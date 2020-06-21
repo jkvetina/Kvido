@@ -9,11 +9,11 @@ CREATE OR REPLACE PACKAGE err AS
 
     -- flags
     flag_module             CONSTANT logs.flag%TYPE     := 'M';     -- Start of any module (procedure/function)
-    flag_action             CONSTANT logs.flag%TYPE     := 'A';     -- Action requested by user (button or link of FE)
-    flag_error              CONSTANT logs.flag%TYPE     := 'E';     -- Error
-    flag_warning            CONSTANT logs.flag%TYPE     := 'W';     -- Warning
+    flag_action             CONSTANT logs.flag%TYPE     := 'A';     -- Actions to distinguish different parts of code in longer modules
     flag_debug              CONSTANT logs.flag%TYPE     := 'D';     -- Debug
-    flag_result             CONSTANT logs.flag%TYPE     := 'R';     -- Result of procedure for log_debugging purposes
+    flag_result             CONSTANT logs.flag%TYPE     := 'R';     -- Result of procedure for debugging purposes
+    flag_warning            CONSTANT logs.flag%TYPE     := 'W';     -- Warning
+    flag_error              CONSTANT logs.flag%TYPE     := 'E';     -- Error
     flag_query              CONSTANT logs.flag%TYPE     := 'Q';     -- Query with binded values appended via job/trigger
 
     -- specify maximum length for trim
@@ -71,6 +71,23 @@ CREATE OR REPLACE PACKAGE err AS
         in_log_id       logs.log_id%TYPE := NULL
     )
     RETURN logs.log_id%TYPE;
+
+
+
+    --
+    -- Returns log_id for LOGS_TREE view
+    --
+    FUNCTION get_tree_id
+    RETURN logs.log_id%TYPE;
+
+
+
+    --
+    -- Set log_id which will be viewed by LOGS_TREE view
+    --
+    PROCEDURE set_tree_id (
+        in_log_id       logs.log_id%TYPE
+    );
 
 
 

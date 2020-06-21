@@ -2,6 +2,7 @@ CREATE OR REPLACE PACKAGE BODY err AS
 
     recent_log_id       logs.log_id%TYPE;    -- last log_id in session (any flag)
     recent_error_id     logs.log_id%TYPE;    -- last real log_id in session (with E flag)
+    recent_tree_id      logs.log_id%TYPE;    -- selected log_id for LOGS_TREE view
 
     -- array to hold recent log_id; array[depth + module] = log_id
     TYPE arr_map_module_to_id IS
@@ -118,6 +119,23 @@ CREATE OR REPLACE PACKAGE BODY err AS
         START WITH e.log_id = NVL(in_log_id, recent_log_id);
         --
         RETURN out_log_id;
+    END;
+
+
+
+    FUNCTION get_tree_id
+    RETURN logs.log_id%TYPE AS
+    BEGIN
+        RETURN recent_tree_id;
+    END;
+
+
+
+    PROCEDURE set_tree_id (
+        in_log_id       logs.log_id%TYPE
+    ) AS
+    BEGIN
+        recent_tree_id := in_log_id;
     END;
 
 
