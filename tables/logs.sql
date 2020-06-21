@@ -22,7 +22,6 @@ CREATE TABLE logs (
     --
     scheduler_name      VARCHAR2(30),
     scheduler_id        NUMBER,                     -- USER_SCHEDULER_JOB_RUN_DETAILS
-    scn                 NUMBER,
     --
     session_db          NUMBER,
     session_apex        NUMBER,
