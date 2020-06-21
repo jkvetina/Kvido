@@ -198,6 +198,14 @@ CREATE OR REPLACE PACKAGE BODY err AS
                 out_module_name := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i + 1));
                 out_module_line := UTL_CALL_STACK.UNIT_LINE(i + 1);
 
+                -- fix purge job
+                IF out_module_name = 'jsarunjob' THEN
+                    out_module_name     := module_name;
+                    out_module_line     := 0;
+                    out_module_depth    := 1;
+                    RETURN;  -- exit procedure
+                END IF;
+
                 -- increase offset for err.module
                 IF module_name = fn_log_module THEN
                     parent_offset := 1;
@@ -593,7 +601,7 @@ CREATE OR REPLACE PACKAGE BODY err AS
         blacklisted     BOOLEAN := FALSE;   -- dont log
     BEGIN
         -- get previous caller info for error tree and session views
-        get_caller_info (  -- basically who called this
+        err.get_caller_info (  -- basically who called this
             out_module_name     => rec.module_name,
             out_module_line     => rec.module_line,
             out_module_depth    => rec.module_depth,
@@ -776,7 +784,7 @@ CREATE OR REPLACE PACKAGE BODY err AS
         rec                 logs%ROWTYPE;
     BEGIN
         IF in_log_id IS NULL THEN
-            get_caller_info (  -- basically who called this
+            err.get_caller_info (  -- basically who called this
                 out_module_name     => rec.module_name,
                 out_module_line     => rec.module_line,
                 out_module_depth    => rec.module_depth,
