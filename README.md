@@ -1,8 +1,13 @@
-# ERR
+# ERR - PL/SQL logger
 
 Purpose of this project is to track all errors (and debug messages) in ORACLE database as a tree
 so you can quickly analyze what happened. It has automatic scope recognition,
 simple arguments passing and many interesting features.
+
+[![Paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=EX68GXSFFWV2S&item_name=ERR+-+PL/SQL+logger&currency_code=EUR&source=url) &nbsp;
+If you like my work, please consider donation.
+
+<br />
 
 ## Quick overview
 
