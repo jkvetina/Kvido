@@ -11,6 +11,7 @@ CREATE OR REPLACE PACKAGE err AS
     flag_module             CONSTANT logs.flag%TYPE     := 'M';     -- Start of any module (procedure/function)
     flag_action             CONSTANT logs.flag%TYPE     := 'A';     -- Actions to distinguish different parts of code in longer modules
     flag_debug              CONSTANT logs.flag%TYPE     := 'D';     -- Debug
+    flag_info               CONSTANT logs.flag%TYPE     := 'I';     -- Info (extended debug)
     flag_result             CONSTANT logs.flag%TYPE     := 'R';     -- Result of procedure for debugging purposes
     flag_warning            CONSTANT logs.flag%TYPE     := 'W';     -- Warning
     flag_error              CONSTANT logs.flag%TYPE     := 'E';     -- Error
@@ -379,6 +380,27 @@ CREATE OR REPLACE PACKAGE err AS
         in_arg6         logs.arguments%TYPE     := NULL,
         in_arg7         logs.arguments%TYPE     := NULL,
         in_arg8         logs.arguments%TYPE     := NULL
+    );
+
+
+
+    --
+    -- Log requested SYS_CONTEXT values
+    --
+    FUNCTION log_context (
+        in_namespace        logs.arguments%TYPE     := '%',
+        in_filter           logs.arguments%TYPE     := '%'
+    )
+    RETURN logs.log_id%TYPE;
+
+
+
+    --
+    -- Same as log_context function
+    --
+    PROCEDURE log_context (
+        in_namespace        logs.arguments%TYPE     := '%',
+        in_filter           logs.arguments%TYPE     := '%'
     );
 
 

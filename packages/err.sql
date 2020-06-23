@@ -598,6 +598,46 @@ CREATE OR REPLACE PACKAGE BODY err AS
 
 
 
+    FUNCTION log_context (
+        in_namespace        logs.arguments%TYPE     := '%',
+        in_filter           logs.arguments%TYPE     := '%'
+    )
+    RETURN logs.log_id%TYPE AS
+        out_arguments   logs.arguments%TYPE;
+    BEGIN
+        FOR c IN (
+            SELECT x.namespace || '.' || x.attribute || ' = ' || x.value AS key_value_pair
+            FROM session_context x
+            WHERE x.namespace   LIKE in_namespace
+                AND x.attribute LIKE in_filter
+            ORDER BY x.namespace, x.attribute
+        ) LOOP
+            out_arguments := out_arguments || c.key_value_pair || CHR(10);
+        END LOOP;
+        --
+        RETURN err.log__ (
+            in_action_name  => NULL,
+            in_flag         => err.flag_info,
+            in_arguments    => out_arguments
+        );
+    END;
+
+
+
+    PROCEDURE log_context (
+        in_namespace        logs.arguments%TYPE     := '%',
+        in_filter           logs.arguments%TYPE     := '%'
+    ) AS
+        out_log_id          logs.log_id%TYPE;
+    BEGIN
+        out_log_id := err.log_context (
+            in_namespace    => in_namespace,
+            in_filter       => in_filter
+        );
+    END;
+
+
+
     FUNCTION log__ (
         in_action_name      logs.action_name%TYPE,
         in_flag             logs.flag%TYPE,
