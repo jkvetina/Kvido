@@ -406,6 +406,25 @@ CREATE OR REPLACE PACKAGE err AS
 
 
     --
+    -- Log USERENV values
+    --
+    FUNCTION log_userenv (
+        in_filter           logs.arguments%TYPE     := '%'
+    )
+    RETURN logs.log_id%TYPE;
+
+
+
+    --
+    -- Same as log_userenv function
+    --
+    PROCEDURE log_userenv (
+        in_filter           logs.arguments%TYPE     := '%'
+    );
+
+
+
+    --
     -- Internal function which creates records in logs table; returns assigned log_id
     --
     FUNCTION log__ (

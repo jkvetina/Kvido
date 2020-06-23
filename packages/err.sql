@@ -603,7 +603,7 @@ CREATE OR REPLACE PACKAGE BODY err AS
         in_filter           logs.arguments%TYPE     := '%'
     )
     RETURN logs.log_id%TYPE AS
-        out_arguments   logs.arguments%TYPE;
+        out_arguments       logs.arguments%TYPE;
     BEGIN
         FOR c IN (
             SELECT x.namespace || '.' || x.attribute || ' = ' || x.value AS key_value_pair
@@ -632,6 +632,65 @@ CREATE OR REPLACE PACKAGE BODY err AS
     BEGIN
         out_log_id := err.log_context (
             in_namespace    => in_namespace,
+            in_filter       => in_filter
+        );
+    END;
+
+
+
+    FUNCTION log_userenv (
+        in_filter           logs.arguments%TYPE     := '%'
+    )
+    RETURN logs.log_id%TYPE AS
+        out_arguments       logs.arguments%TYPE;
+    BEGIN
+        FOR c IN (
+            WITH t AS (
+                SELECT
+                    'CLIENT_IDENTIFIER,CLIENT_INFO,ACTION,MODULE,' ||
+                    'CURRENT_SCHEMA,CURRENT_USER,CURRENT_EDITION_ID,CURRENT_EDITION_NAME,' ||
+                    'OS_USER,POLICY_INVOKER,' ||
+                    'SESSION_USER,SESSIONID,SID,SESSION_EDITION_ID,SESSION_EDITION_NAME,' ||
+                    'AUTHENTICATED_IDENTITY,AUTHENTICATION_DATA,AUTHENTICATION_METHOD,IDENTIFICATION_TYPE,' ||
+                    'ENTERPRISE_IDENTITY,PROXY_ENTERPRISE_IDENTITY,PROXY_USER,' ||
+                    'GLOBAL_CONTEXT_MEMORY,GLOBAL_UID,' ||
+                    'AUDITED_CURSORID,ENTRYID,STATEMENTID,CURRENT_SQL,CURRENT_BIND,' ||
+                    'HOST,SERVER_HOST,SERVICE_NAME,IP_ADDRESS,' ||
+                    'DB_DOMAIN,DB_NAME,DB_UNIQUE_NAME,DBLINK_INFO,DATABASE_ROLE,ISDBA,' ||
+                    'INSTANCE,INSTANCE_NAME,NETWORK_PROTOCOL,' ||
+                    'LANG,LANGUAGE,NLS_TERRITORY,NLS_CURRENCY,NLS_SORT,NLS_DATE_FORMAT,NLS_DATE_LANGUAGE,NLS_CALENDAR,' ||
+                    'BG_JOB_ID,FG_JOB_ID' AS attributes
+                FROM DUAL
+            )
+            SELECT c.name || ' = ' || c.value AS key_value_pair
+            FROM (
+                SELECT
+                    REGEXP_SUBSTR(t.attributes, '[^,]+', 1, LEVEL)                            AS name,
+                    SYS_CONTEXT('USERENV', REGEXP_SUBSTR(t.attributes, '[^,]+', 1, LEVEL))    AS value
+                FROM t
+                CONNECT BY LEVEL <= REGEXP_COUNT(t.attributes, ',')
+            ) c
+            WHERE c.name LIKE in_filter
+            ORDER BY c.name
+        ) LOOP
+            out_arguments := out_arguments || c.key_value_pair || CHR(10);
+        END LOOP;
+        --
+        RETURN err.log__ (
+            in_action_name  => NULL,
+            in_flag         => err.flag_info,
+            in_arguments    => out_arguments
+        );
+    END;
+
+
+
+    PROCEDURE log_userenv (
+        in_filter           logs.arguments%TYPE     := '%'
+    ) AS
+        out_log_id          logs.log_id%TYPE;
+    BEGIN
+        out_log_id := err.log_userenv (
             in_filter       => in_filter
         );
     END;
