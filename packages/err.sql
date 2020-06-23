@@ -257,6 +257,24 @@ CREATE OR REPLACE PACKAGE BODY err AS
 
 
 
+    PROCEDURE set_session (
+        in_user_id          logs.user_id%TYPE,
+        in_module_name      logs.module_name%TYPE,
+        in_action_name      logs.action_name%TYPE,
+        in_flag             logs.flag%TYPE
+    ) AS
+    BEGIN
+        IF in_flag = err.flag_module THEN
+            DBMS_SESSION.SET_IDENTIFIER(in_user_id);                            -- CLIENT_IDENTIFIER
+            DBMS_APPLICATION_INFO.SET_CLIENT_INFO(in_user_id);                  -- CLIENT_INFO
+            DBMS_APPLICATION_INFO.SET_MODULE(in_module_name, in_action_name);   -- MODULE, ACTION
+        ELSIF in_flag = err.flag_action THEN
+            DBMS_APPLICATION_INFO.SET_ACTION(in_action_name);                   -- ACTION
+        END IF;
+    END;
+
+
+
     FUNCTION log_module (
         in_arg1         logs.arguments%TYPE     := NULL,
         in_arg2         logs.arguments%TYPE     := NULL,
@@ -758,20 +776,56 @@ CREATE OR REPLACE PACKAGE BODY err AS
 
 
 
-    PROCEDURE set_session (
-        in_user_id          logs.user_id%TYPE,
-        in_module_name      logs.module_name%TYPE,
-        in_action_name      logs.action_name%TYPE,
-        in_flag             logs.flag%TYPE
+    PROCEDURE attach_clob (
+        in_clob             CLOB,
+        in_log_id           logs.log_id%TYPE        := NULL
     ) AS
+        rec                 logs_lobs%ROWTYPE;
     BEGIN
-        IF in_flag = err.flag_module THEN
-            DBMS_SESSION.SET_IDENTIFIER(in_user_id);                            -- CLIENT_IDENTIFIER
-            DBMS_APPLICATION_INFO.SET_CLIENT_INFO(in_user_id);                  -- CLIENT_INFO
-            DBMS_APPLICATION_INFO.SET_MODULE(in_module_name, in_action_name);   -- MODULE, ACTION
-        ELSIF in_flag = err.flag_action THEN
-            DBMS_APPLICATION_INFO.SET_ACTION(in_action_name);                   -- ACTION
-        END IF;
+        err.log_module(in_log_id);
+        --
+        rec.lob_id          := log_id.NEXTVAL;
+        rec.log_id          := NVL(recent_log_id, in_log_id);
+        rec.clob_content    := in_clob;
+        rec.lob_length      := DBMS_LOB.GETLENGTH(rec.clob_content);
+        --
+        INSERT INTO logs_lobs VALUES rec;
+    END;
+
+
+
+    PROCEDURE attach_clob (
+        in_clob             XMLTYPE,
+        in_log_id           logs.log_id%TYPE        := NULL
+    ) AS
+        rec                 logs_lobs%ROWTYPE;
+    BEGIN
+        err.log_module(in_log_id);
+        --
+        rec.lob_id          := log_id.NEXTVAL;
+        rec.log_id          := NVL(recent_log_id, in_log_id);
+        rec.clob_content    := in_clob.GETCLOBVAL();
+        rec.lob_length      := DBMS_LOB.GETLENGTH(rec.clob_content);
+        --
+        INSERT INTO logs_lobs VALUES rec;
+    END;
+
+
+
+    PROCEDURE attach_blob (
+        in_blob             BLOB,
+        in_log_id           logs.log_id%TYPE        := NULL
+    ) AS
+        rec                 logs_lobs%ROWTYPE;
+    BEGIN
+        err.log_module(in_log_id);
+        --
+        rec.lob_id          := log_id.NEXTVAL;
+        rec.log_id          := NVL(recent_log_id, in_log_id);
+        rec.blob_content    := in_blob;
+        rec.lob_length      := DBMS_LOB.GETLENGTH(rec.blob_content);
+        --
+        INSERT INTO logs_lobs VALUES rec;
     END;
 
 
