@@ -818,15 +818,17 @@ CREATE OR REPLACE PACKAGE BODY err AS
 
     PROCEDURE attach_clob (
         in_clob             CLOB,
-        in_log_id           logs.log_id%TYPE        := NULL
+        in_log_id           logs_lobs.log_id%TYPE       := NULL,
+        in_name             logs_lobs.lob_name%TYPE     := NULL
     ) AS
         rec                 logs_lobs%ROWTYPE;
     BEGIN
         err.log_module(in_log_id);
         --
         rec.lob_id          := log_id.NEXTVAL;
-        rec.log_id          := NVL(recent_log_id, in_log_id);
+        rec.log_id          := NVL(in_log_id, recent_log_id);
         rec.clob_content    := in_clob;
+        rec.lob_name        := in_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.clob_content);
         --
         INSERT INTO logs_lobs VALUES rec;
@@ -836,15 +838,17 @@ CREATE OR REPLACE PACKAGE BODY err AS
 
     PROCEDURE attach_clob (
         in_clob             XMLTYPE,
-        in_log_id           logs.log_id%TYPE        := NULL
+        in_log_id           logs_lobs.log_id%TYPE       := NULL,
+        in_name             logs_lobs.lob_name%TYPE     := NULL
     ) AS
         rec                 logs_lobs%ROWTYPE;
     BEGIN
         err.log_module(in_log_id);
         --
         rec.lob_id          := log_id.NEXTVAL;
-        rec.log_id          := NVL(recent_log_id, in_log_id);
+        rec.log_id          := NVL(in_log_id, recent_log_id);
         rec.clob_content    := in_clob.GETCLOBVAL();
+        rec.lob_name        := in_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.clob_content);
         --
         INSERT INTO logs_lobs VALUES rec;
@@ -854,15 +858,17 @@ CREATE OR REPLACE PACKAGE BODY err AS
 
     PROCEDURE attach_blob (
         in_blob             BLOB,
-        in_log_id           logs.log_id%TYPE        := NULL
+        in_log_id           logs_lobs.log_id%TYPE       := NULL,
+        in_name             logs_lobs.lob_name%TYPE     := NULL
     ) AS
         rec                 logs_lobs%ROWTYPE;
     BEGIN
         err.log_module(in_log_id);
         --
         rec.lob_id          := log_id.NEXTVAL;
-        rec.log_id          := NVL(recent_log_id, in_log_id);
+        rec.log_id          := NVL(in_log_id, recent_log_id);
         rec.blob_content    := in_blob;
+        rec.lob_name        := in_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.blob_content);
         --
         INSERT INTO logs_lobs VALUES rec;

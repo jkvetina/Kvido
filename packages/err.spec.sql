@@ -445,7 +445,8 @@ CREATE OR REPLACE PACKAGE err AS
     --
     PROCEDURE attach_clob (
         in_clob             CLOB,
-        in_log_id           logs.log_id%TYPE        := NULL
+        in_log_id           logs_lobs.log_id%TYPE       := NULL,
+        in_name             logs_lobs.lob_name%TYPE     := NULL
     );
 
 
@@ -455,7 +456,8 @@ CREATE OR REPLACE PACKAGE err AS
     --
     PROCEDURE attach_clob (
         in_clob             XMLTYPE,
-        in_log_id           logs.log_id%TYPE        := NULL
+        in_log_id           logs_lobs.log_id%TYPE       := NULL,
+        in_name             logs_lobs.lob_name%TYPE     := NULL
     );
 
 
@@ -465,7 +467,8 @@ CREATE OR REPLACE PACKAGE err AS
     --
     PROCEDURE attach_blob (
         in_blob             BLOB,
-        in_log_id           logs.log_id%TYPE        := NULL
+        in_log_id           logs_lobs.log_id%TYPE       := NULL,
+        in_name             logs_lobs.lob_name%TYPE     := NULL
     );
 
 
