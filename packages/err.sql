@@ -895,7 +895,18 @@ CREATE OR REPLACE PACKAGE BODY err AS
         count_after     PLS_INTEGER;
     BEGIN
         err.log_module();
-        --
+
+        -- delete old LOBs
+        DELETE FROM logs_lobs
+        WHERE lob_id IN (
+            SELECT l.log_id
+            FROM logs e
+            JOIN logs_lobs l
+                ON l.log_id = e.log_id
+            WHERE e.created_at < TRUNC(SYSDATE) - err.table_rows_max_age
+        );
+
+        -- purge whole partitions
         FOR c IN (
             SELECT table_name, partition_name, high_value, partition_position
             FROM user_tab_partitions p
