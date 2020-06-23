@@ -15,7 +15,7 @@ ORGANIZATION INDEX;
 COMMENT ON TABLE  logs_tracking                IS 'Define what events will or wont be actually tracked';
 --
 COMMENT ON COLUMN logs_tracking.user_id        IS 'User ID; % for any user';
-COMMENT ON COLUMN logs_tracking.module_name    IS 'Module name; % for any module';
-COMMENT ON COLUMN logs_tracking.flag           IS 'Flag used in logs_log; % for any flag';
+COMMENT ON COLUMN logs_tracking.module_name    IS 'Module name in LOGS table; % for any module';
+COMMENT ON COLUMN logs_tracking.flag           IS 'Flag used in LOGS table; % for any flag';
 COMMENT ON COLUMN logs_tracking.track          IS 'Y = track; N = dont track; Y > N';
 

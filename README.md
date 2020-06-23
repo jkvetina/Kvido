@@ -26,20 +26,6 @@ END;
 
 <br />
 
-### Adjust tracking
-
-You can adjust tracking for specific users, flags and/or modules by using blacklisted or whitelisted records
-in [LOGS_TRACKING](./tables/logs_tracking.sql) table. Whitelisted row (TRACK=Y) precedes blacklisted (TRACK=N) row and you can use "%" as LIKE feature.
-
-| ID | Column name                    | Data type        | NN | PK | Comment |
-| -: | :----------------------------- | :--------------- | -- | -- | :------ |
-|  1 | USER_ID                        | VARCHAR2(30)     | Y | Y | User ID; % for any user |
-|  2 | MODULE_NAME                    | VARCHAR2(30)     | Y | Y | Module name; % for any module |
-|  3 | FLAG                           | CHAR(1)          | Y | Y | Flag used in logs_log; % for any flag |
-|  4 | TRACK                          | CHAR(1)          | Y | N | Y = track; N = dont track; Y > N |
-
-<br />
-
 ## Check tree by using LOGS_TREE view
 
 1) set any log_id you are interested in
