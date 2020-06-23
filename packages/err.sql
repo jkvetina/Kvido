@@ -823,7 +823,7 @@ CREATE OR REPLACE PACKAGE BODY err AS
     ) AS
         rec                 logs_lobs%ROWTYPE;
     BEGIN
-        err.log_module(in_log_id);
+        err.log_module(in_log_id, in_name);
         --
         rec.lob_id          := log_id.NEXTVAL;
         rec.log_id          := NVL(in_log_id, recent_log_id);
@@ -843,7 +843,7 @@ CREATE OR REPLACE PACKAGE BODY err AS
     ) AS
         rec                 logs_lobs%ROWTYPE;
     BEGIN
-        err.log_module(in_log_id);
+        err.log_module(in_log_id, in_name);
         --
         rec.lob_id          := log_id.NEXTVAL;
         rec.log_id          := NVL(in_log_id, recent_log_id);
@@ -863,7 +863,7 @@ CREATE OR REPLACE PACKAGE BODY err AS
     ) AS
         rec                 logs_lobs%ROWTYPE;
     BEGIN
-        err.log_module(in_log_id);
+        err.log_module(in_log_id, in_name);
         --
         rec.lob_id          := log_id.NEXTVAL;
         rec.log_id          := NVL(in_log_id, recent_log_id);
