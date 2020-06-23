@@ -697,6 +697,61 @@ CREATE OR REPLACE PACKAGE BODY err AS
 
 
 
+    FUNCTION log_cgi (
+        in_filter           logs.arguments%TYPE     := '%'
+    )
+    RETURN logs.log_id%TYPE AS
+        out_arguments       logs.arguments%TYPE;
+    BEGIN
+        FOR c IN (
+            WITH t AS (
+                SELECT
+                    'QUERY_STRING,AUTHORIZATION,DAD_NAME,DOC_ACCESS_PATH,DOCUMENT_TABLE,' ||
+                    'HTTP_ACCEPT,HTTP_ACCEPT_ENCODING,HTTP_ACCEPT_CHARSET,HTTP_ACCEPT_LANGUAGE,' ||
+                    'HTTP_COOKIE,HTTP_HOST,HTTP_PRAGMA,HTTP_REFERER,HTTP_USER_AGENT,' ||
+                    'PATH_ALIAS,PATH_INFO,REMOTE_ADDR,REMOTE_HOST,REMOTE_USER,' ||
+                    'REQUEST_CHARSET,REQUEST_IANA_CHARSET,REQUEST_METHOD,REQUEST_PROTOCOL,' ||
+                    'SCRIPT_NAME,SCRIPT_PREFIX,SERVER_NAME,SERVER_PORT,SERVER_PROTOCOL' AS attributes
+                FROM DUAL
+            )
+            SELECT c.name
+            FROM (
+                SELECT REGEXP_SUBSTR(t.attributes, '[^,]+', 1, LEVEL) AS name
+                FROM t
+                CONNECT BY LEVEL <= REGEXP_COUNT(t.attributes, ',')
+            ) c
+            WHERE c.name LIKE in_filter
+            ORDER BY c.name
+        ) LOOP
+            BEGIN
+                out_arguments := out_arguments || c.name || ' = ' || OWA_UTIL.GET_CGI_ENV(c.name) || CHR(10);
+            EXCEPTION
+            WHEN VALUE_ERROR THEN
+                NULL;
+            END;
+        END LOOP;
+        --
+        RETURN err.log__ (
+            in_action_name  => NULL,
+            in_flag         => err.flag_info,
+            in_arguments    => out_arguments
+        );
+    END;
+
+
+
+    PROCEDURE log_cgi (
+        in_filter           logs.arguments%TYPE     := '%'
+    ) AS
+        out_log_id          logs.log_id%TYPE;
+    BEGIN
+        out_log_id := err.log_cgi (
+            in_filter       => in_filter
+        );
+    END;
+
+
+
     FUNCTION log__ (
         in_action_name      logs.action_name%TYPE,
         in_flag             logs.flag%TYPE,

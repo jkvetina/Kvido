@@ -425,6 +425,25 @@ CREATE OR REPLACE PACKAGE err AS
 
 
     --
+    -- Log CGI_ENV values (when called from web)
+    --
+    FUNCTION log_cgi (
+        in_filter           logs.arguments%TYPE     := '%'
+    )
+    RETURN logs.log_id%TYPE;
+
+
+
+    --
+    -- Same as log_cgi function
+    --
+    PROCEDURE log_cgi (
+        in_filter           logs.arguments%TYPE     := '%'
+    );
+
+
+
+    --
     -- Internal function which creates records in logs table; returns assigned log_id
     --
     FUNCTION log__ (
