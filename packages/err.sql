@@ -939,11 +939,11 @@ CREATE OR REPLACE PACKAGE BODY err AS
     BEGIN
         err.log_module(in_log_id, in_name);
         --
-        rec.lob_id          := log_id.NEXTVAL;
-        rec.log_id          := NVL(in_log_id, recent_log_id);
-        rec.clob_content    := in_clob;
+        rec.log_id          := log_id.NEXTVAL;
+        rec.parent_log      := NVL(in_log_id, recent_log_id);
         rec.lob_name        := in_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.clob_content);
+        rec.clob_content    := in_clob;
         --
         INSERT INTO logs_lobs VALUES rec;
     END;
@@ -959,11 +959,11 @@ CREATE OR REPLACE PACKAGE BODY err AS
     BEGIN
         err.log_module(in_log_id, in_name);
         --
-        rec.lob_id          := log_id.NEXTVAL;
-        rec.log_id          := NVL(in_log_id, recent_log_id);
-        rec.clob_content    := in_clob.GETCLOBVAL();
+        rec.log_id          := log_id.NEXTVAL;
+        rec.parent_log      := NVL(in_log_id, recent_log_id);
         rec.lob_name        := in_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.clob_content);
+        rec.clob_content    := in_clob.GETCLOBVAL();
         --
         INSERT INTO logs_lobs VALUES rec;
     END;
@@ -979,11 +979,11 @@ CREATE OR REPLACE PACKAGE BODY err AS
     BEGIN
         err.log_module(in_log_id, in_name);
         --
-        rec.lob_id          := log_id.NEXTVAL;
-        rec.log_id          := NVL(in_log_id, recent_log_id);
-        rec.blob_content    := in_blob;
+        rec.log_id          := log_id.NEXTVAL;
+        rec.parent_log      := NVL(in_log_id, recent_log_id);
         rec.lob_name        := in_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.blob_content);
+        rec.blob_content    := in_blob;
         --
         INSERT INTO logs_lobs VALUES rec;
     END;
@@ -1057,12 +1057,12 @@ CREATE OR REPLACE PACKAGE BODY err AS
         err.log_module();
 
         -- delete old LOBs
-        DELETE FROM logs_lobs
-        WHERE lob_id IN (
+        DELETE FROM logs_lobs l
+        WHERE l.log_id IN (
             SELECT l.log_id
             FROM logs e
             JOIN logs_lobs l
-                ON l.log_id = e.log_id
+                ON l.parent_log = e.log_id
             WHERE e.created_at < TRUNC(SYSDATE) - err.table_rows_max_age
         );
 
