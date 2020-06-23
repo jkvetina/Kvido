@@ -932,16 +932,16 @@ CREATE OR REPLACE PACKAGE BODY err AS
 
     PROCEDURE attach_clob (
         in_clob             CLOB,
-        in_log_id           logs_lobs.log_id%TYPE       := NULL,
-        in_name             logs_lobs.lob_name%TYPE     := NULL
+        in_lob_name         logs_lobs.lob_name%TYPE     := NULL,
+        in_log_id           logs_lobs.log_id%TYPE       := NULL
     ) AS
         rec                 logs_lobs%ROWTYPE;
     BEGIN
-        err.log_module(in_log_id, in_name);
+        err.log_module(in_log_id, in_lob_name);
         --
         rec.log_id          := log_id.NEXTVAL;
         rec.parent_log      := NVL(in_log_id, recent_log_id);
-        rec.lob_name        := in_name;
+        rec.lob_name        := in_lob_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.clob_content);
         rec.clob_content    := in_clob;
         --
@@ -952,16 +952,16 @@ CREATE OR REPLACE PACKAGE BODY err AS
 
     PROCEDURE attach_clob (
         in_clob             XMLTYPE,
-        in_log_id           logs_lobs.log_id%TYPE       := NULL,
-        in_name             logs_lobs.lob_name%TYPE     := NULL
+        in_lob_name         logs_lobs.lob_name%TYPE     := NULL,
+        in_log_id           logs_lobs.log_id%TYPE       := NULL
     ) AS
         rec                 logs_lobs%ROWTYPE;
     BEGIN
-        err.log_module(in_log_id, in_name);
+        err.log_module(in_log_id, in_lob_name);
         --
         rec.log_id          := log_id.NEXTVAL;
         rec.parent_log      := NVL(in_log_id, recent_log_id);
-        rec.lob_name        := in_name;
+        rec.lob_name        := in_lob_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.clob_content);
         rec.clob_content    := in_clob.GETCLOBVAL();
         --
@@ -972,16 +972,16 @@ CREATE OR REPLACE PACKAGE BODY err AS
 
     PROCEDURE attach_blob (
         in_blob             BLOB,
-        in_log_id           logs_lobs.log_id%TYPE       := NULL,
-        in_name             logs_lobs.lob_name%TYPE     := NULL
+        in_lob_name         logs_lobs.lob_name%TYPE     := NULL,
+        in_log_id           logs_lobs.log_id%TYPE       := NULL
     ) AS
         rec                 logs_lobs%ROWTYPE;
     BEGIN
-        err.log_module(in_log_id, in_name);
+        err.log_module(in_log_id, in_lob_name);
         --
         rec.log_id          := log_id.NEXTVAL;
         rec.parent_log      := NVL(in_log_id, recent_log_id);
-        rec.lob_name        := in_name;
+        rec.lob_name        := in_lob_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.blob_content);
         rec.blob_content    := in_blob;
         --

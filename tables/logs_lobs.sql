@@ -19,7 +19,7 @@ COMMENT ON TABLE  logs_lobs                  IS 'Large objects storage for LOGS 
 --
 COMMENT ON COLUMN logs_lobs.log_id           IS 'ID to have multiple LOBs attached to single row in LOGS';
 COMMENT ON COLUMN logs_lobs.parent_log       IS 'Referenced log_id in LOBS table';
-COMMENT ON COLUMN logs_lobs.lob_name         IS 'Optiona name of the object/file';
+COMMENT ON COLUMN logs_lobs.lob_name         IS 'Optional name of the object/file';
 COMMENT ON COLUMN logs_lobs.lob_length       IS 'Length in bytes';
 COMMENT ON COLUMN logs_lobs.blob_content     IS 'BLOB';
 COMMENT ON COLUMN logs_lobs.clob_content     IS 'CLOB';
