@@ -9,22 +9,22 @@ If you like my work, please consider donation.
 
 <br />
 
-## Quick overview
 
-All you need to do is add [ERR.LOG_MODULE](./packages/err.spec.sql#log_module) calls to beginning of your every procedure.
-There is a view [LOGS_CHECK_MISSING_CALLS](./views/logs_check_missing_calls.sql) which will help you to track missing occurrences.
 
-```sql
-PROCEDURE your_procedure AS
-BEGIN
-    err.log_module();
+#### Notes
 
-    -- your code
-    NULL;
-END;
-```
+To access log tree you have to add [`err.log_module`](../packages/err.spec.sql#log_module) calls to beginning of your every procedure.
+
+There is an aid view [`logs_check_modules`](../views/logs_check_modules.sql) which will help you to track missing occurrences.
 
 <br />
+
+
+
+
+
+
+
 
 ## Check tree by using LOGS_TREE view
 
@@ -56,24 +56,6 @@ FROM logs_tree e;
 <br />
 
 ## More examples
-
-### Track module with arguments and timer
-
-```sql
-PROCEDURE your_procedure (
-    in_argument1    VARCHAR2,
-    in_argument2    NUMBER,
-    in_argument3    DATE
-) AS
-BEGIN
-    err.log_module(in_argument1, in_argument2, in_argument3);
-
-    -- your code
-    NULL;
-
-    err.update_timer();
-END;
-```
 
 ### Track debugging info and possible warning
 
