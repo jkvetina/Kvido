@@ -16,6 +16,7 @@ CREATE OR REPLACE PACKAGE bug AS
     flag_warning            CONSTANT debug_log.flag%TYPE    := 'W';     -- Warning
     flag_error              CONSTANT debug_log.flag%TYPE    := 'E';     -- Error
     flag_query              CONSTANT debug_log.flag%TYPE    := 'Q';     -- Query with binded values appended via job/trigger
+    flag_longops            CONSTANT debug_log.flag%TYPE    := 'L';     -- Longops row
 
     -- specify maximum length for trim
     length_action           CONSTANT PLS_INTEGER            := 48;      -- debug_log.action%TYPE
@@ -516,6 +517,15 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     PROCEDURE update_timer (
         in_log_id           debug_log.log_id%TYPE := NULL
+    );
+
+
+
+    --
+    --Update progress for LONGOPS
+    --
+    PROCEDURE update_progress (
+        in_progress         NUMBER := NULL
     );
 
 
