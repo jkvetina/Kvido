@@ -17,7 +17,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns application id from APEX
     --
     FUNCTION get_app_id
-    RETURN logs.app_id%TYPE;
+    RETURN debug_log.app_id%TYPE;
 
 
 
@@ -25,7 +25,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns application page id from APEX
     --
     FUNCTION get_page_id
-    RETURN logs.page_id%TYPE;
+    RETURN debug_log.page_id%TYPE;
 
 
 
@@ -33,7 +33,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns user id (APEX user, CONTEXT user, DB user..., whatever fits your needs)
     --
     FUNCTION get_user_id
-    RETURN logs.user_id%TYPE;
+    RETURN debug_log.user_id%TYPE;
 
 
 
@@ -41,7 +41,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Set user_id when running from DBMS_SCHEDULER, trigger...
     --
     PROCEDURE set_user_id (
-        in_user_id  logs.user_id%TYPE
+        in_user_id  debug_log.user_id%TYPE
     );
 
 
@@ -50,7 +50,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns database session id
     --
     FUNCTION get_session_db
-    RETURN logs.session_db%TYPE;
+    RETURN debug_log.session_db%TYPE;
 
 
 
@@ -58,7 +58,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns APEX session id
     --
     FUNCTION get_session_apex
-    RETURN logs.session_apex%TYPE;
+    RETURN debug_log.session_apex%TYPE;
 
 
 
@@ -66,7 +66,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns your app context id
     --
     FUNCTION get_context_a
-    RETURN logs.context_a%TYPE;
+    RETURN debug_log.context_a%TYPE;
 
 
 
@@ -74,7 +74,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Set application context
     --
     PROCEDURE set_context_a (
-        in_value    logs.context_a%TYPE
+        in_value    debug_log.context_a%TYPE
     );
 
 
@@ -83,7 +83,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns your app context id
     --
     FUNCTION get_context_b
-    RETURN logs.context_b%TYPE;
+    RETURN debug_log.context_b%TYPE;
 
 
 
@@ -91,7 +91,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Set application context
     --
     PROCEDURE set_context_b (
-        in_value    logs.context_b%TYPE
+        in_value    debug_log.context_b%TYPE
     );
 
 
@@ -100,7 +100,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns your app context id
     --
     FUNCTION get_context_c
-    RETURN logs.context_c%TYPE;
+    RETURN debug_log.context_c%TYPE;
 
 
 
@@ -108,7 +108,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Set application context
     --
     PROCEDURE set_context_c (
-        in_value    logs.context_c%TYPE
+        in_value    debug_log.context_c%TYPE
     );
 
 END;

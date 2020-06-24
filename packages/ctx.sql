@@ -1,7 +1,7 @@
 CREATE OR REPLACE PACKAGE BODY ctx AS
 
     FUNCTION get_app_id
-    RETURN logs.app_id%TYPE AS
+    RETURN debug_log.app_id%TYPE AS
     BEGIN
         RETURN TO_NUMBER(SYS_CONTEXT('APEX$SESSION', 'APP_ID'));
     END;
@@ -9,7 +9,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     FUNCTION get_page_id
-    RETURN logs.page_id%TYPE AS
+    RETURN debug_log.page_id%TYPE AS
     BEGIN
         RETURN TO_NUMBER(SYS_CONTEXT('APEX$SESSION', 'APP_PAGE_ID'));
     END;
@@ -17,7 +17,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     FUNCTION get_user_id
-    RETURN logs.user_id%TYPE AS
+    RETURN debug_log.user_id%TYPE AS
     BEGIN
         RETURN COALESCE(SYS_CONTEXT('APEX$SESSION', 'APP_USER'), NULL, USER);
     END;
@@ -25,7 +25,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     PROCEDURE set_user_id (
-        in_user_id  logs.user_id%TYPE
+        in_user_id  debug_log.user_id%TYPE
     ) AS
     BEGIN
         DBMS_SESSION.SET_CONTEXT(ctx.app_namespace, ctx.app_user_id, in_user_id);
@@ -34,8 +34,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     FUNCTION get_session_db
-    RETURN logs.session_db%TYPE AS
-        out_session     logs.session_db%TYPE;
+    RETURN debug_log.session_db%TYPE AS
+        out_session     debug_log.session_db%TYPE;
     BEGIN
         SELECT TO_NUMBER(s.sid || '.' || s.serial#) INTO out_session
         FROM v$session s
@@ -50,7 +50,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     FUNCTION get_session_apex
-    RETURN logs.session_apex%TYPE AS
+    RETURN debug_log.session_apex%TYPE AS
     BEGIN
         RETURN SYS_CONTEXT('APEX$SESSION', 'APP_SESSION');
     END;
@@ -58,7 +58,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     FUNCTION get_context_a
-    RETURN logs.context_a%TYPE AS
+    RETURN debug_log.context_a%TYPE AS
     BEGIN
         RETURN CASE WHEN ctx.app_context_a IS NOT NULL
             THEN SYS_CONTEXT(ctx.app_namespace, ctx.app_context_a)
@@ -68,7 +68,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     PROCEDURE set_context_a (
-        in_value    logs.context_a%TYPE
+        in_value    debug_log.context_a%TYPE
     ) AS
     BEGIN
         DBMS_SESSION.SET_CONTEXT(ctx.app_namespace, ctx.app_context_a, in_value);
@@ -77,7 +77,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     FUNCTION get_context_b
-    RETURN logs.context_b%TYPE AS
+    RETURN debug_log.context_b%TYPE AS
     BEGIN
         RETURN CASE WHEN ctx.app_context_b IS NOT NULL
             THEN SYS_CONTEXT(ctx.app_namespace, ctx.app_context_b)
@@ -87,7 +87,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     PROCEDURE set_context_b (
-        in_value    logs.context_b%TYPE
+        in_value    debug_log.context_b%TYPE
     ) AS
     BEGIN
         DBMS_SESSION.SET_CONTEXT(ctx.app_namespace, ctx.app_context_b, in_value);
@@ -96,7 +96,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     FUNCTION get_context_c
-    RETURN logs.context_c%TYPE AS
+    RETURN debug_log.context_c%TYPE AS
     BEGIN
         RETURN CASE WHEN ctx.app_context_c IS NOT NULL
             THEN SYS_CONTEXT(ctx.app_namespace, ctx.app_context_c)
@@ -106,7 +106,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     PROCEDURE set_context_c (
-        in_value    logs.context_c%TYPE
+        in_value    debug_log.context_c%TYPE
     ) AS
     BEGIN
         DBMS_SESSION.SET_CONTEXT(ctx.app_namespace, ctx.app_context_c, in_value);
