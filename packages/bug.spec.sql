@@ -482,7 +482,7 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Attach CLOB to existing/recent logs record
     --
     PROCEDURE attach_clob (
-        in_clob             CLOB,
+        in_payload          CLOB,
         in_lob_name         debug_log_lobs.lob_name%TYPE    := NULL,
         in_log_id           debug_log_lobs.log_id%TYPE      := NULL
     );
@@ -493,7 +493,7 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Attach XML to existing/recent logs record
     --
     PROCEDURE attach_clob (
-        in_clob             XMLTYPE,
+        in_payload          XMLTYPE,
         in_lob_name         debug_log_lobs.lob_name%TYPE    := NULL,
         in_log_id           debug_log_lobs.log_id%TYPE      := NULL
     );
@@ -504,7 +504,7 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Attach BLOB to existing/recent logs record
     --
     PROCEDURE attach_blob (
-        in_blob             BLOB,
+        in_payload          BLOB,
         in_lob_name         debug_log_lobs.lob_name%TYPE    := NULL,
         in_log_id           debug_log_lobs.log_id%TYPE      := NULL
     );

@@ -12,9 +12,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     map_modules         arr_map_module_to_id;
     map_actions         arr_map_module_to_id;
     --
-    fn_log_module       CONSTANT debug_log.module_name%TYPE     := 'ERR.LOG_MODULE';
-    fn_log_action       CONSTANT debug_log.module_name%TYPE     := 'ERR.LOG_ACTION';
-    fn_update_timer     CONSTANT debug_log.module_name%TYPE     := 'ERR.UPDATE_TIMER';
+    fn_log_module       CONSTANT debug_log.module_name%TYPE     := 'BUG.LOG_MODULE';
+    fn_log_action       CONSTANT debug_log.module_name%TYPE     := 'BUG.LOG_ACTION';
+    fn_update_timer     CONSTANT debug_log.module_name%TYPE     := 'BUG.UPDATE_TIMER';
 
     -- arrays to specify adhoc requests
     TYPE arr_tracking IS VARRAY(20) OF debug_log_tracking%ROWTYPE;
@@ -190,7 +190,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         parent_index        debug_log.module_name%TYPE;
         parent_offset       PLS_INTEGER                         := 0;
     BEGIN
-        -- find first caller before ERR package
+        -- find first caller before this package
         out_module_depth := 0;
         FOR i IN REVERSE 1 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP
             module_name := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i));
@@ -773,7 +773,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         blacklisted     BOOLEAN := FALSE;   -- dont log
     BEGIN
         -- get previous caller info for error tree and session views
-        bug.get_caller_info (  -- basically who called this
+        bug.get_caller_info (   -- basically who called this
             out_module_name     => rec.module_name,
             out_module_line     => rec.module_line,
             out_module_depth    => rec.module_depth,
@@ -931,7 +931,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
     PROCEDURE attach_clob (
-        in_clob             CLOB,
+        in_payload          CLOB,
         in_lob_name         debug_log_lobs.lob_name%TYPE    := NULL,
         in_log_id           debug_log_lobs.log_id%TYPE      := NULL
     ) AS
@@ -941,9 +941,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         --
         rec.log_id          := log_id.NEXTVAL;
         rec.parent_log      := NVL(in_log_id, recent_log_id);
+        rec.clob_content    := in_payload;
         rec.lob_name        := in_lob_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.clob_content);
-        rec.clob_content    := in_clob;
         --
         INSERT INTO debug_log_lobs VALUES rec;
     END;
@@ -951,7 +951,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
     PROCEDURE attach_clob (
-        in_clob             XMLTYPE,
+        in_payload          XMLTYPE,
         in_lob_name         debug_log_lobs.lob_name%TYPE    := NULL,
         in_log_id           debug_log_lobs.log_id%TYPE      := NULL
     ) AS
@@ -961,9 +961,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         --
         rec.log_id          := log_id.NEXTVAL;
         rec.parent_log      := NVL(in_log_id, recent_log_id);
+        rec.clob_content    := in_payload.GETCLOBVAL();
         rec.lob_name        := in_lob_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.clob_content);
-        rec.clob_content    := in_clob.GETCLOBVAL();
         --
         INSERT INTO debug_log_lobs VALUES rec;
     END;
@@ -971,7 +971,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
     PROCEDURE attach_blob (
-        in_blob             BLOB,
+        in_payload          BLOB,
         in_lob_name         debug_log_lobs.lob_name%TYPE    := NULL,
         in_log_id           debug_log_lobs.log_id%TYPE      := NULL
     ) AS
@@ -981,9 +981,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         --
         rec.log_id          := log_id.NEXTVAL;
         rec.parent_log      := NVL(in_log_id, recent_log_id);
+        rec.blob_content    := in_payload;
         rec.lob_name        := in_lob_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.blob_content);
-        rec.blob_content    := in_blob;
         --
         INSERT INTO debug_log_lobs VALUES rec;
     END;
@@ -998,7 +998,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         rec                 debug_log%ROWTYPE;
     BEGIN
         IF in_log_id IS NULL THEN
-            bug.get_caller_info (  -- basically who called this
+            bug.get_caller_info (   -- basically who called this
                 out_module_name     => rec.module_name,
                 out_module_line     => rec.module_line,
                 out_module_depth    => rec.module_depth,
