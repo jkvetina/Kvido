@@ -1,4 +1,4 @@
-# ERR - PL/SQL logger
+# (de)BUG - simple to use yet powerful PL/SQL logger
 
 Purpose of this project is to track all errors (and debug messages) in ORACLE database as a tree
 so you can quickly analyze what happened. It has automatic scope recognition,
