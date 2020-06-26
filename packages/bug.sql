@@ -12,7 +12,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     map_modules         arr_map_module_to_id;
     map_actions         arr_map_module_to_id;
     --
-    fn_log_module       CONSTANT debug_log.module_name%TYPE     := 'BUG.LOG_MODULE';
+    fn_log_module       CONSTANT debug_log.module_name%TYPE     := 'BUG.LOG_MODULE';  -- $$PLSQL_UNIT
     fn_log_action       CONSTANT debug_log.module_name%TYPE     := 'BUG.LOG_ACTION';
     fn_update_timer     CONSTANT debug_log.module_name%TYPE     := 'BUG.UPDATE_TIMER';
 
@@ -1078,7 +1078,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         );
 
         -- calculate time spend since start
-        rec.arguments :=
+        rec.timer :=
             LPAD(EXTRACT(HOUR   FROM LOCALTIMESTAMP - rec.created_at), 2, '0') || ':' ||
             LPAD(EXTRACT(MINUTE FROM LOCALTIMESTAMP - rec.created_at), 2, '0') || ':' ||
             RPAD(REGEXP_REPLACE(
@@ -1089,7 +1089,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         -- update progress in log
         UPDATE debug_log e
         SET e.scn           = rec.scn,
-            e.arguments     = ROUND(in_progress * 100, 2) || '% ' || rec.arguments
+            e.arguments     = ROUND(in_progress * 100, 2) || '%',
+            e.timer         = rec.timer
         WHERE e.log_id      = rec.log_id;
         --
         COMMIT;

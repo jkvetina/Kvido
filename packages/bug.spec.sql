@@ -4,8 +4,8 @@ CREATE OR REPLACE PACKAGE bug AS
     output_enabled          BOOLEAN := TRUE;
 
     -- error log table name and max age fo records
-    table_name              CONSTANT VARCHAR2(30)           := 'LOGS';  -- used in purge_old
-    table_rows_max_age      CONSTANT PLS_INTEGER            := 14;      -- max logs age in days
+    table_name              CONSTANT VARCHAR2(30)           := 'DEBUG_LOG';     -- used in purge_old
+    table_rows_max_age      CONSTANT PLS_INTEGER            := 14;              -- max logs age in days
 
     -- flags
     flag_module             CONSTANT debug_log.flag%TYPE    := 'M';     -- Start of any module (procedure/function)
@@ -522,10 +522,10 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
-    --Update progress for LONGOPS
+    -- Update progress for LONGOPS
     --
     PROCEDURE update_progress (
-        in_progress         NUMBER := NULL
+        in_progress         NUMBER := NULL  -- in percent (0-1)
     );
 
 
