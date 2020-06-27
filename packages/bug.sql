@@ -605,22 +605,22 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         in_filter           debug_log.arguments%TYPE    := '%'
     )
     RETURN debug_log.log_id%TYPE AS
-        out_arguments       debug_log.arguments%TYPE;
+        payload             VARCHAR2(32767);
     BEGIN
         FOR c IN (
-            SELECT x.namespace || '.' || x.attribute || ' = ' || x.value AS key_value_pair
+            SELECT x.namespace || '.' || x.attribute || '=' || x.value AS key_value_pair
             FROM session_context x
             WHERE x.namespace   LIKE in_namespace
                 AND x.attribute LIKE in_filter
             ORDER BY x.namespace, x.attribute
         ) LOOP
-            out_arguments := out_arguments || c.key_value_pair || CHR(10);
+            payload := payload || c.key_value_pair || '|';
         END LOOP;
         --
         RETURN bug.log__ (
             in_action_name  => NULL,
             in_flag         => bug.flag_info,
-            in_arguments    => out_arguments
+            in_message      => payload
         );
     END;
 
@@ -644,7 +644,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         in_filter           debug_log.arguments%TYPE    := '%'
     )
     RETURN debug_log.log_id%TYPE AS
-        out_arguments       debug_log.arguments%TYPE;
+        payload             VARCHAR2(32767);
     BEGIN
         FOR c IN (
             WITH t AS (
@@ -675,13 +675,13 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             WHERE c.name LIKE in_filter
             ORDER BY c.name
         ) LOOP
-            out_arguments := out_arguments || c.key_value_pair || CHR(10);
+            payload := payload || c.key_value_pair || CHR(10);
         END LOOP;
         --
         RETURN bug.log__ (
             in_action_name  => NULL,
             in_flag         => bug.flag_info,
-            in_arguments    => out_arguments
+            in_message      => payload
         );
     END;
 
@@ -703,7 +703,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         in_filter           debug_log.arguments%TYPE    := '%'
     )
     RETURN debug_log.log_id%TYPE AS
-        out_arguments       debug_log.arguments%TYPE;
+        payload             VARCHAR2(32767);
     BEGIN
         FOR c IN (
             WITH t AS (
@@ -726,7 +726,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             ORDER BY c.name
         ) LOOP
             BEGIN
-                out_arguments := out_arguments || c.name || ' = ' || OWA_UTIL.GET_CGI_ENV(c.name) || CHR(10);
+                payload := payload || c.name || ' = ' || OWA_UTIL.GET_CGI_ENV(c.name) || CHR(10);
             EXCEPTION
             WHEN VALUE_ERROR THEN
                 NULL;
@@ -736,7 +736,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         RETURN bug.log__ (
             in_action_name  => NULL,
             in_flag         => bug.flag_info,
-            in_arguments    => out_arguments
+            in_message      => payload
         );
     END;
 
