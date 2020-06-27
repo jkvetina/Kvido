@@ -57,59 +57,137 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
 
-    FUNCTION get_context_a
-    RETURN debug_log.context_a%TYPE AS
+    FUNCTION get_context (
+        in_name     VARCHAR2
+    )
+    RETURN VARCHAR2 AS
     BEGIN
-        RETURN CASE WHEN ctx.app_context_a IS NOT NULL
-            THEN SYS_CONTEXT(ctx.app_namespace, ctx.app_context_a)
-            ELSE NULL END;
+        RETURN SYS_CONTEXT(ctx.app_namespace, in_name);
     END;
 
 
 
-    PROCEDURE set_context_a (
-        in_value    debug_log.context_a%TYPE
+    FUNCTION get_context_number (
+        in_name     VARCHAR2
+    )
+    RETURN NUMBER AS
+    BEGIN
+        RETURN TO_NUMBER(SYS_CONTEXT(ctx.app_namespace, in_name));
+    END;
+
+
+
+    FUNCTION get_context_date (
+        in_name     VARCHAR2
+    )
+    RETURN DATE AS
+    BEGIN
+        RETURN TO_DATE(SYS_CONTEXT(ctx.app_namespace, in_name), 'YYYY-MM-DD');
+    END;
+
+
+
+    PROCEDURE set_context (
+        in_name     VARCHAR2,
+        in_value    VARCHAR2
     ) AS
     BEGIN
-        DBMS_SESSION.SET_CONTEXT(ctx.app_namespace, ctx.app_context_a, in_value);
+        IF in_name = ctx.app_user_id THEN
+            RETURN;  -- cant update this directly
+        END IF;
+        --
+        DBMS_SESSION.SET_CONTEXT(ctx.app_namespace, in_name, in_value);
     END;
 
 
 
-    FUNCTION get_context_b
-    RETURN debug_log.context_b%TYPE AS
-    BEGIN
-        RETURN CASE WHEN ctx.app_context_b IS NOT NULL
-            THEN SYS_CONTEXT(ctx.app_namespace, ctx.app_context_b)
-            ELSE NULL END;
-    END;
-
-
-
-    PROCEDURE set_context_b (
-        in_value    debug_log.context_b%TYPE
+    PROCEDURE load_contexts (
+        in_user_id          contexts.user_id%TYPE       := NULL,
+        in_session_db       contexts.session_db%TYPE    := NULL,
+        in_session_apex     contexts.session_apex%TYPE  := NULL
     ) AS
     BEGIN
-        DBMS_SESSION.SET_CONTEXT(ctx.app_namespace, ctx.app_context_b, in_value);
+        FOR c IN (
+            WITH x AS (
+                SELECT x.payload
+                FROM contexts x
+                WHERE x.user_id         = NVL(in_user_id,       ctx.get_user_id())
+                    AND x.session_apex  = NVL(in_session_apex,  NVL(ctx.get_session_apex(), 0))
+                    AND x.session_db    = NVL(in_session_db,    NVL(ctx.get_session_db(),   0))
+            ),
+            r AS (
+                SELECT REGEXP_SUBSTR(x.payload, '[^' || ctx.splitter_rows || ']+', 1, LEVEL) AS row_
+                FROM x
+                CONNECT BY LEVEL <= REGEXP_COUNT(x.payload, '[' || ctx.splitter_rows || ']')
+            )
+            SELECT
+                SUBSTR(r.row_, 1, INSTR(r.row_, ctx.splitter_values) - 1)   AS attribute,
+                SUBSTR(r.row_, INSTR(r.row_, ctx.splitter_values) + 1)      AS value
+            FROM r
+        ) LOOP
+            ctx.set_context (
+                in_name     => c.attribute,
+                in_value    => c.value
+            );
+        END LOOP;
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        NULL;
     END;
 
 
 
-    FUNCTION get_context_c
-    RETURN debug_log.context_c%TYPE AS
+    PROCEDURE update_contexts
+    AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+        --
+        rec                 contexts%ROWTYPE;
     BEGIN
-        RETURN CASE WHEN ctx.app_context_c IS NOT NULL
-            THEN SYS_CONTEXT(ctx.app_namespace, ctx.app_context_c)
-            ELSE NULL END;
+        rec.user_id         := ctx.get_user_id();
+        rec.session_apex    := NVL(ctx.get_session_apex(),  0);
+        rec.session_db      := NVL(ctx.get_session_db(),    0);
+        rec.payload         := ctx.get_payload();
+        rec.updated_at      := SYSTIMESTAMP;
+        --
+        UPDATE contexts SET ROW = rec;
+        --
+        IF SQL%ROWCOUNT = 0 THEN
+            INSERT INTO contexts VALUES rec;
+        END IF;
+        --
+        COMMIT;
+    EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
     END;
 
 
 
-    PROCEDURE set_context_c (
-        in_value    debug_log.context_c%TYPE
-    ) AS
+    PROCEDURE clear_contexts AS
     BEGIN
-        DBMS_SESSION.SET_CONTEXT(ctx.app_namespace, ctx.app_context_c, in_value);
+        DBMS_SESSION.CLEAR_ALL_CONTEXT(ctx.app_namespace);
+    END;
+
+
+
+    FUNCTION get_payload
+    RETURN contexts.payload%TYPE
+    AS
+        payload         contexts.payload%TYPE;
+    BEGIN
+        FOR c IN (
+            SELECT s.attribute, s.value
+            FROM session_context s
+            WHERE s.namespace   = ctx.app_namespace
+                AND s.value     IS NOT NULL
+        ) LOOP
+            payload := payload ||
+                c.attribute || ctx.splitter_values ||
+                c.value     || ctx.splitter_rows;
+        END LOOP;
+        --
+        RETURN payload;
     END;
 
 END;

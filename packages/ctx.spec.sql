@@ -6,10 +6,9 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- context name for user_id
     app_user_id         CONSTANT VARCHAR2(30)       := 'USER_ID';
 
-    -- application contexts
-    app_context_a       CONSTANT VARCHAR2(30)       := 'CONTEXT_A';
-    app_context_b       CONSTANT VARCHAR2(30)       := 'CONTEXT_B';
-    app_context_c       CONSTANT VARCHAR2(30)       := 'CONTEXT_C';
+    -- splitters for payload
+    splitter_values     CONSTANT CHAR := '=';
+    splitter_rows       CONSTANT CHAR := '|';
 
 
 
@@ -63,53 +62,75 @@ CREATE OR REPLACE PACKAGE ctx AS
 
 
     --
-    -- Returns your app context id
+    -- Returns your app context
     --
-    FUNCTION get_context_a
-    RETURN debug_log.context_a%TYPE;
+    FUNCTION get_context (
+        in_name     VARCHAR2
+    )
+    RETURN VARCHAR2;
 
 
 
     --
-    -- Set application context
+    -- Returns your app context as NUMBER
     --
-    PROCEDURE set_context_a (
-        in_value    debug_log.context_a%TYPE
+    FUNCTION get_context_number (
+        in_name     VARCHAR2
+    )
+    RETURN NUMBER;
+
+
+
+    --
+    -- Returns your app context as DATE
+    --
+    FUNCTION get_context_date (
+        in_name     VARCHAR2
+    )
+    RETURN DATE;
+
+
+
+    --
+    -- Set application context value
+    --
+    PROCEDURE set_context (
+        in_name     VARCHAR2,
+        in_value    VARCHAR2
     );
 
 
 
     --
-    -- Returns your app context id
+    -- Load contexts from table
     --
-    FUNCTION get_context_b
-    RETURN debug_log.context_b%TYPE;
-
-
-
-    --
-    -- Set application context
-    --
-    PROCEDURE set_context_b (
-        in_value    debug_log.context_b%TYPE
+    PROCEDURE load_contexts (
+        in_user_id          contexts.user_id%TYPE       := NULL,
+        in_session_db       contexts.session_db%TYPE    := NULL,
+        in_session_apex     contexts.session_apex%TYPE  := NULL
     );
 
 
 
     --
-    -- Returns your app context id
+    -- Store current contexts into table
     --
-    FUNCTION get_context_c
-    RETURN debug_log.context_c%TYPE;
+    PROCEDURE update_contexts;
 
 
 
     --
-    -- Set application context
+    -- Clear SYS_CONTEXT for app namespace
     --
-    PROCEDURE set_context_c (
-        in_value    debug_log.context_c%TYPE
-    );
+    PROCEDURE clear_contexts;
+
+
+
+    --
+    -- Prepare payload with contexts
+    --
+    FUNCTION get_payload
+    RETURN contexts.payload%TYPE;
 
 END;
 /
