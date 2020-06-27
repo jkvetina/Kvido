@@ -6,8 +6,8 @@ CREATE TABLE debug_log_lobs (
     lob_name            VARCHAR2(255),
     lob_length          NUMBER,
     --
-    blob_content        BLOB,
-    clob_content        CLOB,
+    payload_blob        BLOB,
+    payload_clob        CLOB,
     --
     CONSTRAINT pk_debug_log_lobs PRIMARY KEY (log_id),
     --
@@ -21,6 +21,6 @@ COMMENT ON COLUMN debug_log_lobs.log_id           IS 'ID to have multiple LOBs a
 COMMENT ON COLUMN debug_log_lobs.parent_log       IS 'Referenced log_id in LOBS table';
 COMMENT ON COLUMN debug_log_lobs.lob_name         IS 'Optional name of the object/file';
 COMMENT ON COLUMN debug_log_lobs.lob_length       IS 'Length in bytes';
-COMMENT ON COLUMN debug_log_lobs.blob_content     IS 'BLOB';
-COMMENT ON COLUMN debug_log_lobs.clob_content     IS 'CLOB';
+COMMENT ON COLUMN debug_log_lobs.payload_blob     IS 'BLOB payload';
+COMMENT ON COLUMN debug_log_lobs.payload_clob     IS 'CLOB payload';
 

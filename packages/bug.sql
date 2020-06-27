@@ -942,9 +942,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         --
         rec.log_id          := log_id.NEXTVAL;
         rec.parent_log      := NVL(in_log_id, recent_log_id);
-        rec.clob_content    := in_payload;
+        rec.payload_clob    := in_payload;
         rec.lob_name        := in_lob_name;
-        rec.lob_length      := DBMS_LOB.GETLENGTH(rec.clob_content);
+        rec.lob_length      := DBMS_LOB.GETLENGTH(rec.payload_clob);
         --
         INSERT INTO debug_log_lobs VALUES rec;
     END;
@@ -962,9 +962,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         --
         rec.log_id          := log_id.NEXTVAL;
         rec.parent_log      := NVL(in_log_id, recent_log_id);
-        rec.clob_content    := in_payload.GETCLOBVAL();
+        rec.payload_clob    := in_payload.GETCLOBVAL();
         rec.lob_name        := in_lob_name;
-        rec.lob_length      := DBMS_LOB.GETLENGTH(rec.clob_content);
+        rec.lob_length      := DBMS_LOB.GETLENGTH(rec.payload_clob);
         --
         INSERT INTO debug_log_lobs VALUES rec;
     END;
@@ -982,9 +982,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         --
         rec.log_id          := log_id.NEXTVAL;
         rec.parent_log      := NVL(in_log_id, recent_log_id);
-        rec.blob_content    := in_payload;
+        rec.payload_blob    := in_payload;
         rec.lob_name        := in_lob_name;
-        rec.lob_length      := DBMS_LOB.GETLENGTH(rec.blob_content);
+        rec.lob_length      := DBMS_LOB.GETLENGTH(rec.payload_blob);
         --
         INSERT INTO debug_log_lobs VALUES rec;
     END;
