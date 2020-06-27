@@ -158,8 +158,7 @@ CREATE OR REPLACE PACKAGE bug AS
     PROCEDURE set_session (
         in_user_id          debug_log.user_id%TYPE,
         in_module_name      debug_log.module_name%TYPE,
-        in_action_name      debug_log.action_name%TYPE,
-        in_flag             debug_log.flag%TYPE
+        in_action_name      debug_log.action_name%TYPE
     );
 
 

@@ -260,15 +260,17 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     PROCEDURE set_session (
         in_user_id          debug_log.user_id%TYPE,
         in_module_name      debug_log.module_name%TYPE,
-        in_action_name      debug_log.action_name%TYPE,
-        in_flag             debug_log.flag%TYPE
+        in_action_name      debug_log.action_name%TYPE
     ) AS
     BEGIN
-        IF in_flag = bug.flag_module THEN
-            DBMS_SESSION.SET_IDENTIFIER(in_user_id);                            -- CLIENT_IDENTIFIER
-            DBMS_APPLICATION_INFO.SET_CLIENT_INFO(in_user_id);                  -- CLIENT_INFO
+        DBMS_SESSION.SET_IDENTIFIER(in_user_id);                                -- CLIENT_IDENTIFIER
+        DBMS_APPLICATION_INFO.SET_CLIENT_INFO(in_user_id);                      -- CLIENT_INFO
+        --
+        IF in_module_name IS NOT NULL THEN
             DBMS_APPLICATION_INFO.SET_MODULE(in_module_name, in_action_name);   -- MODULE, ACTION
-        ELSIF in_flag = bug.flag_action THEN
+        END IF;
+        --
+        IF in_action_name IS NOT NULL THEN
             DBMS_APPLICATION_INFO.SET_ACTION(in_action_name);                   -- ACTION
         END IF;
     END;
@@ -802,8 +804,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         bug.set_session (
             in_user_id      => rec.user_id,
             in_module_name  => rec.module_name,
-            in_action_name  => NVL(in_action_name, rec.module_line),
-            in_flag         => in_flag
+            in_action_name  => NVL(in_action_name, rec.module_line)
         );
 
         -- force log errors
