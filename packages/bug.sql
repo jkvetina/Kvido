@@ -856,10 +856,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         rec.scn             := TIMESTAMP_TO_SCN(SYSDATE);
         rec.created_at      := LOCALTIMESTAMP;
 
-        -- update application contexts
-        rec.context_a       := ctx.get_context_a();
-        rec.context_b       := ctx.get_context_b();
-        rec.context_c       := ctx.get_context_c();
+        -- add context values
+        IF SQLCODE != 0 OR INSTR(bug.track_contexts, rec.flag) > 0 OR bug.track_contexts = '%' THEN
+            rec.contexts := SUBSTR(ctx.get_payload(), 1, bug.length_contexts);
+        END IF;
 
         -- add call stack
         IF SQLCODE != 0 OR INSTR(bug.track_callstack, rec.flag) > 0 OR bug.track_callstack = '%' THEN

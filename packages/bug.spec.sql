@@ -20,11 +20,13 @@ CREATE OR REPLACE PACKAGE bug AS
 
     -- specify maximum length for trim
     length_action           CONSTANT PLS_INTEGER            := 48;      -- debug_log.action%TYPE
-    length_arguments        CONSTANT PLS_INTEGER            := 2000;    -- debug_log.arguments%TYPE
+    length_arguments        CONSTANT PLS_INTEGER            := 1000;    -- debug_log.arguments%TYPE
     length_message          CONSTANT PLS_INTEGER            := 4000;    -- debug_log.message%TYPE
+    length_contexts         CONSTANT PLS_INTEGER            := 1000;    -- debug_log.contexts%TYPE
 
     -- append callstack for these flags; % for all
     track_callstack         CONSTANT VARCHAR2(30)       := flag_error || flag_warning || flag_module || flag_result;
+    track_contexts          CONSTANT VARCHAR2(30)       := flag_error || flag_warning || flag_module || flag_result;
 
     -- arguments separator
     splitter                CONSTANT CHAR := '|';
