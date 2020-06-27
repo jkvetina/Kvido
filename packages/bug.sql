@@ -113,7 +113,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     AS
         out_log_id      debug_log.log_id%TYPE;
     BEGIN
-        SELECT MIN(e.log_id) INTO out_log_id
+        SELECT MIN(NVL(e.log_parent, e.log_id)) INTO out_log_id
         FROM debug_log e
         CONNECT BY PRIOR e.log_parent = e.log_id
         START WITH e.log_id = NVL(in_log_id, recent_log_id);
@@ -774,16 +774,29 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         whitelisted     BOOLEAN := FALSE;   -- force log
         blacklisted     BOOLEAN := FALSE;   -- dont log
     BEGIN
-        -- get previous caller info for error tree and session views
-        bug.get_caller_info (   -- basically who called this
-            out_module_name     => rec.module_name,
-            out_module_line     => rec.module_line,
-            out_module_depth    => rec.module_depth,
-            out_parent_id       => rec.log_parent
-        );
-        --
-        rec.log_id        := log_id.NEXTVAL;
-        rec.log_parent    := NVL(in_parent_id, rec.log_parent);
+        IF in_parent_id IS NULL THEN
+            -- get previous caller info for error tree and session views
+            bug.get_caller_info (   -- basically who called this
+                out_module_name     => rec.module_name,
+                out_module_line     => rec.module_line,
+                out_module_depth    => rec.module_depth,
+                out_parent_id       => rec.log_parent
+            );
+        ELSE
+            -- retrieve existing row
+            BEGIN
+                SELECT e.module_name, e.module_line, e.module_depth, e.log_id
+                INTO rec.module_name, rec.module_line, rec.module_depth, rec.log_parent
+                FROM debug_log e
+                WHERE e.log_id = in_parent_id;
+            EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                NULL;
+            END;
+        END IF;
+
+        -- assign new ID
+        rec.log_id := log_id.NEXTVAL;
 
         -- store map to build tree
         IF in_flag = bug.flag_module THEN
