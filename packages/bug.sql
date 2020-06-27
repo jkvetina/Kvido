@@ -608,18 +608,19 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         payload             VARCHAR2(32767);
     BEGIN
         FOR c IN (
-            SELECT x.namespace || '.' || x.attribute || '=' || x.value AS key_value_pair
+            SELECT x.namespace || '.' || x.attribute || bug.splitter_values || x.value AS key_value_pair
             FROM session_context x
             WHERE x.namespace   LIKE in_namespace
                 AND x.attribute LIKE in_filter
             ORDER BY x.namespace, x.attribute
         ) LOOP
-            payload := payload || c.key_value_pair || '|';
+            payload := payload || c.key_value_pair || bug.splitter_rows;
         END LOOP;
         --
         RETURN bug.log__ (
             in_action_name  => NULL,
             in_flag         => bug.flag_info,
+            in_arguments    => bug.get_arguments('LOG_CONTEXT', in_namespace, in_filter),
             in_message      => payload
         );
     END;
@@ -664,7 +665,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                     'BG_JOB_ID,FG_JOB_ID' AS attributes
                 FROM DUAL
             )
-            SELECT c.name || ' = ' || c.value AS key_value_pair
+            SELECT c.name || bug.splitter_values || c.value AS key_value_pair
             FROM (
                 SELECT
                     REGEXP_SUBSTR(t.attributes, '[^,]+', 1, LEVEL)                            AS name,
@@ -675,12 +676,13 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             WHERE c.name LIKE in_filter
             ORDER BY c.name
         ) LOOP
-            payload := payload || c.key_value_pair || CHR(10);
+            payload := payload || c.key_value_pair || bug.splitter_rows;
         END LOOP;
         --
         RETURN bug.log__ (
             in_action_name  => NULL,
             in_flag         => bug.flag_info,
+            in_arguments    => bug.get_arguments('LOG_USERENV', in_filter),
             in_message      => payload
         );
     END;
@@ -726,7 +728,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             ORDER BY c.name
         ) LOOP
             BEGIN
-                payload := payload || c.name || ' = ' || OWA_UTIL.GET_CGI_ENV(c.name) || CHR(10);
+                payload := payload || c.name || bug.splitter_values || OWA_UTIL.GET_CGI_ENV(c.name) || bug.splitter_rows;
             EXCEPTION
             WHEN VALUE_ERROR THEN
                 NULL;
@@ -736,6 +738,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         RETURN bug.log__ (
             in_action_name  => NULL,
             in_flag         => bug.flag_info,
+            in_arguments    => bug.get_arguments('LOG_CGI', in_filter),
             in_message      => payload
         );
     END;

@@ -31,6 +31,10 @@ CREATE OR REPLACE PACKAGE bug AS
     -- arguments separator
     splitter                CONSTANT CHAR := '|';
 
+    -- splitters for payload
+    splitter_values         CONSTANT CHAR := '=';
+    splitter_rows           CONSTANT CHAR := '|';
+
     -- action is mandatory, so we need default value
     empty_action            CONSTANT CHAR := '-';
 
