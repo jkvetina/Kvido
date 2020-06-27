@@ -22,6 +22,5 @@ SELECT
     e.created_at
 FROM debug_log e
 CONNECT BY e.log_parent = PRIOR e.log_id
-START WITH e.log_id     = bug.get_root_id(bug.get_tree_id())
+START WITH e.log_id     = bug.get_tree_id()
 ORDER SIBLINGS BY e.log_id;
-

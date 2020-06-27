@@ -840,6 +840,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             END LOOP;
             --
             IF blacklisted THEN
+                IF bug.output_enabled THEN
+                    DBMS_OUTPUT.PUT_LINE('^BLACKLISTED ' || rec.log_id);
+                END IF;
+                --
                 RETURN NULL;  -- exit function
             END IF;
         END IF;
@@ -925,7 +929,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             in_action_name  => in_action_name,
             in_flag         => in_flag,
             in_arguments    => in_arguments,
-            in_message      => in_message
+            in_message      => in_message,
+            in_parent_id    => in_parent_id
         );
     END;
 
