@@ -595,7 +595,11 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             in_arg8     => in_arg8
         );
         --
-        RAISE_APPLICATION_ERROR(-20000, out_action || bug.splitter || out_log_id, TRUE);
+        --RAISE bug.app_exception;
+        -- we could raise this^, but without custom message
+        -- so we append same code but with message to current err_stack
+        -- and we can intercept this code in calls above
+        RAISE_APPLICATION_ERROR(bug.app_exception_code, out_action || bug.splitter || out_log_id, TRUE);
     END;
 
 
@@ -608,7 +612,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         payload             VARCHAR2(32767);
     BEGIN
         FOR c IN (
-            SELECT x.namespace || '.' || x.attribute || bug.splitter_values || x.value AS key_value_pair
+            SELECT
+                x.namespace || bug.splitter_package ||
+                x.attribute || bug.splitter_values || x.value AS key_value_pair
             FROM session_context x
             WHERE x.namespace   LIKE in_namespace
                 AND x.attribute LIKE in_filter
@@ -1061,10 +1067,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             out_module_depth    => rec.module_depth,
             out_parent_id       => rec.log_parent
         );
-
-        DBMS_OUTPUT.PUT_LINE('> ' || rec.module_name);
-        DBMS_OUTPUT.PUT_LINE('> ' || rec.module_line);
-        DBMS_OUTPUT.PUT_LINE('> ' || rec.log_parent);
 
         -- find longops record
         IF NVL(in_progress, 0) = 0 THEN

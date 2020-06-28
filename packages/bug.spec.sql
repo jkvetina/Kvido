@@ -25,18 +25,25 @@ CREATE OR REPLACE PACKAGE bug AS
     length_contexts         CONSTANT PLS_INTEGER            := 1000;    -- debug_log.contexts%TYPE
 
     -- append callstack for these flags; % for all
-    track_callstack         CONSTANT VARCHAR2(30)       := flag_error || flag_warning || flag_module || flag_result;
-    track_contexts          CONSTANT VARCHAR2(30)       := flag_error || flag_warning || flag_module || flag_result;
+    track_callstack         CONSTANT VARCHAR2(30)           := flag_error || flag_warning || flag_module || flag_result;
+    track_contexts          CONSTANT VARCHAR2(30)           := flag_error || flag_warning || flag_module || flag_result;
 
     -- arguments separator
-    splitter                CONSTANT CHAR := '|';
+    splitter                CONSTANT CHAR                   := '|';
 
     -- splitters for payload
-    splitter_values         CONSTANT CHAR := '=';
-    splitter_rows           CONSTANT CHAR := '|';
+    splitter_values         CONSTANT CHAR                   := '=';
+    splitter_rows           CONSTANT CHAR                   := '|';
+    splitter_package        CONSTANT CHAR                   := '.';
 
     -- action is mandatory, so we need default value
-    empty_action            CONSTANT CHAR := '-';
+    empty_action            CONSTANT CHAR                   := '-';
+
+    -- code for app exception
+    app_exception_code      CONSTANT PLS_INTEGER            := -20000;
+    app_exception           EXCEPTION;
+    --
+    PRAGMA EXCEPTION_INIT(app_exception, app_exception_code);
 
 
 
