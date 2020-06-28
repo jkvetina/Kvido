@@ -19,7 +19,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     FUNCTION get_user_id
     RETURN debug_log.user_id%TYPE AS
     BEGIN
-        RETURN COALESCE(SYS_CONTEXT('APEX$SESSION', 'APP_USER'), NULL, USER);
+        RETURN COALESCE(SYS_CONTEXT(ctx.app_namespace, ctx.app_user_id), SYS_CONTEXT('APEX$SESSION', 'APP_USER'), USER);
     END;
 
 
@@ -28,6 +28,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         in_user_id  debug_log.user_id%TYPE
     ) AS
     BEGIN
+        bug.log_module(in_user_id);
+        --
         DBMS_SESSION.SET_CONTEXT(ctx.app_namespace, ctx.app_user_id, in_user_id);
     END;
 
@@ -106,19 +108,46 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         in_session_db       contexts.session_db%TYPE    := NULL,
         in_session_apex     contexts.session_apex%TYPE  := NULL
     ) AS
+        rec                 contexts%ROWTYPE;
     BEGIN
+        rec.user_id         := NVL(in_user_id,       ctx.get_user_id());
+        rec.session_apex    := NVL(in_session_apex,  NVL(ctx.get_session_apex(), 0));
+        rec.session_db      := NVL(in_session_db,    NVL(ctx.get_session_db(),   0));
+        --
+        bug.log_module(rec.user_id, rec.session_db, rec.session_apex);
+
+        -- retrieve latest payload
+        BEGIN
+            -- find exact match first
+            SELECT x.payload INTO rec.payload
+            FROM contexts x
+            WHERE x.user_id         = rec.user_id
+                AND x.session_apex  = rec.session_apex
+                AND x.session_db    = rec.session_db;
+        EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            BEGIN
+                -- find latest session
+                SELECT x.payload INTO rec.payload
+                FROM (
+                    SELECT x.payload
+                    FROM contexts x
+                    WHERE x.user_id = rec.user_id
+                    ORDER BY x.updated_at
+                ) x
+                WHERE ROWNUM = 1;
+            EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                RETURN;  -- no session available, no need to continue
+            END;
+        END;
+
+        -- parse payload and store in SYS_CONTEXT
         FOR c IN (
-            WITH x AS (
-                SELECT x.payload
-                FROM contexts x
-                WHERE x.user_id         = NVL(in_user_id,       ctx.get_user_id())
-                    AND x.session_apex  = NVL(in_session_apex,  NVL(ctx.get_session_apex(), 0))
-                    AND x.session_db    = NVL(in_session_db,    NVL(ctx.get_session_db(),   0))
-            ),
-            r AS (
-                SELECT REGEXP_SUBSTR(x.payload, '[^' || ctx.splitter_rows || ']+', 1, LEVEL) AS row_
-                FROM x
-                CONNECT BY LEVEL <= REGEXP_COUNT(x.payload, '[' || ctx.splitter_rows || ']')
+            WITH r AS (
+                SELECT REGEXP_SUBSTR(rec.payload, '[^' || ctx.splitter_rows || ']+', 1, LEVEL) AS row_
+                FROM DUAL
+                CONNECT BY LEVEL <= REGEXP_COUNT(rec.payload, '[' || ctx.splitter_rows || ']')
             )
             SELECT
                 SUBSTR(r.row_, 1, INSTR(r.row_, ctx.splitter_values) - 1)   AS attribute,
@@ -130,6 +159,9 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
                 in_value    => c.value
             );
         END LOOP;
+
+        -- make sure we set also user
+        ctx.set_user_id(in_user_id);
     EXCEPTION
     WHEN NO_DATA_FOUND THEN
         NULL;
@@ -148,6 +180,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         rec.session_db      := NVL(ctx.get_session_db(),    0);
         rec.payload         := ctx.get_payload();
         rec.updated_at      := SYSTIMESTAMP;
+        --
+        bug.log_module(rec.user_id, rec.session_apex, rec.session_db);
         --
         UPDATE contexts SET ROW = rec;
         --
@@ -180,6 +214,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             SELECT s.attribute, s.value
             FROM session_context s
             WHERE s.namespace   = ctx.app_namespace
+                AND s.attribute != ctx.app_user_id      -- user_id has dedicated column
                 AND s.value     IS NOT NULL
         ) LOOP
             payload := payload ||
