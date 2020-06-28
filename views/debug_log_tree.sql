@@ -13,8 +13,6 @@ SELECT
     e.arguments,
     e.message,
     e.contexts,
-    e.scheduler_name,
-    e.scheduler_id,
     e.session_db,
     e.session_apex,
     e.scn,

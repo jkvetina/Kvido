@@ -19,9 +19,6 @@ CREATE TABLE debug_log (
     message             VARCHAR2(4000),
     contexts            VARCHAR2(1000),
     --
-    scheduler_name      VARCHAR2(30),
-    scheduler_id        NUMBER,                     -- USER_SCHEDULER_JOB_RUN_DETAILS
-    --
     session_apex        NUMBER,
     session_db          NUMBER,
     scn                 NUMBER,
@@ -58,9 +55,6 @@ COMMENT ON COLUMN debug_log.page_id          IS 'APEX Application PAGE ID';
 COMMENT ON COLUMN debug_log.arguments        IS 'Arguments passed to module';
 COMMENT ON COLUMN debug_log.message          IS 'Formatted call stack, error stack or query with DML error';
 COMMENT ON COLUMN debug_log.contexts         IS 'Your APP contexts in time of creating log record';
---
-COMMENT ON COLUMN debug_log.scheduler_name   IS 'Scheduler name when log was initiated from DBMS_SCHEDULER';
-COMMENT ON COLUMN debug_log.scheduler_id     IS 'Scheduler ID to track down details';
 --
 COMMENT ON COLUMN debug_log.session_apex     IS 'APEX session ID';
 COMMENT ON COLUMN debug_log.session_db       IS 'Database session ID';

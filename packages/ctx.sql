@@ -99,6 +99,10 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         END IF;
         --
         DBMS_SESSION.SET_CONTEXT(ctx.app_namespace, in_name, in_value);
+    EXCEPTION
+    WHEN OTHERS THEN
+        bug.log_error();
+        RAISE;
     END;
 
 
@@ -216,6 +220,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             WHERE s.namespace   = ctx.app_namespace
                 AND s.attribute != ctx.app_user_id      -- user_id has dedicated column
                 AND s.value     IS NOT NULL
+            ORDER BY 1
         ) LOOP
             payload := payload ||
                 c.attribute || ctx.splitter_values ||

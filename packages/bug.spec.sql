@@ -8,15 +8,16 @@ CREATE OR REPLACE PACKAGE bug AS
     table_rows_max_age      CONSTANT PLS_INTEGER            := 14;              -- max logs age in days
 
     -- flags
-    flag_module             CONSTANT debug_log.flag%TYPE    := 'M';     -- Start of any module (procedure/function)
-    flag_action             CONSTANT debug_log.flag%TYPE    := 'A';     -- Actions to distinguish different parts of code in longer modules
-    flag_debug              CONSTANT debug_log.flag%TYPE    := 'D';     -- Debug
-    flag_info               CONSTANT debug_log.flag%TYPE    := 'I';     -- Info (extended debug)
-    flag_result             CONSTANT debug_log.flag%TYPE    := 'R';     -- Result of procedure for debugging purposes
-    flag_warning            CONSTANT debug_log.flag%TYPE    := 'W';     -- Warning
-    flag_error              CONSTANT debug_log.flag%TYPE    := 'E';     -- Error
-    flag_query              CONSTANT debug_log.flag%TYPE    := 'Q';     -- Query with binded values appended via job/trigger
-    flag_longops            CONSTANT debug_log.flag%TYPE    := 'L';     -- Longops row
+    flag_module             CONSTANT debug_log.flag%TYPE    := 'M';     -- start of any module (procedure/function)
+    flag_action             CONSTANT debug_log.flag%TYPE    := 'A';     -- actions to distinguish different parts of code in longer modules
+    flag_debug              CONSTANT debug_log.flag%TYPE    := 'D';     -- debug
+    flag_info               CONSTANT debug_log.flag%TYPE    := 'I';     -- info (extended debug)
+    flag_result             CONSTANT debug_log.flag%TYPE    := 'R';     -- result of procedure for debugging purposes
+    flag_warning            CONSTANT debug_log.flag%TYPE    := 'W';     -- warning
+    flag_error              CONSTANT debug_log.flag%TYPE    := 'E';     -- error
+    flag_query              CONSTANT debug_log.flag%TYPE    := 'Q';     -- query with binded values appended via job/trigger
+    flag_longops            CONSTANT debug_log.flag%TYPE    := 'L';     -- longops row
+    flag_scheduler          CONSTANT debug_log.flag%TYPE    := 'S';     -- scheduler run planned
 
     -- specify maximum length for trim
     length_action           CONSTANT PLS_INTEGER            := 48;      -- debug_log.action%TYPE
@@ -127,7 +128,7 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Returns procedure name which called this function with possible offset
     --
     FUNCTION get_caller_name (
-        in_offset       PLS_INTEGER := NULL
+        in_offset           debug_log.module_depth%TYPE     := 0
     )
     RETURN debug_log.module_name%TYPE;
 
@@ -149,16 +150,6 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Store log_id for current module
     --
     PROCEDURE set_caller_module (
-        in_map_index    debug_log.module_name%TYPE,
-        in_log_id       debug_log.log_id%TYPE
-    );
-
-
-
-    --
-    -- Store log_id for current action
-    --
-    PROCEDURE set_caller_action (
         in_map_index    debug_log.module_name%TYPE,
         in_log_id       debug_log.log_id%TYPE
     );
@@ -205,6 +196,15 @@ CREATE OR REPLACE PACKAGE bug AS
         in_arg6         debug_log.arguments%TYPE    := NULL,
         in_arg7         debug_log.arguments%TYPE    := NULL,
         in_arg8         debug_log.arguments%TYPE    := NULL
+    );
+
+
+
+    --
+    -- Overloaded variant used in schedulers to link calls to proper tree branch
+    --
+    PROCEDURE log_module (
+        in_scheduler_id     debug_log.log_id%TYPE
     );
 
 
@@ -453,6 +453,24 @@ CREATE OR REPLACE PACKAGE bug AS
     PROCEDURE log_cgi (
         in_filter           debug_log.arguments%TYPE    := '%'
     );
+
+
+
+    --
+    -- Log scheduler call and return log_id so the scheduler log can be linked to this log_id
+    --
+    FUNCTION log_scheduler (
+        in_action       debug_log.action_name%TYPE  := NULL,
+        in_arg1         debug_log.arguments%TYPE    := NULL,
+        in_arg2         debug_log.arguments%TYPE    := NULL,
+        in_arg3         debug_log.arguments%TYPE    := NULL,
+        in_arg4         debug_log.arguments%TYPE    := NULL,
+        in_arg5         debug_log.arguments%TYPE    := NULL,
+        in_arg6         debug_log.arguments%TYPE    := NULL,
+        in_arg7         debug_log.arguments%TYPE    := NULL,
+        in_arg8         debug_log.arguments%TYPE    := NULL
+    )
+    RETURN debug_log.log_id%TYPE;
 
 
 
