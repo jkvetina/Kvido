@@ -30,7 +30,13 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     BEGIN
         bug.log_module('SET_USER_ID', in_user_id);  -- when called thru scheduler then parent_log is missing
         --
-        DBMS_SESSION.SET_CONTEXT(ctx.app_namespace, ctx.app_user_id, in_user_id);
+        DBMS_SESSION.SET_CONTEXT (
+            namespace    => ctx.app_namespace,
+            attribute    => ctx.app_user_id,
+            value        => in_user_id,
+            username     => in_user_id,
+            client_id    => ctx.get_client_id(in_user_id)
+        );
     END;
 
 
@@ -55,6 +61,16 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     RETURN debug_log.session_apex%TYPE AS
     BEGIN
         RETURN SYS_CONTEXT('APEX$SESSION', 'APP_SESSION');
+    END;
+
+
+
+    FUNCTION get_client_id (
+        in_user_id      contexts.user_id%TYPE := NULL
+    )
+    RETURN VARCHAR2 AS
+    BEGIN
+        RETURN NVL(in_user_id, ctx.get_user_id()) || ':' || NVL(ctx.get_session_apex(), SYS_CONTEXT('USERENV', 'SESSIONID'));
     END;
 
 
@@ -98,7 +114,22 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             RETURN;  -- cant update this directly
         END IF;
         --
-        DBMS_SESSION.SET_CONTEXT(ctx.app_namespace, in_name, in_value);
+        IF in_value IS NULL THEN
+            DBMS_SESSION.CLEAR_CONTEXT (
+                namespace           => ctx.app_namespace,
+                --client_identifier   => ctx.get_client_id(),
+                attribute           => in_name
+            );
+            RETURN;
+        END IF;
+        --
+        DBMS_SESSION.SET_CONTEXT (
+            namespace    => ctx.app_namespace,
+            attribute    => in_name,
+            value        => in_value,
+            username     => ctx.get_user_id(),
+            client_id    => ctx.get_client_id()
+        );
     EXCEPTION
     WHEN OTHERS THEN
         bug.log_error();

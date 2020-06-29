@@ -62,6 +62,16 @@ CREATE OR REPLACE PACKAGE ctx AS
 
 
     --
+    -- Returns client_id for DBMS_SESSION
+    --
+    FUNCTION get_client_id (
+        in_user_id      contexts.user_id%TYPE := NULL
+    )
+    RETURN VARCHAR2;
+
+
+
+    --
     -- Returns your app context
     --
     FUNCTION get_context (
