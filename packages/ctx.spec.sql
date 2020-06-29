@@ -113,6 +113,15 @@ CREATE OR REPLACE PACKAGE ctx AS
 
 
     --
+    -- Parse payload and store it in SYS_CONTEXT
+    --
+    PROCEDURE apply_contexts (
+        in_payload          contexts.payload%TYPE
+    );
+
+
+
+    --
     -- Store current contexts into table
     --
     PROCEDURE update_contexts;

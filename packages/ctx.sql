@@ -28,7 +28,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         in_user_id  debug_log.user_id%TYPE
     ) AS
     BEGIN
-        bug.log_module(in_user_id);
+        bug.log_module('SET_USER_ID', in_user_id);  -- when called thru scheduler then parent_log is missing
         --
         DBMS_SESSION.SET_CONTEXT(ctx.app_namespace, ctx.app_user_id, in_user_id);
     END;
@@ -94,7 +94,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         in_value    VARCHAR2
     ) AS
     BEGIN
-        IF in_name = ctx.app_user_id THEN
+        IF in_name = ctx.app_user_id OR in_name IS NULL THEN
             RETURN;  -- cant update this directly
         END IF;
         --
@@ -146,12 +146,30 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             END;
         END;
 
-        -- parse payload and store in SYS_CONTEXT
+        -- parse payload to SYS_CONTEXT and set user
+        ctx.apply_contexts(rec.payload);
+        ctx.set_user_id(in_user_id);
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        NULL;
+    END;
+
+
+
+    PROCEDURE apply_contexts (
+        in_payload          contexts.payload%TYPE
+    ) AS
+    BEGIN
+        IF in_payload IS NULL THEN
+            RETURN;
+        END IF;
+
+        -- parse payload and store it in SYS_CONTEXT
         FOR c IN (
             WITH r AS (
-                SELECT REGEXP_SUBSTR(rec.payload, '[^' || ctx.splitter_rows || ']+', 1, LEVEL) AS row_
+                SELECT REGEXP_SUBSTR(in_payload, '[^' || ctx.splitter_rows || ']+', 1, LEVEL) AS row_
                 FROM DUAL
-                CONNECT BY LEVEL <= REGEXP_COUNT(rec.payload, '[' || ctx.splitter_rows || ']')
+                CONNECT BY LEVEL <= REGEXP_COUNT(in_payload, '[' || ctx.splitter_rows || ']')
             )
             SELECT
                 SUBSTR(r.row_, 1, INSTR(r.row_, ctx.splitter_values) - 1)   AS attribute,
@@ -163,9 +181,6 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
                 in_value    => c.value
             );
         END LOOP;
-
-        -- make sure we set also user
-        ctx.set_user_id(in_user_id);
     EXCEPTION
     WHEN NO_DATA_FOUND THEN
         NULL;

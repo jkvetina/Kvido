@@ -322,19 +322,19 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     PROCEDURE log_module (
         in_scheduler_id     debug_log.log_id%TYPE
     ) AS
-        user_id             debug_log.user_id%TYPE;
-        action_name         debug_log.action_name%TYPE;
-        --
+        rec_user_id         debug_log.user_id%TYPE;
+        rec_action_name     debug_log.action_name%TYPE;
+        rec_contexts        debug_log.contexts%TYPE;
         out_log_id          debug_log.log_id%TYPE;
     BEGIN
-        SELECT e.user_id, e.action_name
-        INTO user_id, action_name
+        SELECT e.user_id, e.action_name, e.contexts
+        INTO rec_user_id, rec_action_name, rec_contexts
         FROM debug_log e
         WHERE e.log_id = in_scheduler_id;
-        --
-        ctx.load_contexts (  -- everything called in this procedure has wrong/empty parent_id
-            in_user_id => user_id
-        );
+
+        -- recover app context values from log and set user
+        ctx.apply_contexts(rec_contexts);
+        ctx.set_user_id(rec_user_id);
 
         -- create log as the last action in this procedure
         out_log_id := bug.log__ (
@@ -912,6 +912,11 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
         -- add context values
         IF SQLCODE != 0 OR INSTR(bug.track_contexts, rec.flag) > 0 OR bug.track_contexts = '%' THEN
+            rec.contexts := SUBSTR(ctx.get_payload(), 1, bug.length_contexts);
+        END IF;
+
+        -- store current contexts before running scheduler
+        IF rec.flag = bug.flag_scheduler THEN
             rec.contexts := SUBSTR(ctx.get_payload(), 1, bug.length_contexts);
         END IF;
 
