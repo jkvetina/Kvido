@@ -1,5 +1,14 @@
 CREATE OR REPLACE PACKAGE BODY ctx AS
 
+    /**
+     * This package is part of the BUG project under MIT licence.
+     * https://github.com/jkvetina/BUG/
+     *
+     * Copyright (c) Jan Kvetina, 2020
+     */
+
+
+
     PROCEDURE init AS
     BEGIN
         DBMS_SESSION.CLEAR_ALL_CONTEXT(ctx.app_namespace);
