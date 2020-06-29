@@ -13,6 +13,13 @@ CREATE OR REPLACE PACKAGE ctx AS
 
 
     --
+    -- Initialize session
+    --
+    PROCEDURE init;
+
+
+
+    --
     -- Returns application id from APEX
     --
     FUNCTION get_app_id

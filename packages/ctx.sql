@@ -1,5 +1,18 @@
 CREATE OR REPLACE PACKAGE BODY ctx AS
 
+    PROCEDURE init AS
+    BEGIN
+        DBMS_SESSION.CLEAR_ALL_CONTEXT(ctx.app_namespace);
+        DBMS_SESSION.CLEAR_IDENTIFIER();
+        --
+        DBMS_APPLICATION_INFO.SET_MODULE (
+            module_name => NULL,
+            action_name => NULL
+        ); 
+    END;
+
+
+
     FUNCTION get_app_id
     RETURN debug_log.app_id%TYPE AS
     BEGIN
