@@ -18,6 +18,7 @@ CREATE OR REPLACE PACKAGE bug AS
     flag_query              CONSTANT debug_log.flag%TYPE    := 'Q';     -- query with binded values appended via job/trigger
     flag_longops            CONSTANT debug_log.flag%TYPE    := 'L';     -- longops row
     flag_scheduler          CONSTANT debug_log.flag%TYPE    := 'S';     -- scheduler run planned
+    flag_context            CONSTANT debug_log.flag%TYPE    := 'X';     -- CTX package calls (so you can ignore them)
 
     -- specify maximum length for trim
     length_action           CONSTANT PLS_INTEGER            := 48;      -- debug_log.action%TYPE
@@ -26,8 +27,8 @@ CREATE OR REPLACE PACKAGE bug AS
     length_contexts         CONSTANT PLS_INTEGER            := 1000;    -- debug_log.contexts%TYPE
 
     -- append callstack for these flags; % for all
-    track_callstack         CONSTANT VARCHAR2(30)           := flag_error || flag_warning || flag_module || flag_result;
-    track_contexts          CONSTANT VARCHAR2(30)           := flag_error || flag_warning || flag_module || flag_result;
+    track_callstack         CONSTANT VARCHAR2(30)           := flag_error || flag_warning || flag_module || flag_result || flag_context;
+    track_contexts          CONSTANT VARCHAR2(30)           := flag_error || flag_warning || flag_module || flag_result || flag_context;
 
     -- arguments separator
     splitter                CONSTANT CHAR                   := '|';

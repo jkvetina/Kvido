@@ -13,7 +13,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     --
     fn_log_module       CONSTANT debug_log.module_name%TYPE     := 'BUG.LOG_MODULE';  -- $$PLSQL_UNIT
     fn_log_action       CONSTANT debug_log.module_name%TYPE     := 'BUG.LOG_ACTION';
-    fn_update_timer     CONSTANT debug_log.module_name%TYPE     := 'BUG.UPDATE_TIMER';
+
+    -- module_name LIKE to switch flag_module to flag_context
+    trigger_ctx         CONSTANT debug_log.module_name%TYPE     := 'CTX.%';
 
     -- arrays to specify adhoc requests
     TYPE arr_tracking IS VARRAY(20) OF debug_log_tracking%ROWTYPE;
@@ -336,9 +338,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
         -- create log as the last action in this procedure
         out_log_id := bug.log__ (
-            in_action_name  => action_name,
-            in_flag         => bug.flag_module,  -- keep M flag here for children calls
-            in_arguments    => action_name || '_' || in_scheduler_id,
+            in_action_name  => rec_action_name,
+            in_flag         => bug.flag_module,
+            in_arguments    => rec_action_name || '_' || in_scheduler_id,
             in_parent_id    => in_scheduler_id
         );
     END;
@@ -842,15 +844,22 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END IF;
 
         -- get user and update session info
-        rec.user_id := ctx.get_user_id();
+        rec.user_id         := ctx.get_user_id();
+        rec.flag            := COALESCE(in_flag, '?');
+        --
         bug.set_session (
             in_user_id      => rec.user_id,
             in_module_name  => rec.module_name,
             in_action_name  => NVL(in_action_name, rec.module_line)
         );
 
+        -- override flag for CTX package calls
+        IF rec.module_name LIKE trigger_ctx AND rec.flag = bug.flag_module THEN
+            rec.flag := bug.flag_context;
+        END IF;
+
         -- force log errors
-        IF SQLCODE != 0 OR in_flag IN (bug.flag_error, bug.flag_warning) THEN
+        IF SQLCODE != 0 OR rec.flag IN (bug.flag_error, bug.flag_warning) THEN
             whitelisted := TRUE;
         END IF;
 
@@ -861,7 +870,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 --
                 IF rec.user_id              LIKE rows_whitelist(i).user_id
                     AND rec.module_name     LIKE rows_whitelist(i).module_name
-                    AND in_flag             LIKE rows_whitelist(i).flag
+                    AND rec.flag            LIKE rows_whitelist(i).flag
                 THEN
                     whitelisted := TRUE;
                 END IF;
@@ -875,7 +884,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 --
                 IF rec.user_id              LIKE rows_blacklist(i).user_id
                     AND rec.module_name     LIKE rows_blacklist(i).module_name
-                    AND in_flag             LIKE rows_blacklist(i).flag
+                    AND rec.flag            LIKE rows_blacklist(i).flag
                 THEN
                     blacklisted := TRUE;
                 END IF;
@@ -893,7 +902,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         -- prepare record
         rec.app_id          := ctx.get_app_id();
         rec.page_id         := ctx.get_page_id();
-        rec.flag            := COALESCE(in_flag, '?');
         rec.action_name     := SUBSTR(NVL(in_action_name, bug.empty_action), 1, bug.length_action);
         rec.arguments       := SUBSTR(in_arguments, 1, bug.length_arguments);
         rec.message         := SUBSTR(in_message,   1, bug.length_message);  -- may be overwritten later
