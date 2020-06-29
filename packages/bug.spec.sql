@@ -138,7 +138,7 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     -- Return detailed info about caller
     --
-    PROCEDURE get_caller_info (
+    PROCEDURE get_caller (
         out_module_name     OUT debug_log.module_name%TYPE,
         out_module_line     OUT debug_log.module_line%TYPE,
         out_module_depth    OUT debug_log.module_depth%TYPE,
@@ -150,7 +150,7 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     -- Store log_id for current module
     --
-    PROCEDURE set_caller_module (
+    PROCEDURE update_map (
         in_map_index    debug_log.module_name%TYPE,
         in_log_id       debug_log.log_id%TYPE
     );
@@ -160,7 +160,7 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     -- Update DBMS_SESSION and DBMS_APPLICATION_INFO with current module and action
     --
-    PROCEDURE set_session (
+    PROCEDURE update_session (
         in_user_id          debug_log.user_id%TYPE,
         in_module_name      debug_log.module_name%TYPE,
         in_action_name      debug_log.action_name%TYPE
@@ -476,6 +476,15 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
+    -- Update progress for LONGOPS
+    --
+    PROCEDURE log_progress (
+        in_progress         NUMBER := NULL  -- in percent (0-1)
+    );
+
+
+
+    --
     -- Internal function which creates records in logs table; returns assigned log_id
     --
     FUNCTION log__ (
@@ -548,15 +557,6 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     PROCEDURE update_timer (
         in_log_id           debug_log.log_id%TYPE := NULL
-    );
-
-
-
-    --
-    -- Update progress for LONGOPS
-    --
-    PROCEDURE update_progress (
-        in_progress         NUMBER := NULL  -- in percent (0-1)
     );
 
 

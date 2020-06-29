@@ -197,7 +197,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
-    PROCEDURE get_caller_info (
+    PROCEDURE get_caller (
         out_module_name     OUT debug_log.module_name%TYPE,
         out_module_line     OUT debug_log.module_line%TYPE,
         out_module_depth    OUT debug_log.module_depth%TYPE,
@@ -225,7 +225,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
                 -- create child
                 IF curr_module IN (fn_log_module, fn_log_action) THEN
-                    set_caller_module (
+                    bug.update_map (
                         in_map_index    => curr_index,
                         in_log_id       => recent_log_id
                     );
@@ -251,7 +251,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
-    PROCEDURE set_caller_module (
+    PROCEDURE update_map (
         in_map_index    debug_log.module_name%TYPE,
         in_log_id       debug_log.log_id%TYPE
     ) AS
@@ -261,7 +261,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
-    PROCEDURE set_session (
+    PROCEDURE update_session (
         in_user_id          debug_log.user_id%TYPE,
         in_module_name      debug_log.module_name%TYPE,
         in_action_name      debug_log.action_name%TYPE
@@ -614,7 +614,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         out_log_id      debug_log.log_id%TYPE;
         out_action      debug_log.action_name%TYPE;
     BEGIN
-        out_action := COALESCE(in_action, bug.get_caller_name(1), 'UNEXPECTED_ERROR');
+        out_action := COALESCE(in_action, bug.get_caller_name(), 'UNEXPECTED_ERROR');
         out_log_id := bug.log_error (
             in_action   => out_action,
             in_arg1     => in_arg1,
@@ -817,6 +817,79 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
+    PROCEDURE log_progress (
+        in_progress         NUMBER := NULL
+    ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+        --
+        slno                BINARY_INTEGER;
+        rec                 debug_log%ROWTYPE;
+    BEGIN
+        bug.get_caller (   -- basically who called this
+            out_module_name     => rec.module_name,
+            out_module_line     => rec.module_line,
+            out_module_depth    => rec.module_depth,
+            out_parent_id       => rec.log_parent
+        );
+
+        -- find longops record
+        IF NVL(in_progress, 0) = 0 THEN
+            -- first visit
+            SELECT e.* INTO rec
+            FROM debug_log e
+            WHERE e.log_id = rec.log_parent;
+            --
+            rec.scn             := DBMS_APPLICATION_INFO.SET_SESSION_LONGOPS_NOHINT;
+            rec.log_parent      := rec.log_id;  -- create fresh child
+            rec.log_id          := log_id.NEXTVAL;
+            rec.flag            := bug.flag_longops;
+            --
+            INSERT INTO debug_log
+            VALUES rec;
+        ELSE
+            SELECT e.* INTO rec
+            FROM debug_log e
+            WHERE e.log_parent  = rec.log_parent
+                AND e.flag      = bug.flag_longops;
+        END IF;
+
+        -- update progress for system views
+        DBMS_APPLICATION_INFO.SET_SESSION_LONGOPS (
+            rindex          => rec.scn,
+            slno            => slno,
+            op_name         => rec.module_name,     -- 64 chars
+            target_desc     => rec.action_name,     -- 32 chars
+            context         => rec.log_id,
+            sofar           => NVL(in_progress, 0),
+            totalwork       => 1,                   -- 1 = 100%
+            units           => '%'
+        );
+
+        -- calculate time spend since start
+        rec.timer :=
+            LPAD(EXTRACT(HOUR   FROM LOCALTIMESTAMP - rec.created_at), 2, '0') || ':' ||
+            LPAD(EXTRACT(MINUTE FROM LOCALTIMESTAMP - rec.created_at), 2, '0') || ':' ||
+            RPAD(REGEXP_REPLACE(
+                REGEXP_REPLACE(EXTRACT(SECOND FROM LOCALTIMESTAMP - rec.created_at), '^[\.,]', '00,'),
+                '^(\d)[\.,]', '0\1,'
+            ), 9, '0');
+
+        -- update progress in log
+        UPDATE debug_log e
+        SET e.scn           = rec.scn,
+            e.arguments     = ROUND(in_progress * 100, 2) || '%',
+            e.timer         = rec.timer
+        WHERE e.log_id      = rec.log_id;
+        --
+        COMMIT;
+    EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+    END;
+
+
+
     FUNCTION log__ (
         in_action_name      debug_log.action_name%TYPE,
         in_flag             debug_log.flag%TYPE,
@@ -841,7 +914,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         rec.log_id              := log_id.NEXTVAL;
         recent_log_id           := rec.log_id;
         --
-        bug.get_caller_info (   -- basically who called this
+        bug.get_caller (   -- basically who called this
             out_module_name     => rec.module_name,
             out_module_line     => rec.module_line,
             out_module_depth    => rec.module_depth,
@@ -856,7 +929,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         rec.user_id         := ctx.get_user_id();
         rec.flag            := COALESCE(in_flag, '?');
         --
-        bug.set_session (
+        bug.update_session (
             in_user_id      => rec.user_id,
             in_module_name  => rec.module_name,
             in_action_name  => NVL(in_action_name, rec.module_line)
@@ -1066,7 +1139,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         rec                 debug_log%ROWTYPE;
     BEGIN
         IF in_log_id IS NULL THEN
-            bug.get_caller_info (   -- basically who called this
+            bug.get_caller (   -- basically who called this
                 out_module_name     => rec.module_name,
                 out_module_line     => rec.module_line,
                 out_module_depth    => rec.module_depth,
@@ -1083,79 +1156,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 '^(\d)[\.,]', '0\1,'
             ), 9, '0')
         WHERE e.log_id = NVL(in_log_id, rec.log_parent);
-        --
-        COMMIT;
-    EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        RAISE;
-    END;
-
-
-
-    PROCEDURE update_progress (
-        in_progress         NUMBER := NULL
-    ) AS
-        PRAGMA AUTONOMOUS_TRANSACTION;
-        --
-        slno                BINARY_INTEGER;
-        rec                 debug_log%ROWTYPE;
-    BEGIN
-        bug.get_caller_info (   -- basically who called this
-            out_module_name     => rec.module_name,
-            out_module_line     => rec.module_line,
-            out_module_depth    => rec.module_depth,
-            out_parent_id       => rec.log_parent
-        );
-
-        -- find longops record
-        IF NVL(in_progress, 0) = 0 THEN
-            -- first visit
-            SELECT e.* INTO rec
-            FROM debug_log e
-            WHERE e.log_id = rec.log_parent;
-            --
-            rec.scn             := DBMS_APPLICATION_INFO.SET_SESSION_LONGOPS_NOHINT;
-            rec.log_parent      := rec.log_id;  -- create fresh child
-            rec.log_id          := log_id.NEXTVAL;
-            rec.flag            := bug.flag_longops;
-            --
-            INSERT INTO debug_log
-            VALUES rec;
-        ELSE
-            SELECT e.* INTO rec
-            FROM debug_log e
-            WHERE e.log_parent  = rec.log_parent
-                AND e.flag      = bug.flag_longops;
-        END IF;
-
-        -- update progress for system views
-        DBMS_APPLICATION_INFO.SET_SESSION_LONGOPS (
-            rindex          => rec.scn,
-            slno            => slno,
-            op_name         => rec.module_name,     -- 64 chars
-            target_desc     => rec.action_name,     -- 32 chars
-            context         => rec.log_id,
-            sofar           => NVL(in_progress, 0),
-            totalwork       => 1,                   -- 1 = 100%
-            units           => '%'
-        );
-
-        -- calculate time spend since start
-        rec.timer :=
-            LPAD(EXTRACT(HOUR   FROM LOCALTIMESTAMP - rec.created_at), 2, '0') || ':' ||
-            LPAD(EXTRACT(MINUTE FROM LOCALTIMESTAMP - rec.created_at), 2, '0') || ':' ||
-            RPAD(REGEXP_REPLACE(
-                REGEXP_REPLACE(EXTRACT(SECOND FROM LOCALTIMESTAMP - rec.created_at), '^[\.,]', '00,'),
-                '^(\d)[\.,]', '0\1,'
-            ), 9, '0');
-
-        -- update progress in log
-        UPDATE debug_log e
-        SET e.scn           = rec.scn,
-            e.arguments     = ROUND(in_progress * 100, 2) || '%',
-            e.timer         = rec.timer
-        WHERE e.log_id      = rec.log_id;
         --
         COMMIT;
     EXCEPTION
