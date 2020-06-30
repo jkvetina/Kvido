@@ -932,7 +932,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         bug.update_session (
             in_user_id      => rec.user_id,
             in_module_name  => rec.module_name,
-            in_action_name  => NVL(in_action_name, rec.module_line)
+            in_action_name  => NVL(in_action_name, rec.module_name || bug.splitter || rec.module_line)
         );
 
         -- override flag for CTX package calls
@@ -1185,7 +1185,114 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     FUNCTION get_dml_tracker
     RETURN VARCHAR2 AS
     BEGIN
-        RETURN recent_log_id || ' ' || bug.get_caller_name();
+        RETURN recent_log_id;
+    END;
+
+
+
+    PROCEDURE drop_dml_tables (
+        in_table_like       VARCHAR2
+    ) AS
+    BEGIN
+        FOR c IN (
+            SELECT t.owner, t.table_name
+            FROM all_tables t
+            WHERE t.owner           = bug.dml_tables_owner
+                AND t.table_name    LIKE in_table_like
+                AND t.table_name    LIKE '%' || bug.dml_tables_postfix
+        ) LOOP
+            bug.log_debug(c.table_name, c.owner);
+            --
+            EXECUTE IMMEDIATE
+                'DROP TABLE ' || c.owner || '.' || c.table_name || ' PURGE';
+        END LOOP;
+    END;
+
+
+
+    PROCEDURE create_dml_tables (
+        in_table_like       VARCHAR2
+    ) AS
+    BEGIN
+        bug.log_module(in_table_like);
+
+        -- create DML log tables for all tables
+        FOR c IN (
+            SELECT
+                t.table_name                            AS data_table,
+                t.table_name || bug.dml_tables_postfix  AS error_table
+            FROM user_tables t
+            WHERE t.table_name LIKE in_table_like
+        ) LOOP
+            bug.drop_dml_tables(c.error_table);
+            bug.log_debug(c.data_table, c.error_table);
+            --
+            DBMS_ERRLOG.CREATE_ERROR_LOG (
+                dml_table_name          => USER || '.' || c.data_table,
+                err_log_table_owner     => bug.dml_tables_owner,
+                err_log_table_name      => c.error_table,
+                skip_unsupported        => TRUE
+            );
+            --
+            IF bug.dml_tables_owner != USER THEN
+                EXECUTE IMMEDIATE
+                    'GRANT ALL ON ' || bug.dml_tables_owner || '.' || c.error_table ||
+                    ' TO ' || USER;
+            END IF;
+        END LOOP;
+    END;
+
+
+
+    PROCEDURE create_dml_errors_view
+    AS
+        q_block     VARCHAR2(32767);
+        q           CLOB;
+    BEGIN
+        DBMS_LOB.CREATETEMPORARY(q, TRUE);
+
+        -- create header with correct data types
+        q_block :=
+            'CREATE OR REPLACE VIEW ' || 'debug_log_dml_errors' ||
+            ' (log_id, action, table_name, new_rowid, old_rowid, err_message) AS' || CHR(10) ||
+            'SELECT 0, ''-'', ''-'', ROWID, ''UROWID'', ''-''' || CHR(10) ||
+            'FROM DUAL' || CHR(10) ||
+            'WHERE ROWNUM = 0' || CHR(10) ||
+            '--' || CHR(10) ||
+            '-- THIS VIEW IS GENERATED' || CHR(10) ||
+            '--' || CHR(10);
+        --
+        DBMS_LOB.WRITEAPPEND(q, LENGTH(q_block), q_block);
+        q_block := '';
+
+        -- append all existing tables
+        FOR c IN (
+            SELECT
+                RTRIM(t.table_name, bug.dml_tables_postfix) AS data_table,
+                t.owner || '.' || t.table_name              AS error_table
+            FROM all_tables t
+            WHERE t.owner           = bug.dml_tables_owner
+                AND t.table_name    LIKE '%' || dml_tables_postfix
+            ORDER BY 1
+        ) LOOP
+            q_block := 'UNION ALL' || CHR(10);
+            q_block := q_block || 'SELECT' || CHR(10);
+            q_block := q_block || '    TO_NUMBER(REGEXP_SUBSTR(e.ora_err_tag$, ''^(\d+)'') DEFAULT 0 ON CONVERSION ERROR),' || CHR(10);
+            q_block := q_block || '    e.ora_err_optyp$,' || CHR(10);
+            q_block := q_block || '    ''' || c.data_table || ''',' || CHR(10);
+            q_block := q_block || '    e.ROWID,' || CHR(10);
+            q_block := q_block || '    CAST(e.ora_err_rowid$ AS VARCHAR2(30)),' || CHR(10);
+            q_block := q_block || '    e.ora_err_mesg$' || CHR(10);
+            q_block := q_block || 'FROM ' || c.error_table || ' e' || CHR(10);
+            --
+            DBMS_LOB.WRITEAPPEND(q, LENGTH(q_block), q_block);
+            q_block := '';
+        END LOOP;
+        --
+        EXECUTE IMMEDIATE q;
+    EXCEPTION
+    WHEN OTHERS THEN
+        bug.raise_error();
     END;
 
 

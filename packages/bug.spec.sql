@@ -47,6 +47,10 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     PRAGMA EXCEPTION_INIT(app_exception, app_exception_code);
 
+    -- owner of DML error tables
+    dml_tables_owner        CONSTANT VARCHAR2(30)           := USER;
+    dml_tables_postfix      CONSTANT VARCHAR2(30)           := '_E$';
+
 
 
     --
@@ -576,6 +580,31 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     FUNCTION get_dml_tracker
     RETURN VARCHAR2;
+
+
+
+    --
+    --
+    --
+    PROCEDURE drop_dml_tables (
+        in_table_like       VARCHAR2
+    );
+
+
+
+    --
+    --
+    --
+    PROCEDURE create_dml_tables (
+        in_table_like       VARCHAR2
+    );
+
+
+
+    --
+    --
+    --
+    PROCEDURE create_dml_errors_view;
 
 
 
