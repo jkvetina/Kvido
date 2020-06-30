@@ -592,8 +592,8 @@ CREATE OR REPLACE PACKAGE bug AS
     FUNCTION get_dml_query (
         in_log_id           debug_log.log_id%TYPE,
         in_table_name       debug_log.module_name%TYPE,
-        in_action           CHAR,  -- [I|U|D]
-        in_old_rowid        VARCHAR2
+        in_table_rowid      VARCHAR2,
+        in_action           CHAR  -- [I|U|D]
     )
     RETURN debug_log_lobs.payload_clob%TYPE;
 

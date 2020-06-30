@@ -1193,8 +1193,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     FUNCTION get_dml_query (
         in_log_id           debug_log.log_id%TYPE,
         in_table_name       debug_log.module_name%TYPE,
-        in_action           CHAR,  -- [I|U|D]
-        in_old_rowid        VARCHAR2
+        in_table_rowid      VARCHAR2,
+        in_action           CHAR  -- [I|U|D]
     )
     RETURN debug_log_lobs.payload_clob%TYPE
     AS
@@ -1216,17 +1216,17 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             'SELECT' || CHR(10) ||
             LISTAGG('    ''' || p.value || ''' AS ' || LOWER(p.name), ',' || CHR(10) ON OVERFLOW TRUNCATE)
                 WITHIN GROUP (ORDER BY p.pos) || ',' || CHR(10) ||
-            '    ''' || in_old_rowid || ''' AS rid' || CHR(10) ||
+            '    ''' || in_table_rowid || ''' AS rid' || CHR(10) ||
             'FROM DUAL' || CHR(10) ||
             --
-            CASE WHEN in_old_rowid IS NOT NULL THEN
+            CASE WHEN in_table_rowid IS NOT NULL THEN
                 'UNION ALL' || CHR(10) ||
                 'SELECT' || CHR(10) ||
                 LISTAGG('    TO_CHAR(' || LOWER(p.name), '),' || CHR(10) ON OVERFLOW TRUNCATE)
                     WITHIN GROUP (ORDER BY p.pos) || '),' || CHR(10) ||
                 '    ''^'' AS rid' || CHR(10) ||  -- remove ROWID to match only on 1 row
                 'FROM ' || LOWER(in_table_name) || CHR(10) ||
-                'WHERE ROWID = ''' || in_old_rowid || ''''
+                'WHERE ROWID = ''' || in_table_rowid || ''''
                 END || CHR(10) ||
             --
             ') s ON (s.rid = t.ROWID)' || CHR(10) ||
@@ -1283,8 +1283,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             payload := bug.get_dml_query (
                 in_log_id       => c.log_id,
                 in_table_name   => c.table_name,
-                in_action       => c.action,
-                in_old_rowid    => c.old_rowid
+                in_table_rowid  => c.table_rowid,
+                in_action       => c.action
             );
     
             -- store it in LOB table
@@ -1308,18 +1308,22 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         in_table_like       debug_log.module_name%TYPE
     ) AS
     BEGIN
+        bug.log_module(in_table_like);
+        --
         FOR c IN (
             SELECT t.owner, t.table_name
             FROM all_tables t
             WHERE t.owner           = bug.dml_tables_owner
-                AND t.table_name    LIKE in_table_like
-                AND t.table_name    LIKE '%' || bug.dml_tables_postfix
+                AND t.table_name    LIKE in_table_like || bug.dml_tables_postfix
         ) LOOP
             bug.log_debug(c.table_name, c.owner);
             --
             EXECUTE IMMEDIATE
                 'DROP TABLE ' || c.owner || '.' || c.table_name || ' PURGE';
         END LOOP;
+
+        -- refresh view
+        bug.create_dml_errors_view();
     END;
 
 
@@ -1330,6 +1334,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     BEGIN
         bug.log_module(in_table_like);
 
+        -- drop tables first
+        bug.drop_dml_tables(in_table_like);
+
         -- create DML log tables for all tables
         FOR c IN (
             SELECT
@@ -1338,7 +1345,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             FROM user_tables t
             WHERE t.table_name LIKE in_table_like
         ) LOOP
-            bug.drop_dml_tables(c.error_table);
             bug.log_debug(c.data_table, c.error_table);
             --
             DBMS_ERRLOG.CREATE_ERROR_LOG (
@@ -1354,6 +1360,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                     ' TO ' || USER;
             END IF;
         END LOOP;
+
+        -- refresh view
+        bug.create_dml_errors_view();
     END;
 
 
@@ -1368,8 +1377,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         -- create header with correct data types
         q_block :=
             'CREATE OR REPLACE VIEW ' || bug.view_dml_errors ||
-            ' (log_id, action, table_name, new_rowid, old_rowid, err_message) AS' || CHR(10) ||
-            'SELECT 0, ''-'', ''-'', ROWID, ''UROWID'', ''-''' || CHR(10) ||
+            ' (log_id, action, table_name, table_rowid, dml_rowid, err_message) AS' || CHR(10) ||
+            'SELECT 0, ''-'', ''-'', ''UROWID'', ROWID, ''-''' || CHR(10) ||
             'FROM DUAL' || CHR(10) ||
             'WHERE ROWNUM = 0' || CHR(10) ||
             '--' || CHR(10) ||
@@ -1394,8 +1403,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             q_block := q_block || '    TO_NUMBER(REGEXP_SUBSTR(e.ora_err_tag$, ''^(\d+)'') DEFAULT 0 ON CONVERSION ERROR),' || CHR(10);
             q_block := q_block || '    e.ora_err_optyp$,' || CHR(10);
             q_block := q_block || '    ''' || c.data_table || ''',' || CHR(10);
-            q_block := q_block || '    e.ROWID,' || CHR(10);
             q_block := q_block || '    CAST(e.ora_err_rowid$ AS VARCHAR2(30)),' || CHR(10);
+            q_block := q_block || '    e.ROWID,' || CHR(10);
             q_block := q_block || '    e.ora_err_mesg$' || CHR(10);
             q_block := q_block || 'FROM ' || c.error_table || ' e' || CHR(10);
             --
