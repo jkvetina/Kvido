@@ -1190,8 +1190,122 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
+    FUNCTION get_dml_query (
+        in_log_id           debug_log.log_id%TYPE,
+        in_table_name       debug_log.module_name%TYPE,
+        in_action           CHAR,  -- [I|U|D]
+        in_old_rowid        VARCHAR2
+    )
+    RETURN debug_log_lobs.payload_clob%TYPE
+    AS
+        out_query           VARCHAR2(32767);
+        in_cursor           SYS_REFCURSOR;
+    BEGIN
+        -- prepare cursor for XML conversion and extraction
+        OPEN in_cursor FOR
+            'SELECT * FROM ' || bug.dml_tables_owner || '.' || in_table_name || bug.dml_tables_postfix ||
+            ' WHERE ora_err_tag$ = ' || in_log_id;
+
+        -- build query the way you can run it again manually or run just inner select to view passed values
+        -- to see dates properly setup nls_date_format first
+        -- ALTER SESSION SET nls_date_format = 'YYYY-MM-DD HH24:MI:SS';
+        SELECT
+            'MERGE INTO ' || LOWER(in_table_name) || ' t' || CHR(10) ||
+            'USING (' || CHR(10) ||
+            --
+            'SELECT' || CHR(10) ||
+            LISTAGG('    ''' || p.value || ''' AS ' || LOWER(p.name), ',' || CHR(10) ON OVERFLOW TRUNCATE)
+                WITHIN GROUP (ORDER BY p.pos) || ',' || CHR(10) ||
+            '    ''' || in_old_rowid || ''' AS rid' || CHR(10) ||
+            'FROM DUAL' || CHR(10) ||
+            --
+            CASE WHEN in_old_rowid IS NOT NULL THEN
+                'UNION ALL' || CHR(10) ||
+                'SELECT' || CHR(10) ||
+                LISTAGG('    TO_CHAR(' || LOWER(p.name), '),' || CHR(10) ON OVERFLOW TRUNCATE)
+                    WITHIN GROUP (ORDER BY p.pos) || '),' || CHR(10) ||
+                '    ''^'' AS rid' || CHR(10) ||  -- remove ROWID to match only on 1 row
+                'FROM ' || LOWER(in_table_name) || CHR(10) ||
+                'WHERE ROWID = ''' || in_old_rowid || ''''
+                END || CHR(10) ||
+            --
+            ') s ON (s.rid = t.ROWID)' || CHR(10) ||
+            --
+            CASE in_action
+                WHEN 'U' THEN
+                    'WHEN MATCHED' || CHR(10) ||
+                    'THEN UPDATE SET' || CHR(10) ||
+                    LISTAGG('    t.' || LOWER(p.name) || ' = s.' || LOWER(p.name), ',' || CHR(10) ON OVERFLOW TRUNCATE)
+                        WITHIN GROUP (ORDER BY p.pos)
+                WHEN 'I' THEN
+                    'WHEN NOT MATCHED' || CHR(10) ||
+                    'THEN INSERT (' || CHR(10) ||
+                    LISTAGG('t.' || LOWER(p.name), ', ' || CHR(10) ON OVERFLOW TRUNCATE)
+                        WITHIN GROUP (ORDER BY p.pos) || CHR(10) || ')' || CHR(10) ||
+                    'VALUES (' || CHR(10) ||
+                    LISTAGG('''' || p.value || '''', ',' || CHR(10) ON OVERFLOW TRUNCATE)
+                        WITHIN GROUP (ORDER BY p.pos) || CHR(10) || ')'
+            END || ';'
+        INTO out_query
+        FROM (
+            SELECT
+                VALUE(p).GETROOTELEMENT()       AS name,
+                EXTRACTVALUE(VALUE(p), '/*')    AS value,
+                c.column_id                     AS pos
+            FROM TABLE(XMLSEQUENCE(EXTRACT(XMLTYPE.CREATEXML(in_cursor), '//ROWSET/ROW/*'))) p
+            JOIN user_tab_cols c
+                ON c.table_name     = in_table_name
+                AND c.column_name   = VALUE(p).GETROOTELEMENT()
+            ORDER BY c.column_id
+        ) p;
+        --
+        CLOSE in_cursor;
+        --
+        RETURN out_query;
+    END;
+
+
+
+    PROCEDURE process_dml_errors (
+        in_table_like       debug_log.module_name%TYPE := NULL
+    ) AS
+        payload             debug_log_lobs.payload_clob%TYPE;
+    BEGIN
+        FOR c IN (
+            SELECT e.*,
+                bug.dml_tables_owner || '.' || e.table_name || bug.dml_tables_postfix AS error_table
+            FROM debug_log_dml_errors e
+            JOIN debug_log d
+                ON d.log_id     = e.log_id
+            WHERE e.table_name  LIKE NVL(in_table_like, '%')
+        ) LOOP
+            -- prepare query
+            payload := bug.get_dml_query (
+                in_log_id       => c.log_id,
+                in_table_name   => c.table_name,
+                in_action       => c.action,
+                in_old_rowid    => c.old_rowid
+            );
+    
+            -- store it in LOB table
+            bug.attach_clob (
+                in_payload      => payload,
+                in_lob_name     => 'DML_ERROR',
+                in_log_id       => c.log_id
+            );
+    
+            -- remove from DML ERR table
+            EXECUTE IMMEDIATE
+                'DELETE FROM ' || c.error_table ||
+                ' WHERE ora_err_tag$ = ' || c.log_id;
+        END LOOP;
+    END;
+    
+
+
+
     PROCEDURE drop_dml_tables (
-        in_table_like       VARCHAR2
+        in_table_like       debug_log.module_name%TYPE
     ) AS
     BEGIN
         FOR c IN (
@@ -1211,7 +1325,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
     PROCEDURE create_dml_tables (
-        in_table_like       VARCHAR2
+        in_table_like       debug_log.module_name%TYPE
     ) AS
     BEGIN
         bug.log_module(in_table_like);
@@ -1253,7 +1367,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
         -- create header with correct data types
         q_block :=
-            'CREATE OR REPLACE VIEW ' || 'debug_log_dml_errors' ||
+            'CREATE OR REPLACE VIEW ' || bug.view_dml_errors ||
             ' (log_id, action, table_name, new_rowid, old_rowid, err_message) AS' || CHR(10) ||
             'SELECT 0, ''-'', ''-'', ROWID, ''UROWID'', ''-''' || CHR(10) ||
             'FROM DUAL' || CHR(10) ||

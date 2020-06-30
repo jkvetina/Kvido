@@ -7,6 +7,9 @@ CREATE OR REPLACE PACKAGE bug AS
     table_name              CONSTANT VARCHAR2(30)           := 'DEBUG_LOG';     -- used in purge_old
     table_rows_max_age      CONSTANT PLS_INTEGER            := 14;              -- max logs age in days
 
+    -- view which holds all DML errors
+    view_dml_errors         CONSTANT VARCHAR2(30)           := 'DEBUG_LOG_DML_ERRORS';
+
     -- flags
     flag_module             CONSTANT debug_log.flag%TYPE    := 'M';     -- start of any module (procedure/function)
     flag_action             CONSTANT debug_log.flag%TYPE    := 'A';     -- actions to distinguish different parts of code in longer modules
@@ -584,25 +587,47 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
+    -- Converts record from DML ERR table to MERGE query
     --
+    FUNCTION get_dml_query (
+        in_log_id           debug_log.log_id%TYPE,
+        in_table_name       debug_log.module_name%TYPE,
+        in_action           CHAR,  -- [I|U|D]
+        in_old_rowid        VARCHAR2
+    )
+    RETURN debug_log_lobs.payload_clob%TYPE;
+
+
+
+    --
+    -- Link errors stored in all DML ERR tables to thei respective log_id records
+    --
+    PROCEDURE process_dml_errors (
+        in_table_like       debug_log.module_name%TYPE := NULL
+    );
+
+
+
+    --
+    -- Drop DML ERR tables matching in_table_like filter
     --
     PROCEDURE drop_dml_tables (
-        in_table_like       VARCHAR2
+        in_table_like       debug_log.module_name%TYPE
     );
 
 
 
     --
-    --
+    -- Recreate DML ERR tables matching in_table_like filter
     --
     PROCEDURE create_dml_tables (
-        in_table_like       VARCHAR2
+        in_table_like       debug_log.module_name%TYPE
     );
 
 
 
     --
-    --
+    -- Merge all DML ERR tables into single view
     --
     PROCEDURE create_dml_errors_view;
 
