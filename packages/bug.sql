@@ -1183,14 +1183,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
-    FUNCTION get_dml_tracker
-    RETURN VARCHAR2 AS
-    BEGIN
-        RETURN recent_log_id;
-    END;
-
-
-
     FUNCTION get_dml_query (
         in_log_id           debug_log.log_id%TYPE,
         in_table_name       debug_log.module_name%TYPE,
@@ -1214,23 +1206,23 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             'MERGE INTO ' || LOWER(in_table_name) || ' t' || CHR(10) ||
             'USING (' || CHR(10) ||
             --
-            'SELECT' || CHR(10) ||
-            LISTAGG('    ''' || p.value || ''' AS ' || LOWER(p.name), ',' || CHR(10) ON OVERFLOW TRUNCATE)
-                WITHIN GROUP (ORDER BY p.pos) || ',' || CHR(10) ||
-            '    ''' || in_table_rowid || ''' AS rid' || CHR(10) ||
-            'FROM DUAL' || CHR(10) ||
+            '    SELECT' || CHR(10) ||
+            LISTAGG('        ''' || p.value || ''' AS ' || LOWER(p.name) || p.data_type, CHR(10) ON OVERFLOW TRUNCATE)
+                WITHIN GROUP (ORDER BY p.pos) || CHR(10) ||
+            '        ''' || in_table_rowid || ''' AS rowid_' || CHR(10) ||
+            '    FROM DUAL' ||
             --
             CASE WHEN in_table_rowid IS NOT NULL THEN
-                'UNION ALL' || CHR(10) ||
-                'SELECT' || CHR(10) ||
-                LISTAGG('    TO_CHAR(' || LOWER(p.name), '),' || CHR(10) ON OVERFLOW TRUNCATE)
+                CHR(10) || '    UNION ALL' || CHR(10) ||
+                '    SELECT' || CHR(10) ||
+                LISTAGG('        TO_CHAR(' || LOWER(p.name), '),' || CHR(10) ON OVERFLOW TRUNCATE)
                     WITHIN GROUP (ORDER BY p.pos) || '),' || CHR(10) ||
-                '    ''^'' AS rid' || CHR(10) ||  -- remove ROWID to match only on 1 row
-                'FROM ' || LOWER(in_table_name) || CHR(10) ||
-                'WHERE ROWID = ''' || in_table_rowid || ''''
+                '        ''^'' AS rowid_' || CHR(10) ||  -- remove ROWID to match only on 1 row
+                '    FROM ' || LOWER(in_table_name) || CHR(10) ||
+                '    WHERE ROWID = ''' || in_table_rowid || ''''
                 END || CHR(10) ||
             --
-            ') s ON (s.rid = t.ROWID)' || CHR(10) ||
+            ') s ON (s.rowid_ = t.ROWID)' || CHR(10) ||
             --
             CASE in_action
                 WHEN 'U' THEN
@@ -1241,10 +1233,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 WHEN 'I' THEN
                     'WHEN NOT MATCHED' || CHR(10) ||
                     'THEN INSERT (' || CHR(10) ||
-                    LISTAGG('t.' || LOWER(p.name), ', ' || CHR(10) ON OVERFLOW TRUNCATE)
+                    LISTAGG('    t.' || LOWER(p.name), ',' || CHR(10) ON OVERFLOW TRUNCATE)
                         WITHIN GROUP (ORDER BY p.pos) || CHR(10) || ')' || CHR(10) ||
                     'VALUES (' || CHR(10) ||
-                    LISTAGG('''' || p.value || '''', ',' || CHR(10) ON OVERFLOW TRUNCATE)
+                    LISTAGG('    ''' || p.value || '''', ',' || CHR(10) ON OVERFLOW TRUNCATE)
                         WITHIN GROUP (ORDER BY p.pos) || CHR(10) || ')'
             END || ';'
         INTO out_query
@@ -1252,11 +1244,32 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             SELECT
                 VALUE(p).GETROOTELEMENT()       AS name,
                 EXTRACTVALUE(VALUE(p), '/*')    AS value,
-                c.column_id                     AS pos
+                c.column_id                     AS pos,
+                c.data_type
             FROM TABLE(XMLSEQUENCE(EXTRACT(XMLTYPE.CREATEXML(in_cursor), '//ROWSET/ROW/*'))) p
-            JOIN user_tab_cols c
-                ON c.table_name     = in_table_name
-                AND c.column_name   = VALUE(p).GETROOTELEMENT()
+            JOIN (
+                SELECT
+                    c.table_name, c.column_name, c.column_id,
+                    ',  -- ' || CASE
+                        WHEN c.data_type LIKE '%CHAR%' OR c.data_type = 'RAW' THEN
+                            c.data_type ||
+                            DECODE(NVL(c.char_length, 0), 0, '',
+                                '(' || c.char_length || DECODE(c.char_used, 'C', ' CHAR', '') || ')'
+                            )
+                        WHEN c.data_type = 'NUMBER' AND c.data_precision = 38 THEN 'INTEGER'
+                        WHEN c.data_type = 'NUMBER' THEN
+                            c.data_type ||
+                            DECODE(NVL(c.data_precision || c.data_scale, 0), 0, '',
+                                DECODE(NVL(c.data_scale, 0), 0, '(' || c.data_precision || ')',
+                                    '(' || c.data_precision || ',' || c.data_scale || ')'
+                                )
+                            )
+                        ELSE c.data_type
+                        END AS data_type
+                FROM user_tab_cols c
+                WHERE c.table_name = in_table_name
+            ) c
+                ON c.column_name = VALUE(p).GETROOTELEMENT()
             ORDER BY c.column_id
         ) p;
         --
@@ -1278,7 +1291,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             FROM debug_log_dml_errors e
             JOIN debug_log d
                 ON d.log_id     = e.log_id
-            WHERE e.table_name  LIKE NVL(in_table_like, '%')
+            WHERE e.table_name  LIKE NVL(UPPER(in_table_like), '%')
         ) LOOP
             -- prepare query
             payload := bug.get_dml_query (
@@ -1315,7 +1328,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             SELECT t.owner, t.table_name
             FROM all_tables t
             WHERE t.owner           = bug.dml_tables_owner
-                AND t.table_name    LIKE in_table_like || bug.dml_tables_postfix
+                AND t.table_name    LIKE UPPER(in_table_like) || bug.dml_tables_postfix
         ) LOOP
             bug.log_debug(c.table_name, c.owner);
             --
@@ -1334,8 +1347,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
     BEGIN
         bug.log_module(in_table_like);
+        -- process existing data first
+        bug.process_dml_errors(in_table_like);
 
-        -- drop tables first
+        -- drop existing tables
         bug.drop_dml_tables(in_table_like);
 
         -- create DML log tables for all tables
@@ -1344,7 +1359,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 t.table_name                            AS data_table,
                 t.table_name || bug.dml_tables_postfix  AS error_table
             FROM user_tables t
-            WHERE t.table_name LIKE in_table_like
+            WHERE t.table_name LIKE UPPER(in_table_like)
         ) LOOP
             bug.log_debug(c.data_table, c.error_table);
             --
@@ -1414,7 +1429,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         ) LOOP
             q_block := 'UNION ALL' || CHR(10);
             q_block := q_block || 'SELECT' || CHR(10);
-            q_block := q_block || '    TO_NUMBER(REGEXP_SUBSTR(e.ora_err_tag$, ''^(\d+)'') DEFAULT 0 ON CONVERSION ERROR),' || CHR(10);
+            q_block := q_block || '    TO_NUMBER(e.ora_err_tag$),' || CHR(10);
             q_block := q_block || '    e.ora_err_optyp$,' || CHR(10);
             q_block := q_block || '    ''' || c.data_table || ''',' || CHR(10);
             q_block := q_block || '    CAST(e.ora_err_rowid$ AS VARCHAR2(30)),' || CHR(10);

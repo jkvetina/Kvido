@@ -579,14 +579,6 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
-    -- Returns string to track down possible DML error; use in LOG ERROR INTO statements
-    --
-    FUNCTION get_dml_tracker
-    RETURN VARCHAR2;
-
-
-
-    --
     -- Converts record from DML ERR table to MERGE query
     --
     FUNCTION get_dml_query (
