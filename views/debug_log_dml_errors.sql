@@ -1,4 +1,6 @@
-CREATE OR REPLACE VIEW debug_log_dml_errors (log_id, action, table_name, table_rowid, dml_rowid, err_message) AS
+CREATE OR REPLACE VIEW debug_log_dml_errors (
+    log_id, action, table_name, table_rowid, dml_rowid, err_message
+) AS
 SELECT 0, '-', '-', 'UROWID', ROWID, '-'
 FROM DUAL
 --

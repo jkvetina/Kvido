@@ -927,7 +927,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
         -- get user and update session info
         rec.user_id         := ctx.get_user_id();
-        rec.flag            := COALESCE(in_flag, '?');
+        rec.flag            := NVL(in_flag, '?');
+        rec.module_line     := NVL(rec.module_line, 0);
         --
         bug.update_session (
             in_user_id      => rec.user_id,
@@ -1371,13 +1372,26 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     AS
         q_block     VARCHAR2(32767);
         q           CLOB;
+        comments    DBMS_UTILITY.LNAME_ARRAY;  -- TABLE OF VARCHAR2(4000) INDEX BY BINARY_INTEGER;
     BEGIN
         DBMS_LOB.CREATETEMPORARY(q, TRUE);
 
+        -- backup current comments
+        FOR c IN (
+            SELECT table_name, column_name, comments
+            FROM user_col_comments
+            WHERE table_name = bug.view_dml_errors
+        ) LOOP
+            comments(comments.count) :=
+                'COMMENT ON COLUMN ' || c.table_name || '.' || c.column_name ||
+                ' IS ''' || REPLACE(c.comments, '''', '''''') || '''';
+        END LOOP;
+
         -- create header with correct data types
         q_block :=
-            'CREATE OR REPLACE VIEW ' || bug.view_dml_errors ||
-            ' (log_id, action, table_name, table_rowid, dml_rowid, err_message) AS' || CHR(10) ||
+            'CREATE OR REPLACE VIEW ' || bug.view_dml_errors || ' (' ||
+            '    log_id, action, table_name, table_rowid, dml_rowid, err_message' || CHR(10) ||
+            ') AS' || CHR(10) ||
             'SELECT 0, ''-'', ''-'', ''UROWID'', ROWID, ''-''' || CHR(10) ||
             'FROM DUAL' || CHR(10) ||
             'WHERE ROWNUM = 0' || CHR(10) ||
@@ -1413,6 +1427,11 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END LOOP;
         --
         EXECUTE IMMEDIATE q;
+
+        -- add comments
+        FOR i IN comments.FIRST .. comments.LAST LOOP
+            EXECUTE IMMEDIATE comments(i);
+        END LOOP;
     EXCEPTION
     WHEN OTHERS THEN
         bug.raise_error();
