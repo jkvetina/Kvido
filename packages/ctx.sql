@@ -33,7 +33,11 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     FUNCTION get_page_id
     RETURN debug_log.page_id%TYPE AS
     BEGIN
-        RETURN TO_NUMBER(SYS_CONTEXT('APEX$SESSION', 'APP_PAGE_ID'));
+        $IF $$APEX_INSTALLED $THEN
+            RETURN NV('APP_PAGE_ID');
+        $ELSE
+            RETURN NULL;
+        $END    
     END;
 
 
@@ -160,13 +164,15 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
 
-    PROCEDURE load_contexts (
+    PROCEDURE get_contexts (
+        in_app_id           contexts.app_id%TYPE        := NULL,
         in_user_id          contexts.user_id%TYPE       := NULL,
         in_session_db       contexts.session_db%TYPE    := NULL,
         in_session_apex     contexts.session_apex%TYPE  := NULL
     ) AS
         rec                 contexts%ROWTYPE;
     BEGIN
+        rec.app_id          := NVL(in_app_id,        NVL(ctx.get_app_id(), 0));
         rec.user_id         := NVL(in_user_id,       ctx.get_user_id());
         rec.session_apex    := NVL(in_session_apex,  NVL(ctx.get_session_apex(), 0));
         rec.session_db      := NVL(in_session_db,    NVL(ctx.get_session_db(),   0));
@@ -178,7 +184,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             -- find exact match first
             SELECT x.payload INTO rec.payload
             FROM contexts x
-            WHERE x.user_id         = rec.user_id
+            WHERE x.app_id          = rec.app_id
+                AND x.user_id       = rec.user_id
                 AND x.session_apex  = rec.session_apex
                 AND x.session_db    = rec.session_db;
         EXCEPTION
@@ -189,7 +196,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
                 FROM (
                     SELECT x.payload
                     FROM contexts x
-                    WHERE x.user_id = rec.user_id
+                    WHERE x.app_id      = rec.app_id
+                        AND x.user_id   = rec.user_id
                     ORDER BY x.updated_at
                 ) x
                 WHERE ROWNUM = 1;
@@ -200,7 +208,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         END;
 
         -- parse payload to SYS_CONTEXT and set user
-        ctx.apply_contexts(rec.payload);
+        ctx.set_contexts(rec.payload);
         ctx.set_user_id(in_user_id);
     EXCEPTION
     WHEN NO_DATA_FOUND THEN
@@ -209,7 +217,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
 
-    PROCEDURE apply_contexts (
+    PROCEDURE set_contexts (
         in_payload          contexts.payload%TYPE
     ) AS
     BEGIN
@@ -247,6 +255,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         --
         rec                 contexts%ROWTYPE;
     BEGIN
+        rec.app_id          := NVL(ctx.get_app_id(), 0);
         rec.user_id         := ctx.get_user_id();
         rec.session_apex    := NVL(ctx.get_session_apex(),  0);
         rec.session_db      := NVL(ctx.get_session_db(),    0);
@@ -266,13 +275,6 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     WHEN OTHERS THEN
         ROLLBACK;
         RAISE;
-    END;
-
-
-
-    PROCEDURE clear_contexts AS
-    BEGIN
-        DBMS_SESSION.CLEAR_ALL_CONTEXT(ctx.app_namespace);
     END;
 
 

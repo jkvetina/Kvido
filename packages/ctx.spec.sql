@@ -121,7 +121,8 @@ CREATE OR REPLACE PACKAGE ctx AS
     --
     -- Load contexts from table
     --
-    PROCEDURE load_contexts (
+    PROCEDURE get_contexts (
+        in_app_id           contexts.app_id%TYPE        := NULL,
         in_user_id          contexts.user_id%TYPE       := NULL,
         in_session_db       contexts.session_db%TYPE    := NULL,
         in_session_apex     contexts.session_apex%TYPE  := NULL
@@ -132,7 +133,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     --
     -- Parse payload and store it in SYS_CONTEXT
     --
-    PROCEDURE apply_contexts (
+    PROCEDURE set_contexts (
         in_payload          contexts.payload%TYPE
     );
 
@@ -142,13 +143,6 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Store current contexts into table
     --
     PROCEDURE update_contexts;
-
-
-
-    --
-    -- Clear SYS_CONTEXT for app namespace
-    --
-    PROCEDURE clear_contexts;
 
 
 
