@@ -609,16 +609,6 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
-    -- Update debug_log.message for requested log_id
-    --
-    PROCEDURE update_message (
-        in_log_id           debug_log.log_id%TYPE,
-        in_message          debug_log.message%TYPE
-    );
-
-
-
-    --
     -- Converts record from DML ERR table to MERGE query
     --
     FUNCTION get_dml_query (

@@ -342,7 +342,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         WHERE e.log_id = in_scheduler_id;
 
         -- recover app context values from log and set user
-        ctx.apply_contexts(rec_contexts);
+        ctx.get_contexts(rec_contexts);
         ctx.set_user_id(rec_user_id);
 
         -- create log as the last action in this procedure
@@ -802,28 +802,29 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     RETURN debug_log.log_id%TYPE AS
         payload             VARCHAR2(32767);
     BEGIN
-        RETURN NULL;
-        /*
-        FOR c IN (
-            SELECT
-                i.item_name                                 AS name,
-                APEX_UTIL.GET_SESSION_STATE(i.item_name)    AS value
-            FROM apex_application_page_items i
-            WHERE i.application_id  = NV('APP_ID')
-                AND i.page_id       = NVL(in_page_id, NV('APP_PAGE_ID'))
-                AND i.item_name     LIKE in_filter
-            ORDER BY i.item_name
-        ) LOOP
-            payload := payload || c.name || bug.splitter_values || c.value || bug.splitter_rows;
-        END LOOP;
-        --
-        RETURN bug.log__ (
-            in_action_name  => NULL,
-            in_flag         => bug.flag_info,
-            in_arguments    => bug.get_arguments('LOG_APEX_ITEMS', in_page_id, in_filter),
-            in_message      => payload
-        );
-        */
+        $IF $$APEX_INSTALLED $THEN
+            FOR c IN (
+                SELECT
+                    i.item_name                                 AS name,
+                    APEX_UTIL.GET_SESSION_STATE(i.item_name)    AS value
+                FROM apex_application_page_items i
+                WHERE i.application_id  = NV('APP_ID')
+                    AND i.page_id       = NVL(in_page_id, NV('APP_PAGE_ID'))
+                    AND i.item_name     LIKE in_filter
+                ORDER BY i.item_name
+            ) LOOP
+                payload := payload || c.name || bug.splitter_values || c.value || bug.splitter_rows;
+            END LOOP;
+            --
+            RETURN bug.log__ (
+                in_action_name  => NULL,
+                in_flag         => bug.flag_info,
+                in_arguments    => bug.get_arguments('LOG_APEX_ITEMS', in_page_id, in_filter),
+                in_message      => payload
+            );
+        $ELSE
+            RETURN NULL;
+        $END    
     END;
 
 
@@ -848,27 +849,28 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     RETURN debug_log.log_id%TYPE AS
         payload             VARCHAR2(32767);
     BEGIN
-        RETURN NULL;
-        /*
-        FOR c IN (
-            SELECT
-                i.item_name                                 AS name,
-                APEX_UTIL.GET_SESSION_STATE(i.item_name)    AS value
-            FROM apex_application_items i
-            WHERE i.application_id  = NV('APP_ID')
-                AND i.item_name     LIKE in_filter
-            ORDER BY i.item_name
-        ) LOOP
-            payload := payload || c.name || bug.splitter_values || c.value || bug.splitter_rows;
-        END LOOP;
-        --
-        RETURN bug.log__ (
-            in_action_name  => NULL,
-            in_flag         => bug.flag_info,
-            in_arguments    => bug.get_arguments('LOG_APEX_GLOBALS', in_filter),
-            in_message      => payload
-        );
-        */
+        $IF $$APEX_INSTALLED $THEN
+            FOR c IN (
+                SELECT
+                    i.item_name                                 AS name,
+                    APEX_UTIL.GET_SESSION_STATE(i.item_name)    AS value
+                FROM apex_application_items i
+                WHERE i.application_id  = NV('APP_ID')
+                    AND i.item_name     LIKE in_filter
+                ORDER BY i.item_name
+            ) LOOP
+                payload := payload || c.name || bug.splitter_values || c.value || bug.splitter_rows;
+            END LOOP;
+            --
+            RETURN bug.log__ (
+                in_action_name  => NULL,
+                in_flag         => bug.flag_info,
+                in_arguments    => bug.get_arguments('LOG_APEX_GLOBALS', in_filter),
+                in_message      => payload
+            );
+        $ELSE
+            RETURN NULL;
+        $END    
     END;
 
 
@@ -1073,7 +1075,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END IF;
 
         -- prepare record
-        rec.app_id          := ctx.get_app_id();
+        rec.app_id          := NVL(ctx.get_app_id(), 0);  -- default to zero to match contexts table
         rec.page_id         := ctx.get_page_id();
         rec.action_name     := SUBSTR(NVL(in_action_name, bug.empty_action), 1, bug.length_action);
         rec.arguments       := SUBSTR(in_arguments, 1, bug.length_arguments);
@@ -1253,22 +1255,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     WHEN OTHERS THEN
         ROLLBACK;
         RAISE;
-    END;
-
-
-
-    PROCEDURE update_message (
-        in_log_id           debug_log.log_id%TYPE,
-        in_message          debug_log.message%TYPE
-    ) AS
-    BEGIN
-        bug.log__ (
-            in_action_name  => NULL,
-            in_flag         => bug.flag_query,
-            in_arguments    => NULL,
-            in_message      => in_message,
-            in_parent_id    => in_log_id
-        );
     END;
 
 
