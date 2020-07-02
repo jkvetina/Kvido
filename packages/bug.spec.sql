@@ -427,6 +427,25 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
+    -- Log session NLS parameters
+    --
+    FUNCTION log_nls (
+        in_filter           debug_log.arguments%TYPE    := '%'
+    )
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- Same as log_nls function
+    --
+    PROCEDURE log_nls (
+        in_filter           debug_log.arguments%TYPE    := '%'
+    );
+
+
+
+    --
     -- Log USERENV values
     --
     FUNCTION log_userenv (

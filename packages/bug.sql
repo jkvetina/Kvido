@@ -679,6 +679,43 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
+    FUNCTION log_nls (
+        in_filter           debug_log.arguments%TYPE    := '%'
+    )
+    RETURN debug_log.log_id%TYPE AS
+        payload             VARCHAR2(32767);
+    BEGIN
+        FOR c IN (
+            SELECT n.parameter || bug.splitter_values || n.value AS key_value_pair
+            FROM nls_session_parameters n
+            WHERE n.parameter LIKE in_filter
+            ORDER BY n.parameter
+        ) LOOP
+            payload := payload || c.key_value_pair || bug.splitter_rows;
+        END LOOP;
+        --
+        RETURN bug.log__ (
+            in_action_name  => NULL,
+            in_flag         => bug.flag_info,
+            in_arguments    => bug.get_arguments('LOG_NLS', in_filter),
+            in_message      => payload
+        );
+    END;
+
+
+
+    PROCEDURE log_nls (
+        in_filter           debug_log.arguments%TYPE    := '%'
+    ) AS
+        out_log_id          debug_log.log_id%TYPE;
+    BEGIN
+        out_log_id := bug.log_nls (
+            in_filter       => in_filter
+        );
+    END;
+
+
+
     FUNCTION log_userenv (
         in_filter           debug_log.arguments%TYPE    := '%'
     )
