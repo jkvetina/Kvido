@@ -215,7 +215,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 OR UTL_CALL_STACK.UNIT_LINE(i) IS NULL;     -- skip DML queries
 
             -- first call to this package stops the search
-            IF curr_module LIKE 'BUG.%' THEN
+            IF curr_module LIKE $$PLSQL_UNIT || '.%' THEN
                 -- set current module
                 out_module_name     := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i + 1));
                 out_module_line     := UTL_CALL_STACK.UNIT_LINE(i + 1);
@@ -789,6 +789,96 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         out_log_id          debug_log.log_id%TYPE;
     BEGIN
         out_log_id := bug.log_cgi (
+            in_filter       => in_filter
+        );
+    END;
+
+
+
+    FUNCTION log_apex_items (
+        in_page_id          debug_log.page_id%TYPE      := NULL,
+        in_filter           debug_log.arguments%TYPE    := '%'
+    )
+    RETURN debug_log.log_id%TYPE AS
+        payload             VARCHAR2(32767);
+    BEGIN
+        RETURN NULL;
+        /*
+        FOR c IN (
+            SELECT
+                i.item_name                                 AS name,
+                APEX_UTIL.GET_SESSION_STATE(i.item_name)    AS value
+            FROM apex_application_page_items i
+            WHERE i.application_id  = NV('APP_ID')
+                AND i.page_id       = NVL(in_page_id, NV('APP_PAGE_ID'))
+                AND i.item_name     LIKE in_filter
+            ORDER BY i.item_name
+        ) LOOP
+            payload := payload || c.name || bug.splitter_values || c.value || bug.splitter_rows;
+        END LOOP;
+        --
+        RETURN bug.log__ (
+            in_action_name  => NULL,
+            in_flag         => bug.flag_info,
+            in_arguments    => bug.get_arguments('LOG_APEX_ITEMS', in_page_id, in_filter),
+            in_message      => payload
+        );
+        */
+    END;
+
+
+
+    PROCEDURE log_apex_items (
+        in_page_id          debug_log.page_id%TYPE      := NULL,
+        in_filter           debug_log.arguments%TYPE    := '%'
+    ) AS
+        out_log_id          debug_log.log_id%TYPE;
+    BEGIN
+        out_log_id := bug.log_apex_items (
+            in_page_id      => in_page_id,
+            in_filter       => in_filter
+        );
+    END;
+
+
+
+    FUNCTION log_apex_globals (
+        in_filter           debug_log.arguments%TYPE    := '%'
+    )
+    RETURN debug_log.log_id%TYPE AS
+        payload             VARCHAR2(32767);
+    BEGIN
+        RETURN NULL;
+        /*
+        FOR c IN (
+            SELECT
+                i.item_name                                 AS name,
+                APEX_UTIL.GET_SESSION_STATE(i.item_name)    AS value
+            FROM apex_application_items i
+            WHERE i.application_id  = NV('APP_ID')
+                AND i.item_name     LIKE in_filter
+            ORDER BY i.item_name
+        ) LOOP
+            payload := payload || c.name || bug.splitter_values || c.value || bug.splitter_rows;
+        END LOOP;
+        --
+        RETURN bug.log__ (
+            in_action_name  => NULL,
+            in_flag         => bug.flag_info,
+            in_arguments    => bug.get_arguments('LOG_APEX_GLOBALS', in_filter),
+            in_message      => payload
+        );
+        */
+    END;
+
+
+
+    PROCEDURE log_apex_globals (
+        in_filter           debug_log.arguments%TYPE    := '%'
+    ) AS
+        out_log_id          debug_log.log_id%TYPE;
+    BEGIN
+        out_log_id := bug.log_apex_globals (
             in_filter       => in_filter
         );
     END;

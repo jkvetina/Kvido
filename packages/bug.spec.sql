@@ -465,6 +465,46 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
+    -- Get APEX items for selected/current page
+    --
+    FUNCTION log_apex_items (
+        in_page_id          debug_log.page_id%TYPE      := NULL,
+        in_filter           debug_log.arguments%TYPE    := '%'
+    )
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- Same as log_apex_items function
+    --
+    PROCEDURE log_apex_items (
+        in_page_id          debug_log.page_id%TYPE      := NULL,
+        in_filter           debug_log.arguments%TYPE    := '%'
+    );
+
+
+
+    --
+    -- Get APEX global items
+    --
+    FUNCTION log_apex_globals (
+        in_filter           debug_log.arguments%TYPE    := '%'
+    )
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- Same as log_apex_globals function
+    --
+    PROCEDURE log_apex_globals (
+        in_filter           debug_log.arguments%TYPE    := '%'
+    );
+
+
+
+    --
     -- Log scheduler call and return log_id so the scheduler log can be linked to this log_id
     --
     FUNCTION log_scheduler (
