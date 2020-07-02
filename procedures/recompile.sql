@@ -1,0 +1,90 @@
+CREATE OR REPLACE PROCEDURE recompile (
+    in_filter_type      VARCHAR2    := '%',
+    in_filter_name      VARCHAR2    := '%',
+    in_code_type        VARCHAR2    := 'INTERPRETED',
+    in_scope            VARCHAR2    := 'IDENTIFIERS:ALL, STATEMENTS:ALL',
+    in_warnings         VARCHAR2    := 'ENABLE:SEVERE, ENABLE:PERFORMANCE',
+    in_optimize         NUMBER      := 3,
+    in_ccflags          VARCHAR2    := NULL,
+    in_invalid_only     CHAR        := 'Y'
+) AS
+BEGIN
+    /**
+     * This procedure is part of the BUG project under MIT licence.
+     * https://github.com/jkvetina/BUG/
+     *
+     * Copyright (c) Jan Kvetina, 2020
+     */
+
+    -- first recompile invalid and requested objects
+    DBMS_OUTPUT.PUT_LINE('--');
+    DBMS_OUTPUT.PUT('INVALID: ');
+    --
+    FOR c IN (
+        SELECT o.object_name, o.object_type
+        FROM user_objects o
+        WHERE o.status          != 'VALID'
+            AND o.object_type   NOT IN ('SEQUENCE', 'MATERIALIZED VIEW')
+            AND o.object_name   != $$PLSQL_UNIT         -- not this procedure
+        UNION ALL
+        SELECT o.object_name, o.object_type
+        FROM user_objects o
+        WHERE in_invalid_only   != 'Y'
+            AND o.object_type   IN ('PACKAGE', 'PACKAGE BODY', 'PROCEDURE', 'FUNCTION', 'TRIGGER', 'VIEW', 'SYNONYM')
+            AND o.object_type   LIKE in_filter_type
+            AND o.object_name   != $$PLSQL_UNIT         -- not this procedure
+            AND o.object_name   LIKE in_filter_name
+    ) LOOP
+        BEGIN
+            EXECUTE IMMEDIATE
+                'ALTER ' || REPLACE(c.object_type, ' BODY', '') || ' ' ||
+                c.object_name || ' COMPILE' ||
+                CASE WHEN c.object_type LIKE '% BODY' THEN ' BODY' END || ' ' ||
+                CASE WHEN c.object_type IN (
+                    'PACKAGE', 'PACKAGE BODY', 'PROCEDURE', 'FUNCTION', 'TRIGGER'
+                ) THEN
+                    'PLSQL_CCFLAGS = '''        || in_ccflags || ''' ' ||
+                    'PLSQL_CODE_TYPE = '        || in_code_type || ' ' ||
+                    'PLSQL_OPTIMIZE_LEVEL = '   || in_optimize || ' ' ||
+                    'PLSQL_WARNINGS = '''       || REPLACE(in_warnings, ',', ''', ''') || ''' ' ||
+                    'PLSCOPE_SETTINGS = '''     || in_scope || ''' ' ||
+                    'REUSE SETTINGS'            -- store in user_plsql_object_settings
+                END;
+            DBMS_OUTPUT.PUT('.');
+        EXCEPTION
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT('!');  -- something went wrong
+        END;
+    END LOOP;
+
+    -- show number of invalid objects
+    FOR c IN (
+        SELECT COUNT(*) AS count_
+        FROM user_objects o
+        WHERE o.status          != 'VALID'
+            AND o.object_type   NOT IN ('SEQUENCE', 'MATERIALIZED VIEW')
+            AND o.object_name   != $$PLSQL_UNIT         -- not this procedure
+    ) LOOP
+        DBMS_OUTPUT.PUT_LINE(' -> ' || c.count_);
+    END LOOP;
+
+    -- list invalid objects
+    DBMS_OUTPUT.PUT_LINE('');
+    FOR c IN (
+        SELECT object_type, LISTAGG(object_name, ', ') WITHIN GROUP (ORDER BY object_name) AS objects
+        FROM (
+            SELECT DISTINCT o.object_type, o.object_name
+            FROM user_objects o
+            WHERE o.status          != 'VALID'
+                AND o.object_type   NOT IN ('SEQUENCE', 'MATERIALIZED VIEW')
+            ORDER BY o.object_type, o.object_name
+        )
+        GROUP BY object_type
+        ORDER BY object_type
+    ) LOOP
+        DBMS_OUTPUT.PUT_LINE('  ' || RPAD(c.object_type || ':', 15, ' ') || ' ' || c.objects);
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE('');
+END;
+/
+
