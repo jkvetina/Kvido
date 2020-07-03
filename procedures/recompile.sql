@@ -81,7 +81,7 @@ BEGIN
         SELECT COUNT(*) AS count_
         FROM user_objects o
         WHERE o.status          != 'VALID'
-            AND o.object_type   NOT IN ('SEQUENCE', 'MATERIALIZED VIEW')
+            AND o.object_type   != 'MATERIALIZED VIEW'
             AND o.object_name   != $$PLSQL_UNIT         -- not this procedure
     ) LOOP
         DBMS_OUTPUT.PUT_LINE(' -> ' || c.count_);
@@ -94,8 +94,8 @@ BEGIN
         FROM (
             SELECT DISTINCT o.object_type, o.object_name
             FROM user_objects o
-            WHERE o.status          != 'VALID'
-                AND o.object_type   NOT IN ('SEQUENCE', 'MATERIALIZED VIEW')
+            WHERE o.status      != 'VALID'
+            AND o.object_type   != 'MATERIALIZED VIEW'
             ORDER BY o.object_type, o.object_name
         )
         GROUP BY object_type
