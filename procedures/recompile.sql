@@ -21,13 +21,13 @@ BEGIN
     DBMS_OUTPUT.PUT('INVALID: ');
     --
     FOR c IN (
-        SELECT o.object_name, o.object_type
+        SELECT o.object_name, o.object_type, '' AS ccflags
         FROM user_objects o
         WHERE o.status          != 'VALID'
             AND o.object_type   NOT IN ('SEQUENCE', 'MATERIALIZED VIEW')
             AND o.object_name   != $$PLSQL_UNIT         -- not this procedure
         UNION ALL
-        SELECT o.object_name, o.object_type
+        SELECT o.object_name, o.object_type, '' AS ccflags
         FROM user_objects o
         WHERE in_invalid_only   != 'Y'
             AND o.object_type   IN ('PACKAGE', 'PACKAGE BODY', 'PROCEDURE', 'FUNCTION', 'TRIGGER', 'VIEW', 'SYNONYM')
@@ -35,6 +35,25 @@ BEGIN
             AND o.object_name   != $$PLSQL_UNIT         -- not this procedure
             AND o.object_name   LIKE in_filter_name
     ) LOOP
+        -- apply ccflags only relevant to current object
+        BEGIN
+            SELECT
+                LISTAGG(REGEXP_SUBSTR(in_ccflags, '(' || s.flag_name || ':[^,]+)', 1, 1, NULL, 1), ', ')
+                    WITHIN GROUP (ORDER BY s.flag_name)
+            INTO c.ccflags
+            FROM (
+                SELECT MAX(REGEXP_SUBSTR(s.text, '[$].*\s[$][$]([A-Z0-9-_]+)\s.*[$]', 1, 1, NULL, 1)) AS flag_name
+                FROM user_source s
+                WHERE REGEXP_LIKE(s.text, '[$].*\s[$][$][A-Z0-9-_]+\s.*[$]')
+                    AND s.name = c.object_name
+                    AND s.type = c.object_type
+                HAVING MAX(REGEXP_SUBSTR(s.text, '[$].*\s[$][$]([A-Z0-9-_]+)\s.*[$]', 1, 1, NULL, 1)) IS NOT NULL
+            ) s;
+        EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            c.ccflags := '';
+        END;
+        --
         BEGIN
             EXECUTE IMMEDIATE
                 'ALTER ' || REPLACE(c.object_type, ' BODY', '') || ' ' ||
@@ -43,7 +62,7 @@ BEGIN
                 CASE WHEN c.object_type IN (
                     'PACKAGE', 'PACKAGE BODY', 'PROCEDURE', 'FUNCTION', 'TRIGGER'
                 ) THEN
-                    'PLSQL_CCFLAGS = '''        || in_ccflags || ''' ' ||
+                    'PLSQL_CCFLAGS = '''        || RTRIM(c.ccflags) || ''' ' ||
                     'PLSQL_CODE_TYPE = '        || in_code_type || ' ' ||
                     'PLSQL_OPTIMIZE_LEVEL = '   || in_optimize || ' ' ||
                     'PLSQL_WARNINGS = '''       || REPLACE(in_warnings, ',', ''', ''') || ''' ' ||
