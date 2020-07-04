@@ -641,10 +641,14 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
-    -- Link errors stored in all DML ERR tables to thei respective log_id records
+    -- Link errors stored in requested DML ERR table to parent log_id
     --
-    PROCEDURE process_dml_errors (
-        in_table_like       debug_log.module_name%TYPE := NULL
+    PROCEDURE process_dml_error (
+        in_log_id           debug_log.log_id%TYPE,
+        in_error_table      VARCHAR2,   -- remove references to debug_log_dml_errors view
+        in_table_name       VARCHAR2,   -- because it can get invalidated too often
+        in_table_rowid      VARCHAR2,
+        in_action           VARCHAR2
     );
 
 

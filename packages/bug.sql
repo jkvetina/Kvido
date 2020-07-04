@@ -1393,39 +1393,32 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
-    PROCEDURE process_dml_errors (
-        in_table_like       debug_log.module_name%TYPE := NULL
+    PROCEDURE process_dml_error (
+        in_log_id           debug_log.log_id%TYPE,
+        in_error_table      VARCHAR2,   -- remove references to debug_log_dml_errors view
+        in_table_name       VARCHAR2,   -- because it can get invalidated too often
+        in_table_rowid      VARCHAR2,
+        in_action           VARCHAR2
     ) AS
         payload             debug_log_lobs.payload_clob%TYPE;
     BEGIN
-        FOR c IN (
-            SELECT e.*,
-                bug.dml_tables_owner || '.' || e.table_name || bug.dml_tables_postfix AS error_table
-            FROM debug_log_dml_errors e
-            JOIN debug_log d
-                ON d.log_id     = e.log_id
-            WHERE e.table_name  LIKE NVL(UPPER(in_table_like), '%')
-        ) LOOP
-            -- prepare query
-            payload := bug.get_dml_query (
-                in_log_id       => c.log_id,
-                in_table_name   => c.table_name,
-                in_table_rowid  => c.table_rowid,
-                in_action       => c.action
-            );
-    
-            -- store it in LOB table
-            bug.attach_clob (
-                in_payload      => payload,
-                in_lob_name     => 'DML_ERROR',
-                in_log_id       => c.log_id
-            );
-    
-            -- remove from DML ERR table
-            EXECUTE IMMEDIATE
-                'DELETE FROM ' || c.error_table ||
-                ' WHERE ora_err_tag$ = ' || c.log_id;
-        END LOOP;
+        payload := bug.get_dml_query (
+            in_log_id       => in_log_id,
+            in_table_name   => in_table_name,
+            in_table_rowid  => in_table_rowid,
+            in_action       => in_action
+        );
+        --
+        bug.attach_clob (
+            in_payload      => payload,
+            in_lob_name     => 'DML_ERROR',
+            in_log_id       => in_log_id
+        );
+
+        -- remove from DML ERR table
+        EXECUTE IMMEDIATE
+            'DELETE FROM ' || in_error_table ||
+            ' WHERE ora_err_tag$ = ' || in_log_id;
     END;
     
 
@@ -1461,7 +1454,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     BEGIN
         bug.log_module(in_table_like);
         -- process existing data first
-        bug.process_dml_errors(in_table_like);
+        bug_process_dml_errors(in_table_like);
 
         -- drop existing tables
         bug.drop_dml_tables(in_table_like);
