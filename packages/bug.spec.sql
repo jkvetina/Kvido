@@ -136,7 +136,9 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Returns procedure name which called this function with possible offset
     --
     FUNCTION get_caller_name (
-        in_offset           debug_log.module_depth%TYPE     := 0
+        in_offset           debug_log.module_depth%TYPE     := 0,
+        in_skip_this        BOOLEAN                         := TRUE,
+        in_attach_line      BOOLEAN                         := FALSE
     )
     RETURN debug_log.module_name%TYPE;
 

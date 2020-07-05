@@ -170,7 +170,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
     FUNCTION get_caller_name (
-        in_offset           debug_log.module_depth%TYPE     := 0
+        in_offset           debug_log.module_depth%TYPE     := 0,
+        in_skip_this        BOOLEAN                         := TRUE,
+        in_attach_line      BOOLEAN                         := FALSE
     )
     RETURN debug_log.module_name%TYPE
     AS
@@ -178,17 +180,20 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         offset              debug_log.module_depth%TYPE     := NVL(in_offset, 0);
     BEGIN
         -- find first caller before this package
-        FOR i IN 1 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP
+        FOR i IN 2 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP
             module_name := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i));
             --
-            IF module_name NOT LIKE $$PLSQL_UNIT || '.%' THEN
-                IF offset > 0 THEN
-                    offset := offset - 1;
-                    CONTINUE;
-                END IF;
-                --
-                RETURN module_name;
+            IF in_skip_this AND module_name LIKE $$PLSQL_UNIT || '.%' THEN
+                CONTINUE;
             END IF;
+            --
+            IF offset > 0 THEN
+                offset := offset - 1;
+                CONTINUE;
+            END IF;
+            --
+            RETURN module_name ||
+                CASE WHEN in_attach_line THEN bug.splitter || UTL_CALL_STACK.UNIT_LINE(i) END;
         END LOOP;
         --
         RETURN NULL;
