@@ -22,4 +22,11 @@ FROM (
     GROUP BY p.name, m.name, m.type, m.overload
 ) p
 ORDER BY total_time DESC, p.name, p.module_name, p.overload;
+--
+COMMENT ON COLUMN debug_log_profiler_sum.name           IS 'Object/package name';
+COMMENT ON COLUMN debug_log_profiler_sum.module_name    IS 'Name of module (function/procedure)';
+COMMENT ON COLUMN debug_log_profiler_sum.module_type    IS 'Module type';
+COMMENT ON COLUMN debug_log_profiler_sum.overload       IS 'Overload ID';
+COMMENT ON COLUMN debug_log_profiler_sum.total_time     IS 'Time spent on module';
+COMMENT ON COLUMN debug_log_profiler_sum.module_perc    IS 'Percentage of total time spent on module';
 
