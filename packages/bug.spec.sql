@@ -18,10 +18,10 @@ CREATE OR REPLACE PACKAGE bug AS
     flag_result             CONSTANT debug_log.flag%TYPE    := 'R';     -- result of procedure for debugging purposes
     flag_warning            CONSTANT debug_log.flag%TYPE    := 'W';     -- warning
     flag_error              CONSTANT debug_log.flag%TYPE    := 'E';     -- error
-    flag_query              CONSTANT debug_log.flag%TYPE    := 'Q';     -- query with binded values appended via job/trigger
     flag_longops            CONSTANT debug_log.flag%TYPE    := 'L';     -- longops row
     flag_scheduler          CONSTANT debug_log.flag%TYPE    := 'S';     -- scheduler run planned
     flag_context            CONSTANT debug_log.flag%TYPE    := 'X';     -- CTX package calls (so you can ignore them)
+    flag_profiler           CONSTANT debug_log.flag%TYPE    := 'P';     -- profiler initiated
 
     -- specify maximum length for trim
     length_action           CONSTANT PLS_INTEGER            := 48;      -- debug_log.action%TYPE

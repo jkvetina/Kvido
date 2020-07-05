@@ -31,9 +31,16 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     --
     rows_whitelist          arr_log_setup := arr_log_setup();
     rows_blacklist          arr_log_setup := arr_log_setup();
+    rows_profiler           arr_log_setup := arr_log_setup();
     --
     rows_limit              CONSTANT PLS_INTEGER := 100;  -- match arr_log_setup VARRAY
 
+    -- log_id where profiler started
+    curr_profiler_id        PLS_INTEGER;
+    curr_coverage_id        PLS_INTEGER;
+    --
+    parent_profiler_id      PLS_INTEGER;
+    parent_coverage_id      PLS_INTEGER;
 
     -- possible exception when parsing call stack
     BAD_DEPTH EXCEPTION;
@@ -1168,6 +1175,54 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             );
         END IF;
 
+        -- start profiler
+        $IF $$PROFILER_INSTALLED OR $$COVERAGE_INSTALLED $THEN
+            IF rec.flag IN (bug.flag_module, bug.flag_context) AND rec.flag != bug.flag_profiler THEN
+                FOR i IN 1 .. rows_profiler.COUNT LOOP
+                    IF rec.user_id              LIKE rows_profiler(i).user_id
+                        AND rec.module_name     LIKE rows_profiler(i).module_name
+                    THEN
+                        $IF $$PROFILER_INSTALLED $THEN
+                            IF rows_profiler(i).profiler = 'Y' THEN
+                                DBMS_PROFILER.START_PROFILER(rec.log_id, run_number => curr_profiler_id);
+                                DBMS_OUTPUT.PUT_LINE('> START_PROFILER ' || curr_profiler_id || ' ' || rec.log_id);
+                                --
+                                bug.log__ (         -- be aware that this may cause infinite loop
+                                    in_action_name  => 'START_PROFILER',
+                                    in_flag         => bug.flag_profiler,
+                                    in_arguments    => curr_profiler_id,
+                                    in_parent_id    => rec.log_id
+                                );
+                                --
+                                curr_profiler_id    := rec.log_id;      -- store current and parent log_id so we can stop profiler later
+                                parent_profiler_id  := rec.log_parent;
+                                --
+                                -- FIX MODULE AND LINE IN LOG -> CALLER_NAME + LINE
+                                --
+                            END IF;
+                        $END    
+                        --
+                        $IF $$COVERAGE_INSTALLED $THEN
+                            IF rows_profiler(i).coverage = 'Y' THEN
+                                curr_coverage_id := DBMS_PLSQL_CODE_COVERAGE.START_COVERAGE(rec.log_id);
+                                DBMS_OUTPUT.PUT_LINE('> START_COVERAGE ' || curr_coverage_id || ' ' || rec.log_id);
+                                --
+                                bug.log__ (         -- be aware that this may cause infinite loop
+                                    in_action_name  => 'START_COVERAGE',
+                                    in_flag         => bug.flag_profiler,
+                                    in_arguments    => curr_coverage_id,
+                                    in_parent_id    => rec.log_id
+                                );
+                                --
+                                curr_coverage_id    := rec.log_id;      -- store current and parent log_id so we can stop coverage later
+                                parent_coverage_id  := rec.log_parent;
+                            END IF;
+                        $END    
+                    END IF;
+                END LOOP;
+            END IF;
+        $END    
+
         -- save last error for easy access
         IF SQLCODE != 0 THEN
             recent_error_id := rec.log_id;
@@ -1287,7 +1342,23 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 out_parent_id       => rec.log_parent
             );
         END IF;
+
+        -- stop profilers
+        $IF $$PROFILER_INSTALLED $THEN
+            IF NVL(in_log_id, rec.log_parent) IN (curr_profiler_id, parent_profiler_id) THEN
+                DBMS_OUTPUT.PUT_LINE('> STOP_PROFILER');
+                DBMS_PROFILER.STOP_PROFILER;
+            END IF;
+        $END    
         --
+        $IF $$COVERAGE_INSTALLED $THEN
+            IF NVL(in_log_id, rec.log_parent) IN (curr_coverage_id, parent_coverage_id) THEN
+                DBMS_OUTPUT.PUT_LINE('> STOP_COVERAGE');
+                DBMS_PLSQL_CODE_COVERAGE.STOP_COVERAGE;
+            END IF;
+        $END    
+
+        -- update timer
         UPDATE debug_log e
         SET e.timer =
             LPAD(EXTRACT(HOUR   FROM LOCALTIMESTAMP - e.created_at), 2, '0') || ':' ||
@@ -1631,6 +1702,13 @@ BEGIN
     BULK COLLECT INTO rows_blacklist
     FROM debug_log_setup t
     WHERE t.track   = 'N'
+        AND ROWNUM  <= rows_limit;
+
+    -- load profiling requests
+    SELECT p.*
+    BULK COLLECT INTO rows_profiler
+    FROM debug_log_setup p
+    WHERE (p.profiler = 'Y' OR p.coverage = 'Y')
         AND ROWNUM  <= rows_limit;
 
 END;
