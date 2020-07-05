@@ -24,7 +24,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     fn_log_action           CONSTANT debug_log.module_name%TYPE     := 'BUG.LOG_ACTION';
 
     -- module_name LIKE to switch flag_module to flag_context
-    trigger_ctx         CONSTANT debug_log.module_name%TYPE     := 'CTX.%';
+    trigger_ctx             CONSTANT debug_log.module_name%TYPE     := 'CTX.%';
 
     -- arrays to specify adhoc requests
     TYPE arr_log_setup      IS VARRAY(20) OF debug_log_setup%ROWTYPE;
@@ -1053,8 +1053,20 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             out_module_depth    => rec.module_depth,
             out_parent_id       => rec.log_parent
         );
-        --
+
+        -- if parent passed manually, then find caller other way
         IF in_parent_id IS NOT NULL THEN
+            --
+            -- @TODO: probably just get_caller with offset ???
+            --
+            rec.module_name     := bug.get_caller_name (
+                in_offset       => 2,       -- when called via function it should be 1 less
+                in_skip_this    => FALSE,
+                in_attach_line  => TRUE
+            );
+            rec.module_line     := SUBSTR(rec.module_name, INSTR(rec.module_name, bug.splitter) + 1);       -- extract line number
+            rec.module_name     := SUBSTR(rec.module_name, 1, INSTR(rec.module_name, bug.splitter) - 1);    -- extract just name
+            rec.module_depth    := 0;
             rec.log_parent      := in_parent_id;
         END IF;
 
