@@ -43,4 +43,17 @@ LEFT JOIN dbmspcc_blocks b
     AND b.line          = s.line
 WHERE p.runid           = x.profiler_id
     AND p.unit_owner    = USER;
+--
+COMMENT ON COLUMN debug_log_profiler.name           IS 'Object name';
+COMMENT ON COLUMN debug_log_profiler.type           IS 'Object type';
+COMMENT ON COLUMN debug_log_profiler.line           IS 'Line in source code';
+COMMENT ON COLUMN debug_log_profiler.total_occur    IS 'Number of occurences';
+COMMENT ON COLUMN debug_log_profiler.total_time     IS 'Time spent on module';
+COMMENT ON COLUMN debug_log_profiler.max_time       IS 'Time spent on one iteration';
+COMMENT ON COLUMN debug_log_profiler.block          IS 'Block from coverage';
+COMMENT ON COLUMN debug_log_profiler.col            IS 'Column from source line';
+COMMENT ON COLUMN debug_log_profiler.covered        IS 'Covered flag';
+COMMENT ON COLUMN debug_log_profiler.source_line    IS 'Source line';
+COMMENT ON COLUMN debug_log_profiler.profiler_id    IS 'Profiler ID';
+COMMENT ON COLUMN debug_log_profiler.coverage_id    IS 'Coverage ID';
 
