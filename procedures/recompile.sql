@@ -42,12 +42,11 @@ BEGIN
                     WITHIN GROUP (ORDER BY s.flag_name)
             INTO c.ccflags
             FROM (
-                SELECT MAX(REGEXP_SUBSTR(s.text, '[$].*\s[$][$]([A-Z0-9-_]+)\s.*[$]', 1, 1, NULL, 1)) AS flag_name
+                SELECT DISTINCT REGEXP_SUBSTR(s.text, '[$].*\s[$][$]([A-Z0-9-_]+)\s.*[$]', 1, 1, NULL, 1) AS flag_name
                 FROM user_source s
                 WHERE REGEXP_LIKE(s.text, '[$].*\s[$][$][A-Z0-9-_]+\s.*[$]')
                     AND s.name = c.object_name
                     AND s.type = c.object_type
-                HAVING MAX(REGEXP_SUBSTR(s.text, '[$].*\s[$][$]([A-Z0-9-_]+)\s.*[$]', 1, 1, NULL, 1)) IS NOT NULL
             ) s;
         EXCEPTION
         WHEN NO_DATA_FOUND THEN
