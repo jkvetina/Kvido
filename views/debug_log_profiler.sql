@@ -1,16 +1,29 @@
 CREATE OR REPLACE VIEW debug_log_profiler AS
 WITH x AS (
     SELECT
-        MAX(c.run_id)   AS coverage_id,
-        MAX(p.runid)    AS profiler_id
-    FROM dbmspcc_runs c
-    CROSS JOIN plsql_profiler_runs p
+        MAX(CASE e.action_name WHEN 'START_PROFILER' THEN TO_NUMBER(e.arguments) END) AS profiler_id,
+        MAX(CASE e.action_name WHEN 'START_COVERAGE' THEN TO_NUMBER(e.arguments) END) AS coverage_id
+    FROM (
+        SELECT e.action_name, e.flag, e.arguments
+        FROM debug_log e
+        CONNECT BY PRIOR e.log_id   = e.log_parent
+        START WITH e.log_id         = bug.get_tree_id()
+    ) e
+    WHERE e.flag = 'P'  -- bug.flag_profiler
 )
 SELECT
-    s.name, s.type, s.line,
-    d.total_occur, d.total_time, d.max_time,
-    b.block, b.col, b.covered,
-    s.text AS source_line
+    s.name,
+    s.type,
+    s.line,
+    d.total_occur,
+    d.total_time,
+    d.max_time,
+    b.block,
+    b.col,
+    b.covered,
+    s.text              AS source_line,
+    x.profiler_id,
+    x.coverage_id
 FROM plsql_profiler_units p
 JOIN plsql_profiler_data d
     ON p.runid          = d.runid
