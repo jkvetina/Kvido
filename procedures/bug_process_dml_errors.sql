@@ -8,12 +8,12 @@ CREATE OR REPLACE PROCEDURE bug_process_dml_errors (
 BEGIN
     FOR c IN (
         SELECT
-            e.log_id, e.table_name, e.table_rowid, e.action,
-            bug.dml_tables_owner || '.' || e.table_name || bug.dml_tables_postfix AS error_table
-        FROM debug_log_dml_errors e
-        JOIN debug_log d
-            ON d.log_id     = e.log_id
-        WHERE e.table_name  LIKE NVL(UPPER(in_table_like), '%')
+            d.log_id, d.table_name, d.table_rowid, d.action,
+            bug.dml_tables_owner || '.' || d.table_name || bug.dml_tables_postfix AS error_table
+        FROM debug_log_dml d
+        JOIN debug_log e
+            ON e.log_id     = d.log_id
+        WHERE d.table_name  LIKE NVL(UPPER(in_table_like), '%')
     ) LOOP
         bug.process_dml_error (
             in_log_id           => c.log_id,

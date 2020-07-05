@@ -9,31 +9,30 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
-    recent_log_id       debug_log.log_id%TYPE;    -- last log_id in session (any flag)
-    recent_error_id     debug_log.log_id%TYPE;    -- last real log_id in session (with E flag)
-    recent_tree_id      debug_log.log_id%TYPE;    -- selected log_id for LOGS_TREE view
+    recent_log_id           debug_log.log_id%TYPE;    -- last log_id in session (any flag)
+    recent_error_id         debug_log.log_id%TYPE;    -- last real log_id in session (with E flag)
+    recent_tree_id          debug_log.log_id%TYPE;    -- selected log_id for DEBUG_LOG_TREE view
 
     -- array to hold recent log_id; array[depth + module] = log_id
     TYPE arr_map_module_to_id IS
         TABLE OF debug_log.log_id%TYPE
         INDEX BY debug_log.module_name%TYPE;
     --
-    map_modules         arr_map_module_to_id;
+    map_modules             arr_map_module_to_id;
     --
-    fn_log_module       CONSTANT debug_log.module_name%TYPE     := 'BUG.LOG_MODULE';  -- $$PLSQL_UNIT
-    fn_log_action       CONSTANT debug_log.module_name%TYPE     := 'BUG.LOG_ACTION';
+    fn_log_module           CONSTANT debug_log.module_name%TYPE     := 'BUG.LOG_MODULE';  -- $$PLSQL_UNIT
+    fn_log_action           CONSTANT debug_log.module_name%TYPE     := 'BUG.LOG_ACTION';
 
     -- module_name LIKE to switch flag_module to flag_context
     trigger_ctx         CONSTANT debug_log.module_name%TYPE     := 'CTX.%';
 
     -- arrays to specify adhoc requests
-    TYPE arr_tracking IS VARRAY(20) OF debug_log_tracking%ROWTYPE;
+    TYPE arr_log_setup      IS VARRAY(20) OF debug_log_setup%ROWTYPE;
     --
-    rows_whitelist      arr_tracking := arr_tracking();
-    rows_blacklist      arr_tracking := arr_tracking();
+    rows_whitelist          arr_log_setup := arr_log_setup();
+    rows_blacklist          arr_log_setup := arr_log_setup();
     --
-    rows_limit          CONSTANT PLS_INTEGER := 20;  -- match arr_tracking VARRAY
-
+    rows_limit              CONSTANT PLS_INTEGER := 100;  -- match arr_log_setup VARRAY
 
 
     -- possible exception when parsing call stack
@@ -954,7 +953,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         slno                BINARY_INTEGER;
         rec                 debug_log%ROWTYPE;
     BEGIN
-        bug.get_caller (   -- basically who called this
+        bug.get_caller (        -- basically who called this
             out_module_name     => rec.module_name,
             out_module_line     => rec.module_line,
             out_module_depth    => rec.module_depth,
@@ -1043,7 +1042,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         rec.log_id              := log_id.NEXTVAL;
         recent_log_id           := rec.log_id;
         --
-        bug.get_caller (   -- basically who called this
+        bug.get_caller (        -- basically who called this
             out_module_name     => rec.module_name,
             out_module_line     => rec.module_line,
             out_module_depth    => rec.module_depth,
@@ -1123,17 +1122,12 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         rec.created_at      := LOCALTIMESTAMP;
 
         -- add context values
-        IF SQLCODE != 0 OR INSTR(bug.track_contexts, rec.flag) > 0 OR bug.track_contexts = '%' THEN
-            rec.contexts := SUBSTR(ctx.get_payload(), 1, bug.length_contexts);
-        END IF;
-
-        -- store current contexts before running scheduler
-        IF rec.flag = bug.flag_scheduler THEN
+        IF SQLCODE != 0 OR INSTR(bug.track_contexts, rec.flag) > 0 OR bug.track_contexts = '%' OR rec.flag = bug.flag_scheduler THEN
             rec.contexts := SUBSTR(ctx.get_payload(), 1, bug.length_contexts);
         END IF;
 
         -- add call stack
-        IF SQLCODE != 0 OR INSTR(bug.track_callstack, rec.flag) > 0 OR bug.track_callstack = '%' THEN
+        IF SQLCODE != 0 OR INSTR(bug.track_callstack, rec.flag) > 0 OR bug.track_callstack = '%' OR in_parent_id IS NOT NULL THEN
             rec.message := SUBSTR(rec.message || bug.get_call_stack(), 1, bug.length_message);
         END IF;
 
@@ -1211,7 +1205,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         bug.log_module(in_log_id, in_lob_name);
         --
         rec.log_id          := log_id.NEXTVAL;
-        rec.parent_log      := NVL(in_log_id, recent_log_id);
+        rec.log_parent      := NVL(in_log_id, recent_log_id);
         rec.payload_clob    := in_payload;
         rec.lob_name        := in_lob_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.payload_clob);
@@ -1231,7 +1225,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         bug.log_module(in_log_id, in_lob_name);
         --
         rec.log_id          := log_id.NEXTVAL;
-        rec.parent_log      := NVL(in_log_id, recent_log_id);
+        rec.log_parent      := NVL(in_log_id, recent_log_id);
         rec.payload_clob    := in_payload.GETCLOBVAL();
         rec.lob_name        := in_lob_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.payload_clob);
@@ -1251,7 +1245,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         bug.log_module(in_log_id, in_lob_name);
         --
         rec.log_id          := log_id.NEXTVAL;
-        rec.parent_log      := NVL(in_log_id, recent_log_id);
+        rec.log_parent      := NVL(in_log_id, recent_log_id);
         rec.payload_blob    := in_payload;
         rec.lob_name        := in_lob_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.payload_blob);
@@ -1269,7 +1263,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         rec                 debug_log%ROWTYPE;
     BEGIN
         IF in_log_id IS NULL THEN
-            bug.get_caller (   -- basically who called this
+            bug.get_caller (        -- basically who called this
                 out_module_name     => rec.module_name,
                 out_module_line     => rec.module_line,
                 out_module_depth    => rec.module_depth,
@@ -1573,7 +1567,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             SELECT l.log_id
             FROM debug_log e
             JOIN debug_log_lobs l
-                ON l.parent_log = e.log_id
+                ON l.log_parent = e.log_id
             WHERE e.created_at < TRUNC(SYSDATE) - bug.table_rows_max_age
         );
 
@@ -1608,17 +1602,17 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 BEGIN
 
-    -- prepare collections when session starts
+    -- prepare arrays when session starts
     -- load whitelist/blacklist data from logs_tracing table
     SELECT t.*
     BULK COLLECT INTO rows_whitelist
-    FROM debug_log_tracking t
+    FROM debug_log_setup t
     WHERE t.track   = 'Y'
         AND ROWNUM  <= rows_limit;
     --
     SELECT t.*
     BULK COLLECT INTO rows_blacklist
-    FROM debug_log_tracking t
+    FROM debug_log_setup t
     WHERE t.track   = 'N'
         AND ROWNUM  <= rows_limit;
 
