@@ -224,6 +224,13 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             CONTINUE WHEN
                 curr_module LIKE $$PLSQL_UNIT || '.LOG__'    -- skip target function
                 OR UTL_CALL_STACK.UNIT_LINE(i) IS NULL;     -- skip DML queries
+            --
+            IF bug.output_enabled THEN
+                DBMS_OUTPUT.PUT_LINE('  CALLSTACK: ' ||
+                    (UTL_CALL_STACK.DYNAMIC_DEPTH - i + 1) || '|' ||
+                    UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i))
+                );
+            END IF;
 
             -- first call to this package stops the search
             IF curr_module LIKE $$PLSQL_UNIT || '.%' THEN
@@ -233,6 +240,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 out_module_depth    := UTL_CALL_STACK.DYNAMIC_DEPTH - i;
                 curr_index          := out_module_depth || '|' || out_module_name;
                 parent_index        := curr_index;
+                --
+                IF bug.output_enabled THEN
+                    DBMS_OUTPUT.PUT_LINE('  CURRENT = ' || curr_index);
+                END IF;
 
                 -- create child
                 IF curr_module IN (fn_log_module, fn_log_action) THEN
@@ -244,6 +255,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                     -- recover parent index
                     BEGIN
                         parent_index := (UTL_CALL_STACK.DYNAMIC_DEPTH - i - 1) || '|' || UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i + 2));
+                        IF bug.output_enabled THEN
+                            DBMS_OUTPUT.PUT_LINE('  PARENT  = ' || parent_index);
+                        END IF;
                     EXCEPTION
                     WHEN BAD_DEPTH THEN
                         NULL;
@@ -253,6 +267,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 -- recover parent_id
                 IF map_modules.EXISTS(parent_index) THEN
                     out_parent_id := NULLIF(map_modules(parent_index), recent_log_id);
+                    IF bug.output_enabled THEN
+                        DBMS_OUTPUT.PUT_LINE('  PARENT  = ' || out_parent_id);
+                    END IF;
                 END IF;
                 --
                 EXIT;  -- break
@@ -267,6 +284,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         in_log_id       debug_log.log_id%TYPE
     ) AS
     BEGIN
+        IF bug.output_enabled THEN
+            DBMS_OUTPUT.PUT_LINE('  UPDATE_MAP: ' || in_map_index || ' = ' || in_log_id);
+        END IF;
+        --
         map_modules(in_map_index) := in_log_id;
     END;
 
@@ -1185,10 +1206,12 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                         $IF $$PROFILER_INSTALLED $THEN
                             IF rows_profiler(i).profiler = 'Y' THEN
                                 DBMS_PROFILER.START_PROFILER(rec.log_id, run_number => curr_profiler_id);
-                                DBMS_OUTPUT.PUT_LINE('> START_PROFILER ' || curr_profiler_id || ' ' || rec.log_id);
+                                IF bug.output_enabled THEN
+                                    DBMS_OUTPUT.PUT_LINE('  > START_PROFILER ' || curr_profiler_id);
+                                END IF;
                                 --
                                 bug.log__ (         -- be aware that this may cause infinite loop
-                                    in_action_name  => 'START_PROFILER',
+                                    in_action_name  => 'START_PROFILER',    -- used in debug_log_profiler view
                                     in_flag         => bug.flag_profiler,
                                     in_arguments    => curr_profiler_id,
                                     in_parent_id    => rec.log_id
@@ -1196,19 +1219,18 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                                 --
                                 curr_profiler_id    := rec.log_id;      -- store current and parent log_id so we can stop profiler later
                                 parent_profiler_id  := rec.log_parent;
-                                --
-                                -- FIX MODULE AND LINE IN LOG -> CALLER_NAME + LINE
-                                --
                             END IF;
                         $END    
                         --
                         $IF $$COVERAGE_INSTALLED $THEN
                             IF rows_profiler(i).coverage = 'Y' THEN
                                 curr_coverage_id := DBMS_PLSQL_CODE_COVERAGE.START_COVERAGE(rec.log_id);
-                                DBMS_OUTPUT.PUT_LINE('> START_COVERAGE ' || curr_coverage_id || ' ' || rec.log_id);
+                                IF bug.output_enabled THEN
+                                    DBMS_OUTPUT.PUT_LINE('  > START_COVERAGE ' || curr_coverage_id);
+                                END IF;
                                 --
                                 bug.log__ (         -- be aware that this may cause infinite loop
-                                    in_action_name  => 'START_COVERAGE',
+                                    in_action_name  => 'START_COVERAGE',    -- used in debug_log_profiler view
                                     in_flag         => bug.flag_profiler,
                                     in_arguments    => curr_coverage_id,
                                     in_parent_id    => rec.log_id
@@ -1346,14 +1368,18 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         -- stop profilers
         $IF $$PROFILER_INSTALLED $THEN
             IF NVL(in_log_id, rec.log_parent) IN (curr_profiler_id, parent_profiler_id) THEN
-                DBMS_OUTPUT.PUT_LINE('> STOP_PROFILER');
+                IF bug.output_enabled THEN
+                    DBMS_OUTPUT.PUT_LINE('  > STOP_PROFILER');
+                END IF;
                 DBMS_PROFILER.STOP_PROFILER;
             END IF;
         $END    
         --
         $IF $$COVERAGE_INSTALLED $THEN
             IF NVL(in_log_id, rec.log_parent) IN (curr_coverage_id, parent_coverage_id) THEN
-                DBMS_OUTPUT.PUT_LINE('> STOP_COVERAGE');
+                IF bug.output_enabled THEN
+                    DBMS_OUTPUT.PUT_LINE('  > STOP_COVERAGE');
+                END IF;
                 DBMS_PLSQL_CODE_COVERAGE.STOP_COVERAGE;
             END IF;
         $END    
