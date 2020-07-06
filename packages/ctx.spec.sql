@@ -82,7 +82,9 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns your app context
     --
     FUNCTION get_context (
-        in_name     VARCHAR2
+        in_name     VARCHAR2,
+        in_format   VARCHAR2    := NULL,
+        in_raise    VARCHAR2    := 'Y'  -- boolean for SQL
     )
     RETURN VARCHAR2;
 
@@ -92,7 +94,8 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns your app context as NUMBER
     --
     FUNCTION get_context_number (
-        in_name     VARCHAR2
+        in_name     VARCHAR2,
+        in_raise    VARCHAR2    := 'Y'  -- boolean for SQL
     )
     RETURN NUMBER;
 
@@ -102,7 +105,8 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns your app context as DATE
     --
     FUNCTION get_context_date (
-        in_name     VARCHAR2
+        in_name     VARCHAR2,
+        in_raise    VARCHAR2    := 'Y'  -- boolean for SQL
     )
     RETURN DATE;
 

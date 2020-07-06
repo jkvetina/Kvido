@@ -47,7 +47,11 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     FUNCTION get_user_id
     RETURN debug_log.user_id%TYPE AS
     BEGIN
-        RETURN COALESCE(SYS_CONTEXT(ctx.app_namespace, ctx.app_user_id), SYS_CONTEXT('APEX$SESSION', 'APP_USER'), USER);
+        RETURN COALESCE(
+            SYS_CONTEXT(ctx.app_namespace, ctx.app_user_id),
+            SYS_CONTEXT('APEX$SESSION', 'APP_USER'),
+            USER
+        );
     END;
 
 
@@ -98,37 +102,68 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     )
     RETURN VARCHAR2 AS
     BEGIN
-        RETURN NVL(in_user_id, ctx.get_user_id()) || ':' || NVL(ctx.get_session_apex(), SYS_CONTEXT('USERENV', 'SESSIONID'));
+        RETURN
+            NVL(in_user_id, ctx.get_user_id()) || ':' ||
+            NVL(ctx.get_session_apex(), SYS_CONTEXT('USERENV', 'SESSIONID'));
     END;
 
 
 
     FUNCTION get_context (
-        in_name     VARCHAR2
+        in_name     VARCHAR2,
+        in_format   VARCHAR2    := NULL,
+        in_raise    VARCHAR2    := 'Y'  -- boolean for SQL
     )
     RETURN VARCHAR2 AS
     BEGIN
+        IF in_format IS NOT NULL THEN
+            RETURN TO_CHAR(ctx.get_context_date(in_name), in_format);
+        END IF;
+        --
         RETURN SYS_CONTEXT(ctx.app_namespace, in_name);
+    EXCEPTION
+    WHEN OTHERS THEN
+        IF in_raise = 'Y' THEN
+            RAISE;
+        END IF;
+        --
+        RETURN NULL;
     END;
 
 
 
     FUNCTION get_context_number (
-        in_name     VARCHAR2
+        in_name     VARCHAR2,
+        in_raise    VARCHAR2    := 'Y'  -- boolean for SQL
     )
     RETURN NUMBER AS
     BEGIN
         RETURN TO_NUMBER(SYS_CONTEXT(ctx.app_namespace, in_name));
+    EXCEPTION
+    WHEN OTHERS THEN
+        IF in_raise = 'Y' THEN
+            RAISE;
+        END IF;
+        --
+        RETURN NULL;
     END;
 
 
 
     FUNCTION get_context_date (
-        in_name     VARCHAR2
+        in_name     VARCHAR2,
+        in_raise    VARCHAR2    := 'Y'  -- boolean for SQL
     )
     RETURN DATE AS
     BEGIN
-        RETURN TO_DATE(SYS_CONTEXT(ctx.app_namespace, in_name), 'YYYY-MM-DD');
+        RETURN TO_DATE(SYS_CONTEXT(ctx.app_namespace, in_name), 'YYYY-MM-DD HH24:MI:SS');
+    EXCEPTION
+    WHEN OTHERS THEN
+        IF in_raise = 'Y' THEN
+            RAISE;
+        END IF;
+        --
+        RETURN NULL;
     END;
 
 
