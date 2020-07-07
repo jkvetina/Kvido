@@ -4,9 +4,9 @@ SELECT
     p.module_name,
     p.module_type,
     p.overload,
-    MAX(CASE p.object_type WHEN 'PACKAGE'       THEN p.start_line END)              AS spec_start,
-    MAX(CASE p.object_type WHEN 'PACKAGE'       THEN s.line END)                    AS spec_end,
-    MAX(CASE p.object_type WHEN 'PACKAGE'       THEN s.line - p.start_line + 1 END) AS spec_lines,
+    MIN(CASE p.object_type WHEN 'PACKAGE'       THEN p.start_line END)              AS spec_start,
+    MIN(CASE p.object_type WHEN 'PACKAGE'       THEN s.line END)                    AS spec_end,
+    MIN(CASE p.object_type WHEN 'PACKAGE'       THEN s.line - p.start_line + 1 END) AS spec_lines,
     MAX(CASE p.object_type WHEN 'PACKAGE BODY'  THEN p.start_line END)              AS body_start,
     MAX(CASE p.object_type WHEN 'PACKAGE BODY'  THEN s.line END)                    AS body_end,
     MAX(CASE p.object_type WHEN 'PACKAGE BODY'  THEN s.line - p.start_line + 1 END) AS body_lines
