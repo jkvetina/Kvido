@@ -1721,22 +1721,25 @@ BEGIN
     SELECT t.*
     BULK COLLECT INTO rows_whitelist
     FROM debug_log_setup t
-    WHERE t.track   = 'Y'
-        AND ROWNUM  <= rows_limit;
+    WHERE (t.app_id     = ctx.get_app_id() OR t.app_id < 0)
+        AND t.track     = 'Y'
+        AND ROWNUM      <= rows_limit;
     --
     SELECT t.*
     BULK COLLECT INTO rows_blacklist
     FROM debug_log_setup t
-    WHERE t.track   = 'N'
-        AND ROWNUM  <= rows_limit;
+    WHERE (t.app_id     = ctx.get_app_id() OR t.app_id < 0)
+        AND t.track     = 'N'
+        AND ROWNUM      <= rows_limit;
 
     -- load profiling requests
-    SELECT p.*
+    SELECT t.*
     BULK COLLECT INTO rows_profiler
-    FROM debug_log_setup p
-    WHERE (p.profiler = 'Y' OR p.coverage = 'Y')
-        AND ROWNUM  <= rows_limit;
-
+    FROM debug_log_setup t
+    WHERE (t.app_id     = ctx.get_app_id() OR t.app_id < 0)
+        AND t.track     = 'Y'
+        AND (t.profiler = 'Y' OR t.coverage = 'Y')
+        AND ROWNUM      <= rows_limit;
 END;
 /
 
