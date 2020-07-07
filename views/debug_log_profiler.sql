@@ -15,6 +15,9 @@ SELECT
     s.name,
     s.type,
     s.line,
+    m.module_name,
+    m.module_type,
+    m.overload,
     d.total_occur,
     d.total_time,
     d.max_time,
@@ -33,6 +36,10 @@ JOIN user_source s
     AND s.type          = p.unit_type
     AND s.line          = d.line#
 CROSS JOIN x
+LEFT JOIN debug_log_modules m
+    ON m.package_name   = s.name
+    AND s.type          = 'PACKAGE BODY'
+    AND s.line          BETWEEN m.body_start AND m.body_end
 LEFT JOIN dbmspcc_units c
     ON  c.name          = s.name
     AND c.type          = s.type
