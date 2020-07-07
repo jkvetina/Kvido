@@ -1,4 +1,8 @@
-CREATE OR REPLACE VIEW debug_log_modules AS
+--DROP MATERIALIZED VIEW debug_log_modules;
+CREATE MATERIALIZED VIEW debug_log_modules
+BUILD IMMEDIATE
+REFRESH COMPLETE ON DEMAND
+AS
 SELECT
     p.object_name AS package_name,
     p.module_name,
@@ -45,10 +49,11 @@ LEFT JOIN user_source s
         (s.type = 'PACKAGE BODY' AND REGEXP_LIKE(UPPER(s.text), '^\s*END(\s+' || p.module_name || ')?\s*;')) OR
         (s.type = 'PACKAGE'      AND REGEXP_LIKE(UPPER(s.text), ';'))
     )
-GROUP BY p.object_name, p.module_name, p.module_type, p.overload
-ORDER BY p.object_name, MIN(p.start_line);
+GROUP BY p.object_name, p.module_name, p.module_type, p.overload;
 --
-COMMENT ON TABLE debug_log_modules IS 'Find package modules (procedures and functions) and their boundaries (start-end lines)';
+CREATE INDEX ix_debug_log_modules ON debug_log_modules (package_name, module_name, module_type, overload);
+--
+COMMENT ON MATERIALIZED VIEW debug_log_modules IS 'Find package modules (procedures and functions) and their boundaries (start-end lines)';
 --
 COMMENT ON COLUMN debug_log_modules.package_name    IS 'Package name';
 COMMENT ON COLUMN debug_log_modules.module_name     IS 'Module name';
@@ -60,4 +65,12 @@ COMMENT ON COLUMN debug_log_modules.spec_lines      IS 'Lines in specification';
 COMMENT ON COLUMN debug_log_modules.body_start      IS 'Module start in body';
 COMMENT ON COLUMN debug_log_modules.body_end        IS 'Module end in body';
 COMMENT ON COLUMN debug_log_modules.body_lines      IS 'Lines in body';
+
+
+
+-- refresh mview
+BEGIN
+    DBMS_SNAPSHOT.REFRESH('DEBUG_LOG_MODULES');
+END;
+/
 
