@@ -1,0 +1,2 @@
+*.py linguist-language=Python
+*.sql linguist-language=PLSQL
