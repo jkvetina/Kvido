@@ -1509,6 +1509,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         in_action           VARCHAR2
     ) AS
         payload             debug_log_lobs.payload_clob%TYPE;
+        error_id            debug_log_lobs.log_id%TYPE;
     BEGIN
         bug.log_module(in_log_id, in_error_table, in_table_name, in_table_rowid, in_action);
         --
@@ -1519,10 +1520,16 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             in_action       => in_action
         );
         --
+        SELECT MIN(e.log_id) INTO error_id  -- find row with actual error
+        FROM debug_log e
+        WHERE e.created_at      >= TRUNC(SYSDATE)
+            AND e.log_parent    = in_log_id
+            AND e.flag          = bug.flag_error;
+        --
         bug.attach_clob (
             in_payload      => payload,
             in_lob_name     => 'DML_ERROR',
-            in_log_id       => in_log_id
+            in_log_id       => NVL(error_id, in_log_id)
         );
 
         -- remove from DML ERR table
