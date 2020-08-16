@@ -6,11 +6,13 @@ CREATE OR REPLACE PROCEDURE bug_process_dml_errors (
     -- because DEBUG_LOG_DML_ERRORS view can be invalidated too often
     --
 BEGIN
+    bug.log_module(in_table_like);
+    --
     FOR c IN (
         SELECT
             d.log_id, d.table_name, d.table_rowid, d.action,
             bug.dml_tables_owner || '.' || d.table_name || bug.dml_tables_postfix AS error_table
-        FROM debug_log_dml d
+        FROM debug_log_dml_errors d
         JOIN debug_log e
             ON e.log_id     = d.log_id
         WHERE d.table_name  LIKE NVL(UPPER(in_table_like), '%')

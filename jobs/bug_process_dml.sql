@@ -1,4 +1,3 @@
-@@ -0,0 +1,36 @@
 DECLARE
     in_job_name CONSTANT VARCHAR2(30) := 'BUG_PROCESS_DML';
 BEGIN

@@ -1510,6 +1510,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         payload             debug_log_lobs.payload_clob%TYPE;
     BEGIN
+        bug.log_module(in_log_id, in_error_table, in_table_name, in_table_rowid, in_action);
+        --
         payload := bug.get_dml_query (
             in_log_id       => in_log_id,
             in_table_name   => in_table_name,
@@ -1562,7 +1564,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     BEGIN
         bug.log_module(in_table_like);
         -- process existing data first
-        bug_process_dml_errors(in_table_like);
+        bug_process_dml_errors(in_table_like);  -- it calls bug.process_dml_error
 
         -- drop existing tables
         bug.drop_dml_tables(in_table_like);
