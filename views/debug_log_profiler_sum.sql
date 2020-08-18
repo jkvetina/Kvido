@@ -4,6 +4,7 @@ SELECT
     p.module_name,
     p.module_type,
     p.overload,
+    p.total_calls,
     p.total_time,
     ROUND(p.total_time / SUM(p.total_time) OVER() * 100, 2) AS module_perc
 FROM (
@@ -12,6 +13,7 @@ FROM (
         m.module_name,
         m.module_type,
         m.overload,
+        SUM(p.total_occur)  AS total_calls,
         SUM(p.total_time)   AS total_time
     FROM debug_log_profiler p
     LEFT JOIN debug_log_modules m
