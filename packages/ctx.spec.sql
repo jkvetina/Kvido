@@ -178,7 +178,9 @@ CREATE OR REPLACE PACKAGE ctx AS
     --
     -- Initialize app contexts and `DBMS_SESSION`
     --
-    PROCEDURE init;
+    PROCEDURE init (
+        in_user_id    debug_log.user_id%TYPE := NULL
+    );
 
 END;
 /
