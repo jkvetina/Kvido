@@ -56,69 +56,24 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
 
+
+
+    -- ### Introduction
     --
-    -- Returns clean call stack
+    -- Best way to start is with [`debug_log`](./tables-debug_log) table.
     --
-    FUNCTION get_call_stack
-    RETURN debug_log.message%TYPE;
 
 
 
+
+
+    -- ### Basic functionality
     --
-    -- Returns error stack
-    --
-    FUNCTION get_error_stack
-    RETURN debug_log.message%TYPE;
-
-
 
     --
-    -- Returns last log_id for E flag
+    -- Main function called at the very start of every app module (procedure, function)
     --
-    FUNCTION get_error_id
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Returns last log_id for any flag
-    --
-    FUNCTION get_log_id
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Returns root log_id for passed log_id
-    --
-    FUNCTION get_root_id (
-        in_log_id       debug_log.log_id%TYPE := NULL
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Returns log_id for LOGS_TREE view
-    --
-    FUNCTION get_tree_id
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Set log_id which will be viewed by LOGS_TREE view
-    --
-    PROCEDURE set_tree_id (
-        in_log_id       debug_log.log_id%TYPE
-    );
-
-
-
-    --
-    -- Returns arguments merged into one string
-    --
-    FUNCTION get_arguments (
+    FUNCTION log_module (
         in_arg1         debug_log.arguments%TYPE    := NULL,
         in_arg2         debug_log.arguments%TYPE    := NULL,
         in_arg3         debug_log.arguments%TYPE    := NULL,
@@ -128,9 +83,538 @@ CREATE OR REPLACE PACKAGE bug AS
         in_arg7         debug_log.arguments%TYPE    := NULL,
         in_arg8         debug_log.arguments%TYPE    := NULL
     )
-    RETURN debug_log.arguments%TYPE;
+    RETURN debug_log.log_id%TYPE;
 
 
+
+    --
+    -- ^
+    --
+    PROCEDURE log_module (
+        in_arg1         debug_log.arguments%TYPE    := NULL,
+        in_arg2         debug_log.arguments%TYPE    := NULL,
+        in_arg3         debug_log.arguments%TYPE    := NULL,
+        in_arg4         debug_log.arguments%TYPE    := NULL,
+        in_arg5         debug_log.arguments%TYPE    := NULL,
+        in_arg6         debug_log.arguments%TYPE    := NULL,
+        in_arg7         debug_log.arguments%TYPE    := NULL,
+        in_arg8         debug_log.arguments%TYPE    := NULL
+    );
+
+
+
+    --
+    -- Overloaded variant used in schedulers to link calls to proper tree branch
+    --
+    PROCEDURE log_module (
+        in_scheduler_id     debug_log.log_id%TYPE
+    );
+
+
+
+    --
+    -- Main function used as marker in longer modules; make sure to call `log_module` first
+    --
+    FUNCTION log_action (
+        in_action       debug_log.action_name%TYPE,
+        in_arg1         debug_log.arguments%TYPE    := NULL,
+        in_arg2         debug_log.arguments%TYPE    := NULL,
+        in_arg3         debug_log.arguments%TYPE    := NULL,
+        in_arg4         debug_log.arguments%TYPE    := NULL,
+        in_arg5         debug_log.arguments%TYPE    := NULL,
+        in_arg6         debug_log.arguments%TYPE    := NULL,
+        in_arg7         debug_log.arguments%TYPE    := NULL,
+        in_arg8         debug_log.arguments%TYPE    := NULL
+    )
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- ^
+    --
+    PROCEDURE log_action (
+        in_action       debug_log.action_name%TYPE,
+        in_arg1         debug_log.arguments%TYPE    := NULL,
+        in_arg2         debug_log.arguments%TYPE    := NULL,
+        in_arg3         debug_log.arguments%TYPE    := NULL,
+        in_arg4         debug_log.arguments%TYPE    := NULL,
+        in_arg5         debug_log.arguments%TYPE    := NULL,
+        in_arg6         debug_log.arguments%TYPE    := NULL,
+        in_arg7         debug_log.arguments%TYPE    := NULL,
+        in_arg8         debug_log.arguments%TYPE    := NULL
+    );
+
+
+
+    --
+    -- Store record in log with `D` flag
+    --
+    FUNCTION log_debug (
+        in_arg1         debug_log.arguments%TYPE    := NULL,
+        in_arg2         debug_log.arguments%TYPE    := NULL,
+        in_arg3         debug_log.arguments%TYPE    := NULL,
+        in_arg4         debug_log.arguments%TYPE    := NULL,
+        in_arg5         debug_log.arguments%TYPE    := NULL,
+        in_arg6         debug_log.arguments%TYPE    := NULL,
+        in_arg7         debug_log.arguments%TYPE    := NULL,
+        in_arg8         debug_log.arguments%TYPE    := NULL
+    )
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- ^
+    --
+    PROCEDURE log_debug (
+        in_arg1         debug_log.arguments%TYPE    := NULL,
+        in_arg2         debug_log.arguments%TYPE    := NULL,
+        in_arg3         debug_log.arguments%TYPE    := NULL,
+        in_arg4         debug_log.arguments%TYPE    := NULL,
+        in_arg5         debug_log.arguments%TYPE    := NULL,
+        in_arg6         debug_log.arguments%TYPE    := NULL,
+        in_arg7         debug_log.arguments%TYPE    := NULL,
+        in_arg8         debug_log.arguments%TYPE    := NULL
+    );
+
+
+
+    --
+    -- Store record in log with `R` flag
+    --
+    FUNCTION log_result (
+        in_arg1         debug_log.arguments%TYPE    := NULL,
+        in_arg2         debug_log.arguments%TYPE    := NULL,
+        in_arg3         debug_log.arguments%TYPE    := NULL,
+        in_arg4         debug_log.arguments%TYPE    := NULL,
+        in_arg5         debug_log.arguments%TYPE    := NULL,
+        in_arg6         debug_log.arguments%TYPE    := NULL,
+        in_arg7         debug_log.arguments%TYPE    := NULL,
+        in_arg8         debug_log.arguments%TYPE    := NULL
+    )
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- ^
+    --
+    PROCEDURE log_result (
+        in_arg1         debug_log.arguments%TYPE    := NULL,
+        in_arg2         debug_log.arguments%TYPE    := NULL,
+        in_arg3         debug_log.arguments%TYPE    := NULL,
+        in_arg4         debug_log.arguments%TYPE    := NULL,
+        in_arg5         debug_log.arguments%TYPE    := NULL,
+        in_arg6         debug_log.arguments%TYPE    := NULL,
+        in_arg7         debug_log.arguments%TYPE    := NULL,
+        in_arg8         debug_log.arguments%TYPE    := NULL
+    );
+
+
+
+    --
+    -- Store record in log with `W` flag; pass `action_name`
+    --
+    FUNCTION log_warning (
+        in_action       debug_log.action_name%TYPE  := NULL,
+        in_arg1         debug_log.arguments%TYPE    := NULL,
+        in_arg2         debug_log.arguments%TYPE    := NULL,
+        in_arg3         debug_log.arguments%TYPE    := NULL,
+        in_arg4         debug_log.arguments%TYPE    := NULL,
+        in_arg5         debug_log.arguments%TYPE    := NULL,
+        in_arg6         debug_log.arguments%TYPE    := NULL,
+        in_arg7         debug_log.arguments%TYPE    := NULL,
+        in_arg8         debug_log.arguments%TYPE    := NULL
+    )
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- ^
+    --
+    PROCEDURE log_warning (
+        in_action       debug_log.action_name%TYPE  := NULL,
+        in_arg1         debug_log.arguments%TYPE    := NULL,
+        in_arg2         debug_log.arguments%TYPE    := NULL,
+        in_arg3         debug_log.arguments%TYPE    := NULL,
+        in_arg4         debug_log.arguments%TYPE    := NULL,
+        in_arg5         debug_log.arguments%TYPE    := NULL,
+        in_arg6         debug_log.arguments%TYPE    := NULL,
+        in_arg7         debug_log.arguments%TYPE    := NULL,
+        in_arg8         debug_log.arguments%TYPE    := NULL
+    );
+
+
+
+    --
+    -- Store record in log with `E` flag; pass `action_name`
+    --
+    FUNCTION log_error (
+        in_action       debug_log.action_name%TYPE  := NULL,
+        in_arg1         debug_log.arguments%TYPE    := NULL,
+        in_arg2         debug_log.arguments%TYPE    := NULL,
+        in_arg3         debug_log.arguments%TYPE    := NULL,
+        in_arg4         debug_log.arguments%TYPE    := NULL,
+        in_arg5         debug_log.arguments%TYPE    := NULL,
+        in_arg6         debug_log.arguments%TYPE    := NULL,
+        in_arg7         debug_log.arguments%TYPE    := NULL,
+        in_arg8         debug_log.arguments%TYPE    := NULL
+    )
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- ^
+    --
+    PROCEDURE log_error (
+        in_action       debug_log.action_name%TYPE  := NULL,
+        in_arg1         debug_log.arguments%TYPE    := NULL,
+        in_arg2         debug_log.arguments%TYPE    := NULL,
+        in_arg3         debug_log.arguments%TYPE    := NULL,
+        in_arg4         debug_log.arguments%TYPE    := NULL,
+        in_arg5         debug_log.arguments%TYPE    := NULL,
+        in_arg6         debug_log.arguments%TYPE    := NULL,
+        in_arg7         debug_log.arguments%TYPE    := NULL,
+        in_arg8         debug_log.arguments%TYPE    := NULL
+    );
+
+
+
+    --
+    -- Log error and `RAISE` app exception `action_name|log_id`; pass `error_name` for user in action
+    --
+    PROCEDURE raise_error (
+        in_action       debug_log.action_name%TYPE  := NULL,
+        in_arg1         debug_log.arguments%TYPE    := NULL,
+        in_arg2         debug_log.arguments%TYPE    := NULL,
+        in_arg3         debug_log.arguments%TYPE    := NULL,
+        in_arg4         debug_log.arguments%TYPE    := NULL,
+        in_arg5         debug_log.arguments%TYPE    := NULL,
+        in_arg6         debug_log.arguments%TYPE    := NULL,
+        in_arg7         debug_log.arguments%TYPE    := NULL,
+        in_arg8         debug_log.arguments%TYPE    := NULL
+    );
+
+
+
+
+
+    -- ### Tracking time and progress of long operations
+    --
+
+    --
+    -- Update `debug_log.timer` for current/requested record
+    --
+    PROCEDURE update_timer (
+        in_log_id           debug_log.log_id%TYPE := NULL
+    );
+
+
+
+    --
+    -- Update/track progress for LONGOPS
+    --
+    PROCEDURE log_progress (
+        in_progress         NUMBER := NULL  -- in percent (0-1)
+    );
+
+
+
+
+
+    -- ### Linking scheduler to correct `user_id` and `log_id`
+    --
+
+    --
+    -- Log scheduler call and link its logs to this `log_id`
+    --
+    FUNCTION log_scheduler (
+        in_action       debug_log.action_name%TYPE  := NULL,
+        in_arg1         debug_log.arguments%TYPE    := NULL,
+        in_arg2         debug_log.arguments%TYPE    := NULL,
+        in_arg3         debug_log.arguments%TYPE    := NULL,
+        in_arg4         debug_log.arguments%TYPE    := NULL,
+        in_arg5         debug_log.arguments%TYPE    := NULL,
+        in_arg6         debug_log.arguments%TYPE    := NULL,
+        in_arg7         debug_log.arguments%TYPE    := NULL,
+        in_arg8         debug_log.arguments%TYPE    := NULL
+    )
+    RETURN debug_log.log_id%TYPE;
+
+
+
+
+
+    -- ### Logging large objects
+    --
+
+    --
+    -- Attach `CLOB` to current/requested `log_id`
+    --
+    PROCEDURE attach_clob (
+        in_payload          CLOB,
+        in_lob_name         debug_log_lobs.lob_name%TYPE    := NULL,
+        in_log_id           debug_log_lobs.log_id%TYPE      := NULL
+    );
+
+
+
+    --
+    -- Attach `XML` to current/requested `log_id`
+    --
+    PROCEDURE attach_clob (
+        in_payload          XMLTYPE,
+        in_lob_name         debug_log_lobs.lob_name%TYPE    := NULL,
+        in_log_id           debug_log_lobs.log_id%TYPE      := NULL
+    );
+
+
+
+    --
+    -- Attach `BLOB` to current/requested `log_id`
+    --
+    PROCEDURE attach_blob (
+        in_payload          BLOB,
+        in_lob_name         debug_log_lobs.lob_name%TYPE    := NULL,
+        in_log_id           debug_log_lobs.log_id%TYPE      := NULL
+    );
+
+
+
+
+
+    -- ### Procedures related to DML error handling
+    --
+
+    --
+    -- Creates `MERGE` query for selected `_E$` table and row
+    --
+    FUNCTION get_dml_query (
+        in_log_id           debug_log.log_id%TYPE,
+        in_table_name       debug_log.module_name%TYPE,
+        in_table_rowid      VARCHAR2,
+        in_action           CHAR  -- [I|U|D]
+    )
+    RETURN debug_log_lobs.payload_clob%TYPE;
+
+
+
+    --
+    -- Maps existing `DML` errors to proper row in `debug_log` table
+    --
+    PROCEDURE process_dml_error (
+        in_log_id           debug_log.log_id%TYPE,
+        in_error_table      VARCHAR2,   -- remove references to debug_log_dml_errors view
+        in_table_name       VARCHAR2,   -- because it can get invalidated too often
+        in_table_rowid      VARCHAR2,
+        in_action           VARCHAR2
+    );
+
+
+
+    --
+    -- Drop `DML` error tables matching filter
+    --
+    PROCEDURE drop_dml_tables (
+        in_table_like       debug_log.module_name%TYPE
+    );
+
+
+
+    --
+    -- Recreates `DML` error tables matching filter
+    --
+    PROCEDURE create_dml_tables (
+        in_table_like       debug_log.module_name%TYPE
+    );
+
+
+
+    --
+    -- Merge all `DML` error tables (`_E$`) into single view
+    --
+    PROCEDURE create_dml_errors_view;
+
+
+
+
+
+    -- ### Logging environment variables
+    --
+
+    --
+    -- Log requested `SYS_CONTEXT` values
+    --
+    FUNCTION log_context (
+        in_namespace        debug_log.arguments%TYPE    := '%',
+        in_filter           debug_log.arguments%TYPE    := '%'
+    )
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- ^
+    --
+    PROCEDURE log_context (
+        in_namespace        debug_log.arguments%TYPE    := '%',
+        in_filter           debug_log.arguments%TYPE    := '%'
+    );
+
+
+
+    --
+    -- Log session `NLS` parameters
+    --
+    FUNCTION log_nls (
+        in_filter           debug_log.arguments%TYPE    := '%'
+    )
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- ^
+    --
+    PROCEDURE log_nls (
+        in_filter           debug_log.arguments%TYPE    := '%'
+    );
+
+
+
+    --
+    -- Log `USERENV` values
+    --
+    FUNCTION log_userenv (
+        in_filter           debug_log.arguments%TYPE    := '%'
+    )
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- ^
+    --
+    PROCEDURE log_userenv (
+        in_filter           debug_log.arguments%TYPE    := '%'
+    );
+
+
+
+    --
+    -- Log `CGI_ENV` values (when called from web/APEX)
+    --
+    FUNCTION log_cgi (
+        in_filter           debug_log.arguments%TYPE    := '%'
+    )
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- ^
+    --
+    PROCEDURE log_cgi (
+        in_filter           debug_log.arguments%TYPE    := '%'
+    );
+
+
+
+    --
+    -- Get `APEX` items for selected/current page
+    --
+    FUNCTION log_apex_items (
+        in_page_id          debug_log.page_id%TYPE      := NULL,
+        in_filter           debug_log.arguments%TYPE    := '%'
+    )
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- ^
+    --
+    PROCEDURE log_apex_items (
+        in_page_id          debug_log.page_id%TYPE      := NULL,
+        in_filter           debug_log.arguments%TYPE    := '%'
+    );
+
+
+
+    --
+    -- Get `APEX` global/app items
+    --
+    FUNCTION log_apex_globals (
+        in_filter           debug_log.arguments%TYPE    := '%'
+    )
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- ^
+    --
+    PROCEDURE log_apex_globals (
+        in_filter           debug_log.arguments%TYPE    := '%'
+    );
+
+
+
+
+
+    -- ### Working with tree
+    --
+
+    --
+    -- Returns last `log_id` for any flag
+    --
+    FUNCTION get_log_id
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- Returns last `log_id` for `E` flag
+    --
+    FUNCTION get_error_id
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- Finds and returns root `log_id` for passed `log_id`
+    --
+    FUNCTION get_root_id (
+        in_log_id       debug_log.log_id%TYPE := NULL
+    )
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- Returns `log_id` used by `LOGS_TREE` view
+    --
+    FUNCTION get_tree_id
+    RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- Set `log_id` for `LOGS_TREE` view
+    --
+    PROCEDURE set_tree_id (
+        in_log_id       debug_log.log_id%TYPE
+    );
+
+
+
+
+
+    -- ### Others
+    --
 
     --
     -- Returns procedure name which called this function with possible offset
@@ -157,7 +641,40 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
-    -- Store log_id for current module
+    -- Returns clean call stack
+    --
+    FUNCTION get_call_stack
+    RETURN debug_log.message%TYPE;
+
+
+
+    --
+    -- Returns error stack
+    --
+    FUNCTION get_error_stack
+    RETURN debug_log.message%TYPE;
+
+
+
+    --
+    -- Returns arguments merged into one string
+    --
+    FUNCTION get_arguments (
+        in_arg1         debug_log.arguments%TYPE    := NULL,
+        in_arg2         debug_log.arguments%TYPE    := NULL,
+        in_arg3         debug_log.arguments%TYPE    := NULL,
+        in_arg4         debug_log.arguments%TYPE    := NULL,
+        in_arg5         debug_log.arguments%TYPE    := NULL,
+        in_arg6         debug_log.arguments%TYPE    := NULL,
+        in_arg7         debug_log.arguments%TYPE    := NULL,
+        in_arg8         debug_log.arguments%TYPE    := NULL
+    )
+    RETURN debug_log.arguments%TYPE;
+
+
+
+    --
+    -- Store `log_id` for current module
     --
     PROCEDURE update_map (
         in_map_index    debug_log.module_name%TYPE,
@@ -167,7 +684,7 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
-    -- Update DBMS_SESSION and DBMS_APPLICATION_INFO with current module and action
+    -- Update `DBMS_SESSION` and `DBMS_APPLICATION_INFO` with current module and action
     --
     PROCEDURE update_session (
         in_user_id          debug_log.user_id%TYPE,
@@ -178,382 +695,7 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
-    -- Main function called at the very start of every application module (procedure, function)
-    --
-    FUNCTION log_module (
-        in_arg1         debug_log.arguments%TYPE    := NULL,
-        in_arg2         debug_log.arguments%TYPE    := NULL,
-        in_arg3         debug_log.arguments%TYPE    := NULL,
-        in_arg4         debug_log.arguments%TYPE    := NULL,
-        in_arg5         debug_log.arguments%TYPE    := NULL,
-        in_arg6         debug_log.arguments%TYPE    := NULL,
-        in_arg7         debug_log.arguments%TYPE    := NULL,
-        in_arg8         debug_log.arguments%TYPE    := NULL
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Same as log_module function
-    --
-    PROCEDURE log_module (
-        in_arg1         debug_log.arguments%TYPE    := NULL,
-        in_arg2         debug_log.arguments%TYPE    := NULL,
-        in_arg3         debug_log.arguments%TYPE    := NULL,
-        in_arg4         debug_log.arguments%TYPE    := NULL,
-        in_arg5         debug_log.arguments%TYPE    := NULL,
-        in_arg6         debug_log.arguments%TYPE    := NULL,
-        in_arg7         debug_log.arguments%TYPE    := NULL,
-        in_arg8         debug_log.arguments%TYPE    := NULL
-    );
-
-
-
-    --
-    -- Overloaded variant used in schedulers to link calls to proper tree branch
-    --
-    PROCEDURE log_module (
-        in_scheduler_id     debug_log.log_id%TYPE
-    );
-
-
-
-    --
-    -- Main function to distinguish chosen path in longer modules; make sure to call log_module first
-    --
-    FUNCTION log_action (
-        in_action       debug_log.action_name%TYPE,
-        in_arg1         debug_log.arguments%TYPE    := NULL,
-        in_arg2         debug_log.arguments%TYPE    := NULL,
-        in_arg3         debug_log.arguments%TYPE    := NULL,
-        in_arg4         debug_log.arguments%TYPE    := NULL,
-        in_arg5         debug_log.arguments%TYPE    := NULL,
-        in_arg6         debug_log.arguments%TYPE    := NULL,
-        in_arg7         debug_log.arguments%TYPE    := NULL,
-        in_arg8         debug_log.arguments%TYPE    := NULL
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Same as log_action function
-    --
-    PROCEDURE log_action (
-        in_action       debug_log.action_name%TYPE,
-        in_arg1         debug_log.arguments%TYPE    := NULL,
-        in_arg2         debug_log.arguments%TYPE    := NULL,
-        in_arg3         debug_log.arguments%TYPE    := NULL,
-        in_arg4         debug_log.arguments%TYPE    := NULL,
-        in_arg5         debug_log.arguments%TYPE    := NULL,
-        in_arg6         debug_log.arguments%TYPE    := NULL,
-        in_arg7         debug_log.arguments%TYPE    := NULL,
-        in_arg8         debug_log.arguments%TYPE    := NULL
-    );
-
-
-
-    --
-    --
-    --
-    FUNCTION log_debug (
-        in_arg1         debug_log.arguments%TYPE    := NULL,
-        in_arg2         debug_log.arguments%TYPE    := NULL,
-        in_arg3         debug_log.arguments%TYPE    := NULL,
-        in_arg4         debug_log.arguments%TYPE    := NULL,
-        in_arg5         debug_log.arguments%TYPE    := NULL,
-        in_arg6         debug_log.arguments%TYPE    := NULL,
-        in_arg7         debug_log.arguments%TYPE    := NULL,
-        in_arg8         debug_log.arguments%TYPE    := NULL
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Same as log_debug function
-    --
-    PROCEDURE log_debug (
-        in_arg1         debug_log.arguments%TYPE    := NULL,
-        in_arg2         debug_log.arguments%TYPE    := NULL,
-        in_arg3         debug_log.arguments%TYPE    := NULL,
-        in_arg4         debug_log.arguments%TYPE    := NULL,
-        in_arg5         debug_log.arguments%TYPE    := NULL,
-        in_arg6         debug_log.arguments%TYPE    := NULL,
-        in_arg7         debug_log.arguments%TYPE    := NULL,
-        in_arg8         debug_log.arguments%TYPE    := NULL
-    );
-
-
-
-    --
-    --
-    --
-    FUNCTION log_result (
-        in_arg1         debug_log.arguments%TYPE    := NULL,
-        in_arg2         debug_log.arguments%TYPE    := NULL,
-        in_arg3         debug_log.arguments%TYPE    := NULL,
-        in_arg4         debug_log.arguments%TYPE    := NULL,
-        in_arg5         debug_log.arguments%TYPE    := NULL,
-        in_arg6         debug_log.arguments%TYPE    := NULL,
-        in_arg7         debug_log.arguments%TYPE    := NULL,
-        in_arg8         debug_log.arguments%TYPE    := NULL
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Same as log_result function
-    --
-    PROCEDURE log_result (
-        in_arg1         debug_log.arguments%TYPE    := NULL,
-        in_arg2         debug_log.arguments%TYPE    := NULL,
-        in_arg3         debug_log.arguments%TYPE    := NULL,
-        in_arg4         debug_log.arguments%TYPE    := NULL,
-        in_arg5         debug_log.arguments%TYPE    := NULL,
-        in_arg6         debug_log.arguments%TYPE    := NULL,
-        in_arg7         debug_log.arguments%TYPE    := NULL,
-        in_arg8         debug_log.arguments%TYPE    := NULL
-    );
-
-
-
-    --
-    --
-    --
-    FUNCTION log_warning (
-        in_action       debug_log.action_name%TYPE  := NULL,
-        in_arg1         debug_log.arguments%TYPE    := NULL,
-        in_arg2         debug_log.arguments%TYPE    := NULL,
-        in_arg3         debug_log.arguments%TYPE    := NULL,
-        in_arg4         debug_log.arguments%TYPE    := NULL,
-        in_arg5         debug_log.arguments%TYPE    := NULL,
-        in_arg6         debug_log.arguments%TYPE    := NULL,
-        in_arg7         debug_log.arguments%TYPE    := NULL,
-        in_arg8         debug_log.arguments%TYPE    := NULL
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Same as log_warning function
-    --
-    PROCEDURE log_warning (
-        in_action       debug_log.action_name%TYPE  := NULL,
-        in_arg1         debug_log.arguments%TYPE    := NULL,
-        in_arg2         debug_log.arguments%TYPE    := NULL,
-        in_arg3         debug_log.arguments%TYPE    := NULL,
-        in_arg4         debug_log.arguments%TYPE    := NULL,
-        in_arg5         debug_log.arguments%TYPE    := NULL,
-        in_arg6         debug_log.arguments%TYPE    := NULL,
-        in_arg7         debug_log.arguments%TYPE    := NULL,
-        in_arg8         debug_log.arguments%TYPE    := NULL
-    );
-
-
-
-    --
-    --
-    --
-    FUNCTION log_error (
-        in_action       debug_log.action_name%TYPE  := NULL,
-        in_arg1         debug_log.arguments%TYPE    := NULL,
-        in_arg2         debug_log.arguments%TYPE    := NULL,
-        in_arg3         debug_log.arguments%TYPE    := NULL,
-        in_arg4         debug_log.arguments%TYPE    := NULL,
-        in_arg5         debug_log.arguments%TYPE    := NULL,
-        in_arg6         debug_log.arguments%TYPE    := NULL,
-        in_arg7         debug_log.arguments%TYPE    := NULL,
-        in_arg8         debug_log.arguments%TYPE    := NULL
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Same as log_error function
-    --
-    PROCEDURE log_error (
-        in_action       debug_log.action_name%TYPE  := NULL,
-        in_arg1         debug_log.arguments%TYPE    := NULL,
-        in_arg2         debug_log.arguments%TYPE    := NULL,
-        in_arg3         debug_log.arguments%TYPE    := NULL,
-        in_arg4         debug_log.arguments%TYPE    := NULL,
-        in_arg5         debug_log.arguments%TYPE    := NULL,
-        in_arg6         debug_log.arguments%TYPE    := NULL,
-        in_arg7         debug_log.arguments%TYPE    := NULL,
-        in_arg8         debug_log.arguments%TYPE    := NULL
-    );
-
-
-
-    --
-    -- Log error and RAISE exception action_name|log_id
-    --
-    PROCEDURE raise_error (
-        in_action       debug_log.action_name%TYPE  := NULL,
-        in_arg1         debug_log.arguments%TYPE    := NULL,
-        in_arg2         debug_log.arguments%TYPE    := NULL,
-        in_arg3         debug_log.arguments%TYPE    := NULL,
-        in_arg4         debug_log.arguments%TYPE    := NULL,
-        in_arg5         debug_log.arguments%TYPE    := NULL,
-        in_arg6         debug_log.arguments%TYPE    := NULL,
-        in_arg7         debug_log.arguments%TYPE    := NULL,
-        in_arg8         debug_log.arguments%TYPE    := NULL
-    );
-
-
-
-    --
-    -- Log requested SYS_CONTEXT values
-    --
-    FUNCTION log_context (
-        in_namespace        debug_log.arguments%TYPE    := '%',
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Same as log_context function
-    --
-    PROCEDURE log_context (
-        in_namespace        debug_log.arguments%TYPE    := '%',
-        in_filter           debug_log.arguments%TYPE    := '%'
-    );
-
-
-
-    --
-    -- Log session NLS parameters
-    --
-    FUNCTION log_nls (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Same as log_nls function
-    --
-    PROCEDURE log_nls (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    );
-
-
-
-    --
-    -- Log USERENV values
-    --
-    FUNCTION log_userenv (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Same as log_userenv function
-    --
-    PROCEDURE log_userenv (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    );
-
-
-
-    --
-    -- Log CGI_ENV values (when called from web)
-    --
-    FUNCTION log_cgi (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Same as log_cgi function
-    --
-    PROCEDURE log_cgi (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    );
-
-
-
-    --
-    -- Get APEX items for selected/current page
-    --
-    FUNCTION log_apex_items (
-        in_page_id          debug_log.page_id%TYPE      := NULL,
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Same as log_apex_items function
-    --
-    PROCEDURE log_apex_items (
-        in_page_id          debug_log.page_id%TYPE      := NULL,
-        in_filter           debug_log.arguments%TYPE    := '%'
-    );
-
-
-
-    --
-    -- Get APEX global items
-    --
-    FUNCTION log_apex_globals (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Same as log_apex_globals function
-    --
-    PROCEDURE log_apex_globals (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    );
-
-
-
-    --
-    -- Log scheduler call and return log_id so the scheduler log can be linked to this log_id
-    --
-    FUNCTION log_scheduler (
-        in_action       debug_log.action_name%TYPE  := NULL,
-        in_arg1         debug_log.arguments%TYPE    := NULL,
-        in_arg2         debug_log.arguments%TYPE    := NULL,
-        in_arg3         debug_log.arguments%TYPE    := NULL,
-        in_arg4         debug_log.arguments%TYPE    := NULL,
-        in_arg5         debug_log.arguments%TYPE    := NULL,
-        in_arg6         debug_log.arguments%TYPE    := NULL,
-        in_arg7         debug_log.arguments%TYPE    := NULL,
-        in_arg8         debug_log.arguments%TYPE    := NULL
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- Update progress for LONGOPS
-    --
-    PROCEDURE log_progress (
-        in_progress         NUMBER := NULL  -- in percent (0-1)
-    );
-
-
-
-    --
-    -- Internal function which creates records in logs table; returns assigned log_id
+    -- Internal function which creates records in logs table; returns assigned `log_id`
     --
     FUNCTION log__ (
         in_action_name      debug_log.action_name%TYPE,
@@ -571,7 +713,7 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
-    -- Same as log__ function
+    -- ^
     --
     PROCEDURE log__ (
         in_action_name      debug_log.action_name%TYPE,
@@ -588,103 +730,11 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
-    -- Attach CLOB to existing/recent logs record
+    -- Purge old records from `debug_log` table
     --
-    PROCEDURE attach_clob (
-        in_payload          CLOB,
-        in_lob_name         debug_log_lobs.lob_name%TYPE    := NULL,
-        in_log_id           debug_log_lobs.log_id%TYPE      := NULL
+    PROCEDURE purge_old (
+        in_age          PLS_INTEGER := NULL
     );
-
-
-
-    --
-    -- Attach XML to existing/recent logs record
-    --
-    PROCEDURE attach_clob (
-        in_payload          XMLTYPE,
-        in_lob_name         debug_log_lobs.lob_name%TYPE    := NULL,
-        in_log_id           debug_log_lobs.log_id%TYPE      := NULL
-    );
-
-
-
-    --
-    -- Attach BLOB to existing/recent logs record
-    --
-    PROCEDURE attach_blob (
-        in_payload          BLOB,
-        in_lob_name         debug_log_lobs.lob_name%TYPE    := NULL,
-        in_log_id           debug_log_lobs.log_id%TYPE      := NULL
-    );
-
-
-
-    --
-    -- Update debug_log.timer for current module (or requested log_id)
-    --
-    PROCEDURE update_timer (
-        in_log_id           debug_log.log_id%TYPE := NULL
-    );
-
-
-
-    --
-    -- Converts record from DML ERR table to MERGE query
-    --
-    FUNCTION get_dml_query (
-        in_log_id           debug_log.log_id%TYPE,
-        in_table_name       debug_log.module_name%TYPE,
-        in_table_rowid      VARCHAR2,
-        in_action           CHAR  -- [I|U|D]
-    )
-    RETURN debug_log_lobs.payload_clob%TYPE;
-
-
-
-    --
-    -- Link errors stored in requested DML ERR table to parent log_id
-    --
-    PROCEDURE process_dml_error (
-        in_log_id           debug_log.log_id%TYPE,
-        in_error_table      VARCHAR2,   -- remove references to debug_log_dml_errors view
-        in_table_name       VARCHAR2,   -- because it can get invalidated too often
-        in_table_rowid      VARCHAR2,
-        in_action           VARCHAR2
-    );
-
-
-
-    --
-    -- Drop DML ERR tables matching in_table_like filter
-    --
-    PROCEDURE drop_dml_tables (
-        in_table_like       debug_log.module_name%TYPE
-    );
-
-
-
-    --
-    -- Recreate DML ERR tables matching in_table_like filter
-    --
-    PROCEDURE create_dml_tables (
-        in_table_like       debug_log.module_name%TYPE
-    );
-
-
-
-    --
-    -- Merge all DML ERR tables into single view
-    --
-    PROCEDURE create_dml_errors_view;
-
-
-
-    --
-    -- Purge old records from logs table
-    --
-    PROCEDURE purge_old;
 
 END;
 /
-
