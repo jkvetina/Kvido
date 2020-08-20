@@ -1677,12 +1677,14 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
-    PROCEDURE purge_old AS
+    PROCEDURE purge_old (
+        in_age          PLS_INTEGER := NULL
+    ) AS
         partition_date  VARCHAR2(10);   -- YYYY-MM-DD
         count_before    PLS_INTEGER;
         count_after     PLS_INTEGER;
     BEGIN
-        bug.log_module();
+        bug.log_module(in_age);
 
         -- delete old LOBs
         DELETE FROM debug_log_lobs l
@@ -1691,7 +1693,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             FROM debug_log e
             JOIN debug_log_lobs l
                 ON l.log_parent = e.log_id
-            WHERE e.created_at < TRUNC(SYSDATE) - bug.table_rows_max_age
+            WHERE e.created_at < TRUNC(SYSDATE) - NVL(in_age, bug.table_rows_max_age)
         );
 
         -- purge whole partitions
@@ -1701,7 +1703,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             WHERE p.table_name = bug.table_name
                 AND p.partition_position > 1
                 AND p.partition_position < (
-                    SELECT MAX(partition_position) - bug.table_rows_max_age
+                    SELECT MAX(partition_position) - NVL(in_age, bug.table_rows_max_age)
                     FROM user_tab_partitions
                     WHERE table_name = bug.table_name
                 )
@@ -1751,4 +1753,3 @@ BEGIN
         AND ROWNUM      <= rows_limit;
 END;
 /
-
