@@ -13,7 +13,7 @@ FROM (
         m.module_name,
         m.module_type,
         m.overload,
-        SUM(p.total_occur)  AS total_calls,
+        SUM(p.total_calls)  AS total_calls,
         SUM(p.total_time)   AS total_time
     FROM debug_log_profiler p
     LEFT JOIN debug_log_modules m
@@ -28,6 +28,7 @@ COMMENT ON COLUMN debug_log_profiler_sum.package_name   IS 'Package name';
 COMMENT ON COLUMN debug_log_profiler_sum.module_name    IS 'Module name';
 COMMENT ON COLUMN debug_log_profiler_sum.module_type    IS 'Module type (function/procedure)';
 COMMENT ON COLUMN debug_log_profiler_sum.overload       IS 'Overload ID';
+COMMENT ON COLUMN debug_log_profiler_sum.total_calls    IS 'Number of occurences/calls';
 COMMENT ON COLUMN debug_log_profiler_sum.total_time     IS 'Time spent on module';
 COMMENT ON COLUMN debug_log_profiler_sum.module_perc    IS 'Percentage of total time spent on module';
 

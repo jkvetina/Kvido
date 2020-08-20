@@ -18,7 +18,7 @@ SELECT
     m.module_name,
     m.module_type,
     m.overload,
-    d.total_occur,
+    d.total_occur       AS total_calls,
     d.total_time,
     d.max_time,
     b.block,
@@ -54,7 +54,7 @@ WHERE p.runid           = x.profiler_id
 COMMENT ON COLUMN debug_log_profiler.name           IS 'Object name';
 COMMENT ON COLUMN debug_log_profiler.type           IS 'Object type';
 COMMENT ON COLUMN debug_log_profiler.line           IS 'Line in source code';
-COMMENT ON COLUMN debug_log_profiler.total_occur    IS 'Number of occurences';
+COMMENT ON COLUMN debug_log_profiler.total_calls    IS 'Number of occurences/calls';
 COMMENT ON COLUMN debug_log_profiler.total_time     IS 'Time spent on module';
 COMMENT ON COLUMN debug_log_profiler.max_time       IS 'Time spent on one iteration';
 COMMENT ON COLUMN debug_log_profiler.block          IS 'Block from coverage';
