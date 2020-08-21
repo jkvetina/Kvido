@@ -177,14 +177,14 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
     FUNCTION get_caller_name (
-        in_offset           debug_log.module_depth%TYPE     := 0,
-        in_skip_this        BOOLEAN                         := TRUE,
-        in_attach_line      BOOLEAN                         := FALSE
+        in_offset           PLS_INTEGER     := 0,
+        in_skip_this        BOOLEAN         := TRUE,
+        in_attach_line      BOOLEAN         := FALSE
     )
     RETURN debug_log.module_name%TYPE
     AS
         module_name         debug_log.module_name%TYPE;
-        offset              debug_log.module_depth%TYPE     := NVL(in_offset, 0);
+        offset              PLS_INTEGER                 := NVL(in_offset, 0);
     BEGIN
         -- find first caller before this package
         FOR i IN 2 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP
@@ -211,7 +211,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     PROCEDURE get_caller (
         out_module_name     OUT debug_log.module_name%TYPE,
         out_module_line     OUT debug_log.module_line%TYPE,
-        out_module_depth    OUT debug_log.module_depth%TYPE,
         out_parent_id       OUT debug_log.log_parent%TYPE
     ) AS
         curr_module             debug_log.module_name%TYPE;
@@ -237,8 +236,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 -- set current module
                 out_module_name     := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i + 1));
                 out_module_line     := UTL_CALL_STACK.UNIT_LINE(i + 1);
-                out_module_depth    := UTL_CALL_STACK.DYNAMIC_DEPTH - i;
-                curr_index          := out_module_depth || '|' || out_module_name;
+                curr_index          := (UTL_CALL_STACK.DYNAMIC_DEPTH - i) || '|' || out_module_name;
                 parent_index        := curr_index;
                 --
                 $IF $$OUTPUT_ENABLED $THEN
@@ -989,7 +987,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         bug.get_caller (        -- basically who called this
             out_module_name     => rec.module_name,
             out_module_line     => rec.module_line,
-            out_module_depth    => rec.module_depth,
             out_parent_id       => rec.log_parent
         );
 
@@ -1078,7 +1075,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         bug.get_caller (        -- basically who called this
             out_module_name     => rec.module_name,
             out_module_line     => rec.module_line,
-            out_module_depth    => rec.module_depth,
             out_parent_id       => rec.log_parent
         );
 
@@ -1094,7 +1090,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             );
             rec.module_line     := SUBSTR(rec.module_name, INSTR(rec.module_name, bug.splitter) + 1);       -- extract line number
             rec.module_name     := SUBSTR(rec.module_name, 1, INSTR(rec.module_name, bug.splitter) - 1);    -- extract just name
-            rec.module_depth    := 0;
             rec.log_parent      := in_parent_id;
         END IF;
 
@@ -1190,7 +1185,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         $IF $$OUTPUT_ENABLED $THEN
             DBMS_OUTPUT.PUT_LINE(
                 rec.log_id || ' [' || rec.flag || ']: ' ||
-                RPAD(' ', (rec.module_depth - 1) * 2, ' ') ||
+                --RPAD(' ', (rec.module_depth - 1) * 2, ' ') ||
                 rec.module_name || ' [' || rec.module_line || '] ' || NULLIF(rec.action_name, bug.empty_action) ||
                 RTRIM(': ' || SUBSTR(in_arguments, 1, 40), ': ')
             );
@@ -1413,7 +1408,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             bug.get_caller (        -- basically who called this
                 out_module_name     => rec.module_name,
                 out_module_line     => rec.module_line,
-                out_module_depth    => rec.module_depth,
                 out_parent_id       => rec.log_parent
             );
         END IF;

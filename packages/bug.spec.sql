@@ -1,8 +1,5 @@
 CREATE OR REPLACE PACKAGE bug AS
 
-    -- switch to enable or disable DBMS_OUTPUT
-    output_enabled          BOOLEAN := TRUE;
-
     -- error log table name and max age fo records
     table_name              CONSTANT VARCHAR2(30)           := 'DEBUG_LOG';     -- used in purge_old
     table_rows_max_age      CONSTANT PLS_INTEGER            := 14;              -- max logs age in days
@@ -620,9 +617,9 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Returns procedure name which called this function with possible offset
     --
     FUNCTION get_caller_name (
-        in_offset           debug_log.module_depth%TYPE     := 0,
-        in_skip_this        BOOLEAN                         := TRUE,
-        in_attach_line      BOOLEAN                         := FALSE
+        in_offset           PLS_INTEGER     := 0,
+        in_skip_this        BOOLEAN         := TRUE,
+        in_attach_line      BOOLEAN         := FALSE
     )
     RETURN debug_log.module_name%TYPE;
 
@@ -634,7 +631,6 @@ CREATE OR REPLACE PACKAGE bug AS
     PROCEDURE get_caller (
         out_module_name     OUT debug_log.module_name%TYPE,
         out_module_line     OUT debug_log.module_line%TYPE,
-        out_module_depth    OUT debug_log.module_depth%TYPE,
         out_parent_id       OUT debug_log.log_parent%TYPE
     );
 

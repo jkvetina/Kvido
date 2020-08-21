@@ -1,7 +1,7 @@
 --DROP TABLE debug_log_lobs PURGE;
 CREATE TABLE debug_log_lobs (
-    log_id              NUMBER          NOT NULL,
-    log_parent          NUMBER          NOT NULL,
+    log_id              INTEGER         NOT NULL,
+    log_parent          INTEGER         NOT NULL,
     --
     lob_name            VARCHAR2(255),
     lob_length          NUMBER,

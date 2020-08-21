@@ -9,7 +9,6 @@ SELECT
     NULLIF(e.action_name, '-')                  AS action_name,
     LPAD(' ', (LEVEL - 1) * 4) || e.module_name AS module_name,
     e.module_line                               AS line,
-    e.module_depth                              AS depth,
     e.arguments,
     e.message,
     e.contexts,
