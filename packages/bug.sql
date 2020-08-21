@@ -1731,6 +1731,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 ON l.log_parent = e.log_id
             WHERE e.created_at < TRUNC(SYSDATE) - NVL(in_age, bug.table_rows_max_age)
         );
+        --
+        DELETE FROM debug_log e
+        WHERE e.created_at < TRUNC(SYSDATE) - NVL(in_age, bug.table_rows_max_age);
 
         -- purge whole partitions
         FOR c IN (
@@ -1757,7 +1760,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             EXECUTE IMMEDIATE
                 'SELECT COUNT(*) FROM ' || c.table_name INTO count_after;
             --
-            bug.log_result(c.partition_name, partition_date, count_before, count_after);
+            bug.log_result(c.partition_name, partition_date, count_before - count_after);
         END LOOP;
     END;
 
