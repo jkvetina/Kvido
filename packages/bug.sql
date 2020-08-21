@@ -222,15 +222,15 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         FOR i IN REVERSE 2 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP  -- 2 = ignore this function
             curr_module := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i));
             CONTINUE WHEN
-                curr_module LIKE $$PLSQL_UNIT || '.LOG__'    -- skip target function
+                curr_module LIKE $$PLSQL_UNIT || '.LOG__'   -- skip target function
                 OR UTL_CALL_STACK.UNIT_LINE(i) IS NULL;     -- skip DML queries
             --
-            IF bug.output_enabled THEN
+            $IF $$OUTPUT_ENABLED $THEN
                 DBMS_OUTPUT.PUT_LINE('  CALLSTACK: ' ||
                     (UTL_CALL_STACK.DYNAMIC_DEPTH - i + 1) || '|' ||
                     UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i))
                 );
-            END IF;
+            $END
 
             -- first call to this package stops the search
             IF curr_module LIKE $$PLSQL_UNIT || '.%' THEN
@@ -241,9 +241,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 curr_index          := out_module_depth || '|' || out_module_name;
                 parent_index        := curr_index;
                 --
-                IF bug.output_enabled THEN
+                $IF $$OUTPUT_ENABLED $THEN
                     DBMS_OUTPUT.PUT_LINE('  CURRENT = ' || curr_index);
-                END IF;
+                $END
 
                 -- create child
                 IF curr_module IN (fn_log_module, fn_log_action) THEN
@@ -255,9 +255,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                     -- recover parent index
                     BEGIN
                         parent_index := (UTL_CALL_STACK.DYNAMIC_DEPTH - i - 1) || '|' || UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i + 2));
-                        IF bug.output_enabled THEN
+                        $IF $$OUTPUT_ENABLED $THEN
                             DBMS_OUTPUT.PUT_LINE('  PARENT  = ' || parent_index);
-                        END IF;
+                        $END
                     EXCEPTION
                     WHEN BAD_DEPTH THEN
                         NULL;
@@ -267,9 +267,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 -- recover parent_id
                 IF map_modules.EXISTS(parent_index) THEN
                     out_parent_id := NULLIF(map_modules(parent_index), recent_log_id);
-                    IF bug.output_enabled THEN
+                    $IF $$OUTPUT_ENABLED $THEN
                         DBMS_OUTPUT.PUT_LINE('  PARENT  = ' || out_parent_id);
-                    END IF;
+                    $END
                 END IF;
                 --
                 EXIT;  -- break
@@ -284,9 +284,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         in_log_id       debug_log.log_id%TYPE
     ) AS
     BEGIN
-        IF bug.output_enabled THEN
+        $IF $$OUTPUT_ENABLED $THEN
             DBMS_OUTPUT.PUT_LINE('  UPDATE_MAP: ' || in_map_index || ' = ' || in_log_id);
-        END IF;
+        $END
         --
         map_modules(in_map_index) := in_log_id;
     END;
@@ -1147,9 +1147,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             END LOOP;
             --
             IF blacklisted THEN
-                IF bug.output_enabled THEN
+                $IF $$OUTPUT_ENABLED $THEN
                     DBMS_OUTPUT.PUT_LINE('^BLACKLISTED');
-                END IF;
+                $END
                 --
                 RETURN NULL;  -- exit function
             END IF;
@@ -1187,14 +1187,14 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         COMMIT;
 
         -- print message to console
-        IF bug.output_enabled THEN
+        $IF $$OUTPUT_ENABLED $THEN
             DBMS_OUTPUT.PUT_LINE(
                 rec.log_id || ' [' || rec.flag || ']: ' ||
                 RPAD(' ', (rec.module_depth - 1) * 2, ' ') ||
                 rec.module_name || ' [' || rec.module_line || '] ' || NULLIF(rec.action_name, bug.empty_action) ||
                 RTRIM(': ' || SUBSTR(in_arguments, 1, 40), ': ')
             );
-        END IF;
+        $END
 
         bug.start_profilers(rec);
 
