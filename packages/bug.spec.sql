@@ -695,6 +695,24 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
+    -- Start profilers
+    --
+    PROCEDURE start_profilers (
+        rec                 debug_log%ROWTYPE
+    );
+
+
+
+    --
+    -- Stop running profilers
+    --
+    PROCEDURE stop_profilers (
+        in_log_id           debug_log.log_id%TYPE := NULL
+    );
+
+
+
+    --
     -- Internal function which creates records in logs table; returns assigned `log_id`
     --
     FUNCTION log__ (

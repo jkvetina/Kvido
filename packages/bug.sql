@@ -1196,54 +1196,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             );
         END IF;
 
-        -- start profiler
-        $IF $$PROFILER_INSTALLED OR $$COVERAGE_INSTALLED $THEN
-            IF rec.flag IN (bug.flag_module, bug.flag_context) AND rec.flag != bug.flag_profiler THEN
-                FOR i IN 1 .. rows_profiler.COUNT LOOP
-                    IF rec.user_id              LIKE rows_profiler(i).user_id
-                        AND rec.module_name     LIKE rows_profiler(i).module_name
-                    THEN
-                        $IF $$PROFILER_INSTALLED $THEN
-                            IF rows_profiler(i).profiler = 'Y' THEN
-                                DBMS_PROFILER.START_PROFILER(rec.log_id, run_number => curr_profiler_id);
-                                IF bug.output_enabled THEN
-                                    DBMS_OUTPUT.PUT_LINE('  > START_PROFILER ' || curr_profiler_id);
-                                END IF;
-                                --
-                                bug.log__ (         -- be aware that this may cause infinite loop
-                                    in_action_name  => 'START_PROFILER',    -- used in debug_log_profiler view
-                                    in_flag         => bug.flag_profiler,
-                                    in_arguments    => curr_profiler_id,
-                                    in_parent_id    => rec.log_id
-                                );
-                                --
-                                curr_profiler_id    := rec.log_id;      -- store current and parent log_id so we can stop profiler later
-                                parent_profiler_id  := rec.log_parent;
-                            END IF;
-                        $END    
-                        --
-                        $IF $$COVERAGE_INSTALLED $THEN
-                            IF rows_profiler(i).coverage = 'Y' THEN
-                                curr_coverage_id := DBMS_PLSQL_CODE_COVERAGE.START_COVERAGE(rec.log_id);
-                                IF bug.output_enabled THEN
-                                    DBMS_OUTPUT.PUT_LINE('  > START_COVERAGE ' || curr_coverage_id);
-                                END IF;
-                                --
-                                bug.log__ (         -- be aware that this may cause infinite loop
-                                    in_action_name  => 'START_COVERAGE',    -- used in debug_log_profiler view
-                                    in_flag         => bug.flag_profiler,
-                                    in_arguments    => curr_coverage_id,
-                                    in_parent_id    => rec.log_id
-                                );
-                                --
-                                curr_coverage_id    := rec.log_id;      -- store current and parent log_id so we can stop coverage later
-                                parent_coverage_id  := rec.log_parent;
-                            END IF;
-                        $END    
-                    END IF;
-                END LOOP;
-            END IF;
-        $END    
+        bug.start_profilers(rec);
 
         -- save last error for easy access
         IF SQLCODE != 0 THEN
@@ -1349,6 +1302,106 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
+    PROCEDURE start_profilers (
+        rec                 debug_log%ROWTYPE
+    ) AS
+    BEGIN
+        -- avoid infinite loop
+        IF rec.flag = bug.flag_profiler THEN
+            RETURN;
+        END IF;
+        --
+        $IF $$PROFILER_INSTALLED $THEN
+            FOR i IN 1 .. rows_profiler.COUNT LOOP
+                IF rows_profiler(i).profiler    = 'Y'
+                    AND rec.user_id             LIKE rows_profiler(i).user_id
+                    AND rec.module_name         LIKE rows_profiler(i).module_name
+                THEN
+                    DBMS_PROFILER.START_PROFILER(rec.log_id, run_number => curr_profiler_id);
+                    $IF $$OUTPUT_ENABLED $THEN
+                        DBMS_OUTPUT.PUT_LINE('  > START_PROFILER ' || curr_profiler_id);
+                    $END
+                    --
+                    bug.log__ (         -- be aware that this may cause infinite loop
+                        in_action_name  => 'START_PROFILER',    -- used in debug_log_profiler view
+                        in_flag         => bug.flag_profiler,
+                        in_arguments    => curr_profiler_id,
+                        in_parent_id    => rec.log_id
+                    );
+                    --
+                    curr_profiler_id    := rec.log_id;      -- store current and parent log_id so we can stop profiler later
+                    parent_profiler_id  := rec.log_parent;
+                    --
+                    EXIT;  -- one profiler is enough
+                END IF;
+            END LOOP;
+        $END
+        --
+        /*
+        $IF $$PROFILER_INSTALLED OR $$COVERAGE_INSTALLED $THEN
+            IF rec.flag IN (bug.flag_module, bug.flag_context) AND rec.flag != bug.flag_profiler THEN
+                FOR i IN 1 .. rows_profiler.COUNT LOOP
+                    IF rec.user_id              LIKE rows_profiler(i).user_id
+                        AND rec.module_name     LIKE rows_profiler(i).module_name
+                    THEN
+                        $IF $$COVERAGE_INSTALLED $THEN
+                            IF rows_profiler(i).coverage = 'Y' THEN
+                                curr_coverage_id := DBMS_PLSQL_CODE_COVERAGE.START_COVERAGE(rec.log_id);
+                                $IF $$OUTPUT_ENABLED $THEN
+                                    DBMS_OUTPUT.PUT_LINE('  > START_COVERAGE ' || curr_coverage_id);
+                                $END
+                                --
+                                bug.log__ (         -- be aware that this may cause infinite loop
+                                    in_action_name  => 'START_COVERAGE',    -- used in debug_log_profiler view
+                                    in_flag         => bug.flag_profiler,
+                                    in_arguments    => curr_coverage_id,
+                                    in_parent_id    => rec.log_id
+                                );
+                                --
+                                curr_coverage_id    := rec.log_id;      -- store current and parent log_id so we can stop coverage later
+                                parent_coverage_id  := rec.log_parent;
+                                --
+                                EXIT;
+                            END IF;
+                        $END
+                    END IF;
+                END LOOP;
+            END IF;
+        $END*/
+        --
+        NULL;
+    END;
+
+
+
+    PROCEDURE stop_profilers (
+        in_log_id           debug_log.log_id%TYPE := NULL
+    ) AS
+    BEGIN
+        $IF $$PROFILER_INSTALLED $THEN
+            IF in_log_id IN (curr_profiler_id, parent_profiler_id) THEN
+                $IF $$OUTPUT_ENABLED $THEN
+                    DBMS_OUTPUT.PUT_LINE('  > STOP_PROFILER');
+                $END
+                DBMS_PROFILER.STOP_PROFILER;
+            END IF;
+        $END
+        --
+        /*
+        $IF $$COVERAGE_INSTALLED $THEN
+            IF in_log_id IN (curr_coverage_id, parent_coverage_id) THEN
+                $IF $$OUTPUT_ENABLED $THEN
+                    DBMS_OUTPUT.PUT_LINE('  > STOP_COVERAGE');
+                $END
+                DBMS_PLSQL_CODE_COVERAGE.STOP_COVERAGE;
+            END IF;
+        $END*/
+        --
+        NULL;
+    END;
+
+
+
     PROCEDURE update_timer (
         in_log_id           debug_log.log_id%TYPE := NULL
     ) AS
@@ -1365,24 +1418,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             );
         END IF;
 
-        -- stop profilers
-        $IF $$PROFILER_INSTALLED $THEN
-            IF NVL(in_log_id, rec.log_parent) IN (curr_profiler_id, parent_profiler_id) THEN
-                IF bug.output_enabled THEN
-                    DBMS_OUTPUT.PUT_LINE('  > STOP_PROFILER');
-                END IF;
-                DBMS_PROFILER.STOP_PROFILER;
-            END IF;
-        $END    
-        --
-        $IF $$COVERAGE_INSTALLED $THEN
-            IF NVL(in_log_id, rec.log_parent) IN (curr_coverage_id, parent_coverage_id) THEN
-                IF bug.output_enabled THEN
-                    DBMS_OUTPUT.PUT_LINE('  > STOP_COVERAGE');
-                END IF;
-                DBMS_PLSQL_CODE_COVERAGE.STOP_COVERAGE;
-            END IF;
-        $END    
+        bug.stop_profilers(NVL(in_log_id, rec.log_parent));
 
         -- update timer
         UPDATE debug_log e
