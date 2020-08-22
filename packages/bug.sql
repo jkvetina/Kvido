@@ -1716,6 +1716,14 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     BEGIN
         bug.log_module(in_age);
 
+        -- purge all
+        IF in_age < 0 THEN
+            EXECUTE IMMEDIATE 'ALTER TABLE debug_log_lobs DISABLE CONSTRAINT fk_debug_log_lobs_debug_log';
+            EXECUTE IMMEDIATE 'TRUNCATE TABLE debug_log_lobs';
+            EXECUTE IMMEDIATE 'TRUNCATE TABLE ' || bug.table_name || ' CASCADE';
+            EXECUTE IMMEDIATE 'ALTER TABLE debug_log_lobs ENABLE CONSTRAINT fk_debug_log_lobs_debug_log';
+        END IF;
+
         -- delete old LOBs
         DELETE FROM debug_log_lobs l
         WHERE l.log_id IN (
@@ -1754,7 +1762,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             EXECUTE IMMEDIATE
                 'SELECT COUNT(*) FROM ' || c.table_name INTO count_after;
             --
-            bug.log_result(c.partition_name, partition_date, count_before - count_after);
+            IF in_age >= 0 THEN
+                bug.log_result(c.partition_name, partition_date, count_before - count_after);
+            END IF;
         END LOOP;
     END;
 
