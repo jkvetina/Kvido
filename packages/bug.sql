@@ -332,34 +332,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
-    PROCEDURE log_module (
-        in_scheduler_id     debug_log.log_id%TYPE
-    ) AS
-        rec_user_id         debug_log.user_id%TYPE;
-        rec_action_name     debug_log.action_name%TYPE;
-        rec_contexts        debug_log.contexts%TYPE;
-        out_log_id          debug_log.log_id%TYPE;
-    BEGIN
-        SELECT e.user_id, e.action_name, e.contexts
-        INTO rec_user_id, rec_action_name, rec_contexts
-        FROM debug_log e
-        WHERE e.log_id = in_scheduler_id;
-
-        -- recover app context values from log and set user
-        ctx.get_contexts(rec_contexts);
-        ctx.set_user_id(rec_user_id);
-
-        -- create log as the last action in this procedure
-        out_log_id := bug.log__ (
-            in_action_name  => rec_action_name,
-            in_flag         => bug.flag_module,
-            in_arguments    => rec_action_name || '_' || in_scheduler_id,
-            in_parent_id    => in_scheduler_id
-        );
-    END;
-
-
-
     FUNCTION log_action (
         in_action       debug_log.action_name%TYPE,
         in_arg1         debug_log.arguments%TYPE    := NULL,
@@ -901,22 +873,30 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
     FUNCTION log_scheduler (
-        in_action       debug_log.action_name%TYPE  := NULL,
-        in_arg1         debug_log.arguments%TYPE    := NULL,
-        in_arg2         debug_log.arguments%TYPE    := NULL,
-        in_arg3         debug_log.arguments%TYPE    := NULL,
-        in_arg4         debug_log.arguments%TYPE    := NULL,
-        in_arg5         debug_log.arguments%TYPE    := NULL,
-        in_arg6         debug_log.arguments%TYPE    := NULL,
-        in_arg7         debug_log.arguments%TYPE    := NULL,
-        in_arg8         debug_log.arguments%TYPE    := NULL
+        in_scheduler_id     debug_log.log_id%TYPE
     )
     RETURN debug_log.log_id%TYPE AS
     BEGIN
         RETURN bug.log__ (
-            in_action_name  => in_action,
+            in_action_name  => NULL,
             in_flag         => bug.flag_scheduler,
-            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+            in_arguments    => 'LOG_SCHEDULER|' || in_scheduler_id,
+            in_parent_id    => in_scheduler_id
+        );
+    END;
+
+
+
+    PROCEDURE log_scheduler (
+        in_scheduler_id     debug_log.log_id%TYPE
+    ) AS
+        out_log_id          debug_log.log_id%TYPE;
+    BEGIN
+        out_log_id := bug.log__ (
+            in_action_name  => NULL,
+            in_flag         => bug.flag_scheduler,
+            in_arguments    => 'LOG_SCHEDULER|' || in_scheduler_id,
+            in_parent_id    => in_scheduler_id
         );
     END;
 
@@ -1027,23 +1007,24 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             out_parent_id       => rec.log_parent
         );
 
-        -- if parent passed manually, then find caller other way
-        IF in_parent_id IS NOT NULL THEN
-            --
-            -- @TODO: probably just get_caller with offset ???
-            --
-            rec.module_name     := bug.get_caller_name (
-                in_offset       => 2,       -- when called via function it should be 1 less
-                in_skip_this    => FALSE,
-                in_attach_line  => TRUE
-            );
-            rec.module_line     := SUBSTR(rec.module_name, INSTR(rec.module_name, bug.splitter) + 1);       -- extract line number
-            rec.module_name     := SUBSTR(rec.module_name, 1, INSTR(rec.module_name, bug.splitter) - 1);    -- extract just name
-            rec.log_parent      := in_parent_id;
+        -- recover contexts for scheduler
+        IF in_flag = bug.flag_scheduler AND in_parent_id IS NOT NULL THEN
+            BEGIN
+                SELECT e.user_id, e.action_name, e.contexts
+                INTO rec.user_id, rec.action_name, rec.contexts
+                FROM debug_log e
+                WHERE e.log_id = in_parent_id;
+            EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                RAISE_APPLICATION_ERROR(-20000, 'SCHEDULER_ROOT_MISSING ' || in_parent_id);
+            END;
+
+            -- recover app context values from log and set user
+            ctx.set_contexts(rec.contexts);
         END IF;
 
         -- get user and update session info
-        rec.user_id         := ctx.get_user_id();
+        rec.user_id         := NVL(rec.user_id, ctx.get_user_id());
         rec.flag            := NVL(in_flag, '?');
         rec.module_line     := NVL(rec.module_line, 0);
         --
@@ -1098,7 +1079,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         -- prepare record
         rec.app_id          := NVL(ctx.get_app_id(), 0);  -- default to zero to match contexts table
         rec.page_id         := ctx.get_page_id();
-        rec.action_name     := SUBSTR(NVL(in_action_name, bug.empty_action), 1, bug.length_action);
+        rec.action_name     := SUBSTR(COALESCE(rec.action_name, in_action_name, bug.empty_action), 1, bug.length_action);
         rec.arguments       := SUBSTR(in_arguments, 1, bug.length_arguments);
         rec.message         := SUBSTR(in_message,   1, bug.length_message);  -- may be overwritten later
         rec.session_db      := ctx.get_session_db();
@@ -1358,6 +1339,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             );
         END IF;
 
+        -- when updating timer for same module which initiated start_profilers
         bug.stop_profilers(NVL(in_log_id, rec.log_parent));
 
         -- update timer

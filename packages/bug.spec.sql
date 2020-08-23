@@ -101,15 +101,6 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
-    -- Overloaded variant used in schedulers to link calls to proper tree branch
-    --
-    PROCEDURE log_module (
-        in_scheduler_id     debug_log.log_id%TYPE
-    );
-
-
-
-    --
     -- Main function used as marker in longer modules; make sure to call `log_module` first
     --
     FUNCTION log_action (
@@ -329,17 +320,18 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Log scheduler call and link its logs to this `log_id`
     --
     FUNCTION log_scheduler (
-        in_action       debug_log.action_name%TYPE  := NULL,
-        in_arg1         debug_log.arguments%TYPE    := NULL,
-        in_arg2         debug_log.arguments%TYPE    := NULL,
-        in_arg3         debug_log.arguments%TYPE    := NULL,
-        in_arg4         debug_log.arguments%TYPE    := NULL,
-        in_arg5         debug_log.arguments%TYPE    := NULL,
-        in_arg6         debug_log.arguments%TYPE    := NULL,
-        in_arg7         debug_log.arguments%TYPE    := NULL,
-        in_arg8         debug_log.arguments%TYPE    := NULL
+        in_scheduler_id     debug_log.log_id%TYPE
     )
     RETURN debug_log.log_id%TYPE;
+
+
+
+    --
+    -- ^
+    --
+    PROCEDURE log_scheduler (
+        in_scheduler_id     debug_log.log_id%TYPE
+    );
 
 
 
