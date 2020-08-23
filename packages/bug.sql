@@ -344,15 +344,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         out_log_id      debug_log.log_id%TYPE;
     BEGIN
-        out_log_id := bug.log_module (
-            in_arg1     => in_arg1,
-            in_arg2     => in_arg2,
-            in_arg3     => in_arg3,
-            in_arg4     => in_arg4,
-            in_arg5     => in_arg5,
-            in_arg6     => in_arg6,
-            in_arg7     => in_arg7,
-            in_arg8     => in_arg8
+        out_log_id := bug.log__ (
+            in_action_name  => bug.empty_action,
+            in_flag         => bug.flag_module,
+            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
