@@ -628,10 +628,17 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     -- Return detailed info about caller
     --
-    PROCEDURE get_caller (
+    PROCEDURE get_caller__ (
+        in_log_id               debug_log.log_id%TYPE       := NULL,
+        in_parent_id            debug_log.log_parent%TYPE   := NULL,
+        in_flag                 debug_log.flag%TYPE         := NULL,
         out_module_name     OUT debug_log.module_name%TYPE,
         out_module_line     OUT debug_log.module_line%TYPE,
         out_parent_id       OUT debug_log.log_parent%TYPE
+    )
+    ACCESSIBLE BY (
+        PACKAGE err,
+        PACKAGE err_ut
     );
 
 
@@ -672,7 +679,7 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     -- Update `DBMS_SESSION` and `DBMS_APPLICATION_INFO` with current module and action
     --
-    PROCEDURE update_session (
+    PROCEDURE set_session (
         in_user_id          debug_log.user_id%TYPE,
         in_module_name      debug_log.module_name%TYPE,
         in_action_name      debug_log.action_name%TYPE

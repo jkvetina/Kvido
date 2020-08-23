@@ -19,9 +19,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         INDEX BY debug_log.module_name%TYPE;
     --
     map_modules             arr_map_module_to_id;
-    --
-    fn_log_module           CONSTANT debug_log.module_name%TYPE     := 'BUG.LOG_MODULE';  -- $$PLSQL_UNIT
-    fn_log_action           CONSTANT debug_log.module_name%TYPE     := 'BUG.LOG_ACTION';
 
     -- module_name LIKE to switch flag_module to flag_context
     trigger_ctx             CONSTANT debug_log.module_name%TYPE     := 'CTX.%';
@@ -208,73 +205,92 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
-    PROCEDURE get_caller (
+    PROCEDURE get_caller__ (
+        in_log_id               debug_log.log_id%TYPE       := NULL,
+        in_parent_id            debug_log.log_parent%TYPE   := NULL,
+        in_flag                 debug_log.flag%TYPE         := NULL,
         out_module_name     OUT debug_log.module_name%TYPE,
         out_module_line     OUT debug_log.module_line%TYPE,
         out_parent_id       OUT debug_log.log_parent%TYPE
+    )
+    ACCESSIBLE BY (
+        PACKAGE err,
+        PACKAGE err_ut
     ) AS
         curr_module             debug_log.module_name%TYPE;
+        curr_depth              PLS_INTEGER;
+        curr_caller             debug_log.module_name%TYPE;
+        curr_line               debug_log.module_line%TYPE;
         curr_index              debug_log.module_name%TYPE;
+        --
+        parent_depth            PLS_INTEGER;
+        parent_caller           debug_log.module_name%TYPE;
         parent_index            debug_log.module_name%TYPE;
+        real_depth              PLS_INTEGER;
     BEGIN
-        -- better version of DBMS_UTILITY.FORMAT_CALL_STACK
+        $IF $$OUTPUT_ENABLED $THEN
+            DBMS_OUTPUT.PUT_LINE('--');
+            FOR i IN 2 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP  -- 2 = ignore this function
+                DBMS_OUTPUT.PUT_LINE('  CALLSTACK: ' || i || ':' ||
+                    UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i))
+                );
+            END LOOP;
+        $END
+
+        -- find first caller before this package
         FOR i IN REVERSE 2 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP  -- 2 = ignore this function
             curr_module := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i));
             CONTINUE WHEN
                 curr_module LIKE $$PLSQL_UNIT || '.LOG__'   -- skip target function
                 OR UTL_CALL_STACK.UNIT_LINE(i) IS NULL;     -- skip DML queries
             --
-            $IF $$OUTPUT_ENABLED $THEN
-                DBMS_OUTPUT.PUT_LINE('  CALLSTACK: ' ||
-                    (UTL_CALL_STACK.DYNAMIC_DEPTH - i + 1) || '|' ||
-                    UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i))
-                );
-            $END
-
-            -- first call to this package stops the search
             IF curr_module LIKE $$PLSQL_UNIT || '.%' THEN
-                -- set current module
-                out_module_name     := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i + 1));
-                out_module_line     := UTL_CALL_STACK.UNIT_LINE(i + 1);
-                curr_index          := (UTL_CALL_STACK.DYNAMIC_DEPTH - i) || '|' || out_module_name;
-                parent_index        := curr_index;
-                --
-                $IF $$OUTPUT_ENABLED $THEN
-                    DBMS_OUTPUT.PUT_LINE('  CURRENT = ' || curr_index);
-                $END
-
-                -- create child
-                IF curr_module IN (fn_log_module, fn_log_action) THEN
-                    map_modules(curr_index) := recent_log_id;
-
-                    -- recover parent index
-                    BEGIN
-                        parent_index := (UTL_CALL_STACK.DYNAMIC_DEPTH - i - 1) || '|' || UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i + 2));
-                        $IF $$OUTPUT_ENABLED $THEN
-                            DBMS_OUTPUT.PUT_LINE('  PARENT  = ' || parent_index);
-                        $END
-                    EXCEPTION
-                    WHEN BAD_DEPTH THEN
-                        NULL;
-                    END;
-                END IF;
-
-                -- recover parent_id
-                IF map_modules.EXISTS(parent_index) THEN
-                    out_parent_id := NULLIF(map_modules(parent_index), recent_log_id);
-                    $IF $$OUTPUT_ENABLED $THEN
-                        DBMS_OUTPUT.PUT_LINE('  PARENT  = ' || out_parent_id);
-                    $END
-                END IF;
-                --
+                curr_depth  := UTL_CALL_STACK.DYNAMIC_DEPTH - i;
+                real_depth  := i + 1;
+                curr_caller := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(real_depth));
+                curr_line   := UTL_CALL_STACK.UNIT_LINE(real_depth);
+                curr_index  := curr_depth || ':' || curr_caller;
                 EXIT;  -- break
             END IF;
         END LOOP;
+
+        -- create map record
+        IF in_log_id IS NOT NULL AND in_flag IN (bug.flag_module, bug.flag_action, bug.flag_scheduler) THEN
+            map_modules(curr_index) := in_log_id;
+            $IF $$OUTPUT_ENABLED $THEN
+                DBMS_OUTPUT.PUT_LINE('    UPDATE: ' || curr_index || ' = ' || in_log_id || ' (' || real_depth || ')');
+            $END
+        END IF;
+
+        -- find parent_id
+        IF in_parent_id IS NULL THEN
+            BEGIN
+                parent_depth    := UTL_CALL_STACK.DYNAMIC_DEPTH - real_depth;
+                parent_caller   := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(real_depth + 1));
+                parent_index    := parent_depth || ':' || parent_caller;
+                --
+                IF map_modules.EXISTS(parent_index) THEN
+                    out_parent_id := NULLIF(map_modules(parent_index), in_log_id);
+                END IF;
+            EXCEPTION
+            WHEN BAD_DEPTH THEN
+                NULL;
+            END;
+            --
+            $IF $$OUTPUT_ENABLED $THEN
+                DBMS_OUTPUT.PUT_LINE('    PARENT: ' || parent_index || ' = ' || out_parent_id || ' (' || (real_depth + 1) || ')');
+            $END
+        END IF;
+
+        -- results
+        out_module_name := curr_caller;
+        out_module_line := NVL(curr_line, 0);
+        out_parent_id   := NVL(in_parent_id, out_parent_id);
     END;
 
 
 
-    PROCEDURE update_session (
+    PROCEDURE set_session (
         in_user_id          debug_log.user_id%TYPE,
         in_module_name      debug_log.module_name%TYPE,
         in_action_name      debug_log.action_name%TYPE
@@ -934,7 +950,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         slno                BINARY_INTEGER;
         rec                 debug_log%ROWTYPE;
     BEGIN
-        bug.get_caller (        -- basically who called this
+        bug.get_caller__ (
             out_module_name     => rec.module_name,
             out_module_line     => rec.module_line,
             out_parent_id       => rec.log_parent
@@ -1012,17 +1028,20 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
-        rec             debug_log%ROWTYPE;
-        map_index       debug_log.module_name%TYPE;
+        rec                 debug_log%ROWTYPE;
+        map_index           debug_log.module_name%TYPE;
         --
-        whitelisted     BOOLEAN := FALSE;   -- force log
-        blacklisted     BOOLEAN := FALSE;   -- dont log
+        whitelisted         BOOLEAN := FALSE;   -- force log
+        blacklisted         BOOLEAN := FALSE;   -- dont log
     BEGIN
         -- get caller info and parent id
-        rec.log_id              := log_id.NEXTVAL;
-        recent_log_id           := rec.log_id;
+        rec.log_id          := log_id.NEXTVAL;
+        recent_log_id       := rec.log_id;
         --
-        bug.get_caller (        -- basically who called this
+        bug.get_caller__ (
+            in_log_id           => rec.log_id,
+            in_parent_id        => in_parent_id,
+            in_flag             => in_flag,
             out_module_name     => rec.module_name,
             out_module_line     => rec.module_line,
             out_parent_id       => rec.log_parent
@@ -1048,7 +1067,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         rec.flag            := NVL(in_flag, '?');
         rec.module_line     := NVL(rec.module_line, 0);
         --
-        bug.update_session (
+        bug.set_session (
             in_user_id      => rec.user_id,
             in_module_name  => rec.module_name,
             in_action_name  => NVL(in_action_name, rec.module_name || bug.splitter || rec.module_line)
@@ -1092,10 +1111,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             END LOOP;
             --
             IF blacklisted THEN
-                $IF $$OUTPUT_ENABLED $THEN
-                    DBMS_OUTPUT.PUT_LINE('^BLACKLISTED');
-                $END
-                --
                 RETURN NULL;  -- exit function
             END IF;
         END IF;
@@ -1355,7 +1370,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         rec                 debug_log%ROWTYPE;
     BEGIN
         IF in_log_id IS NULL THEN
-            bug.get_caller (        -- basically who called this
+            bug.get_caller__ (
+                in_parent_id        => in_log_id,
                 out_module_name     => rec.module_name,
                 out_module_line     => rec.module_line,
                 out_parent_id       => rec.log_parent
