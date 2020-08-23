@@ -19,6 +19,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         INDEX BY debug_log.module_name%TYPE;
     --
     map_modules             arr_map_module_to_id;
+    map_actions             arr_map_module_to_id;
 
     -- module_name LIKE to switch flag_module to flag_context
     trigger_ctx             CONSTANT debug_log.module_name%TYPE     := 'CTX.%';
@@ -217,75 +218,54 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         PACKAGE err,
         PACKAGE err_ut
     ) AS
-        curr_module             debug_log.module_name%TYPE;
-        curr_depth              PLS_INTEGER;
-        curr_caller             debug_log.module_name%TYPE;
-        curr_line               debug_log.module_line%TYPE;
-        curr_index              debug_log.module_name%TYPE;
-        --
-        parent_depth            PLS_INTEGER;
-        parent_caller           debug_log.module_name%TYPE;
-        parent_index            debug_log.module_name%TYPE;
-        real_depth              PLS_INTEGER;
+        curr_module     debug_log.module_name%TYPE;
+        curr_index      debug_log.module_name%TYPE;
+        parent_index    debug_log.module_name%TYPE;
     BEGIN
-        $IF $$OUTPUT_ENABLED $THEN
-            DBMS_OUTPUT.PUT_LINE('--');
-            FOR i IN 2 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP  -- 2 = ignore this function
-                DBMS_OUTPUT.PUT_LINE('  CALLSTACK: ' || i || ':' ||
-                    UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i))
-                );
-            END LOOP;
-        $END
-
-        -- find first caller before this package
+        out_parent_id := in_parent_id;
+        --
         FOR i IN REVERSE 2 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP  -- 2 = ignore this function
             curr_module := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i));
             CONTINUE WHEN
                 curr_module LIKE $$PLSQL_UNIT || '.LOG__'   -- skip target function
                 OR UTL_CALL_STACK.UNIT_LINE(i) IS NULL;     -- skip DML queries
-            --
+    
+            -- first call to this package stops the search
             IF curr_module LIKE $$PLSQL_UNIT || '.%' THEN
-                curr_depth  := UTL_CALL_STACK.DYNAMIC_DEPTH - i;
-                real_depth  := i + 1;
-                curr_caller := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(real_depth));
-                curr_line   := UTL_CALL_STACK.UNIT_LINE(real_depth);
-                curr_index  := curr_depth || ':' || curr_caller;
+                out_module_name     := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i + 1));
+                out_module_line     := UTL_CALL_STACK.UNIT_LINE(i + 1);
+                curr_index          := (UTL_CALL_STACK.DYNAMIC_DEPTH - i) || '|' || out_module_name;
+                parent_index        := curr_index;
+    
+                -- create child
+                IF in_flag IN (bug.flag_action) THEN
+                    map_actions(curr_index) := in_log_id;
+                    --
+                ELSIF in_flag IN (bug.flag_module, bug.flag_scheduler) THEN
+                    map_modules(curr_index) := in_log_id;
+                    
+                    -- find previous module (on another depth)
+                    BEGIN
+                        parent_index := (UTL_CALL_STACK.DYNAMIC_DEPTH - i - 1) || '|' || UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i + 2));
+                    EXCEPTION
+                    WHEN BAD_DEPTH THEN
+                        NULL;
+                    END;
+                END IF;
+
+                -- recover parent_id
+                IF out_parent_id IS NULL AND map_actions.EXISTS(parent_index) THEN
+                    out_parent_id := NULLIF(map_actions(parent_index), in_log_id);
+                END IF;
+                IF out_parent_id IS NULL AND map_modules.EXISTS(parent_index) THEN
+                    out_parent_id := NULLIF(map_modules(parent_index), in_log_id);
+                END IF;
+                --
                 EXIT;  -- break
             END IF;
         END LOOP;
-
-        -- create map record
-        IF in_log_id IS NOT NULL AND in_flag IN (bug.flag_module, bug.flag_action, bug.flag_scheduler) THEN
-            map_modules(curr_index) := in_log_id;
-            $IF $$OUTPUT_ENABLED $THEN
-                DBMS_OUTPUT.PUT_LINE('    UPDATE: ' || curr_index || ' = ' || in_log_id || ' (' || real_depth || ')');
-            $END
-        END IF;
-
-        -- find parent_id
-        IF in_parent_id IS NULL THEN
-            BEGIN
-                parent_depth    := UTL_CALL_STACK.DYNAMIC_DEPTH - real_depth;
-                parent_caller   := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(real_depth + 1));
-                parent_index    := parent_depth || ':' || parent_caller;
-                --
-                IF map_modules.EXISTS(parent_index) THEN
-                    out_parent_id := NULLIF(map_modules(parent_index), in_log_id);
-                END IF;
-            EXCEPTION
-            WHEN BAD_DEPTH THEN
-                NULL;
-            END;
-            --
-            $IF $$OUTPUT_ENABLED $THEN
-                DBMS_OUTPUT.PUT_LINE('    PARENT: ' || parent_index || ' = ' || out_parent_id || ' (' || (real_depth + 1) || ')');
-            $END
-        END IF;
-
-        -- results
-        out_module_name := curr_caller;
-        out_module_line := NVL(curr_line, 0);
-        out_parent_id   := NVL(in_parent_id, out_parent_id);
+        --
+        out_module_line := NVL(out_module_line, 0);
     END;
 
 
