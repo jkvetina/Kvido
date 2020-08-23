@@ -245,10 +245,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
                 -- create child
                 IF curr_module IN (fn_log_module, fn_log_action) THEN
-                    bug.update_map (
-                        in_map_index    => curr_index,
-                        in_log_id       => recent_log_id
-                    );
+                    map_modules(curr_index) := recent_log_id;
 
                     -- recover parent index
                     BEGIN
@@ -273,20 +270,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 EXIT;  -- break
             END IF;
         END LOOP;
-    END;
-
-
-
-    PROCEDURE update_map (
-        in_map_index    debug_log.module_name%TYPE,
-        in_log_id       debug_log.log_id%TYPE
-    ) AS
-    BEGIN
-        $IF $$OUTPUT_ENABLED $THEN
-            DBMS_OUTPUT.PUT_LINE('  UPDATE_MAP: ' || in_map_index || ' = ' || in_log_id);
-        $END
-        --
-        map_modules(in_map_index) := in_log_id;
     END;
 
 

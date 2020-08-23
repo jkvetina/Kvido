@@ -670,16 +670,6 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
-    -- Store `log_id` for current module
-    --
-    PROCEDURE update_map (
-        in_map_index    debug_log.module_name%TYPE,
-        in_log_id       debug_log.log_id%TYPE
-    );
-
-
-
-    --
     -- Update `DBMS_SESSION` and `DBMS_APPLICATION_INFO` with current module and action
     --
     PROCEDURE update_session (
