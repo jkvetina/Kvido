@@ -421,16 +421,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         out_log_id      debug_log.log_id%TYPE;
     BEGIN
-        out_log_id := bug.log_action (
-            in_action   => in_action,
-            in_arg1     => in_arg1,
-            in_arg2     => in_arg2,
-            in_arg3     => in_arg3,
-            in_arg4     => in_arg4,
-            in_arg5     => in_arg5,
-            in_arg6     => in_arg6,
-            in_arg7     => in_arg7,
-            in_arg8     => in_arg8
+        out_log_id := bug.log__ (
+            in_action_name  => in_action,
+            in_flag         => bug.flag_action,
+            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -449,7 +443,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     RETURN debug_log.log_id%TYPE AS
     BEGIN
         RETURN bug.log__ (
-            in_action_name  => NULL,
+            in_action_name  => bug.empty_action,
             in_flag         => bug.flag_debug,
             in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
@@ -469,15 +463,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         out_log_id      debug_log.log_id%TYPE;
     BEGIN
-        out_log_id := bug.log_debug (
-            in_arg1     => in_arg1,
-            in_arg2     => in_arg2,
-            in_arg3     => in_arg3,
-            in_arg4     => in_arg4,
-            in_arg5     => in_arg5,
-            in_arg6     => in_arg6,
-            in_arg7     => in_arg7,
-            in_arg8     => in_arg8
+        out_log_id := bug.log__ (
+            in_action_name  => bug.empty_action,
+            in_flag         => bug.flag_debug,
+            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -516,15 +505,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         out_log_id      debug_log.log_id%TYPE;
     BEGIN
-        out_log_id := bug.log_result (
-            in_arg1     => in_arg1,
-            in_arg2     => in_arg2,
-            in_arg3     => in_arg3,
-            in_arg4     => in_arg4,
-            in_arg5     => in_arg5,
-            in_arg6     => in_arg6,
-            in_arg7     => in_arg7,
-            in_arg8     => in_arg8
+        out_log_id := bug.log__ (
+            in_action_name  => bug.empty_action,
+            in_flag         => bug.flag_result,
+            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -565,16 +549,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         out_log_id      debug_log.log_id%TYPE;
     BEGIN
-        out_log_id := bug.log_warning (
-            in_action   => in_action,
-            in_arg1     => in_arg1,
-            in_arg2     => in_arg2,
-            in_arg3     => in_arg3,
-            in_arg4     => in_arg4,
-            in_arg5     => in_arg5,
-            in_arg6     => in_arg6,
-            in_arg7     => in_arg7,
-            in_arg8     => in_arg8
+        out_log_id := bug.log__ (
+            in_action_name  => in_action,
+            in_flag         => bug.flag_warning,
+            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -615,16 +593,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         out_log_id      debug_log.log_id%TYPE;
     BEGIN
-        out_log_id := bug.log_error (
-            in_action   => in_action,
-            in_arg1     => in_arg1,
-            in_arg2     => in_arg2,
-            in_arg3     => in_arg3,
-            in_arg4     => in_arg4,
-            in_arg5     => in_arg5,
-            in_arg6     => in_arg6,
-            in_arg7     => in_arg7,
-            in_arg8     => in_arg8
+        out_log_id := bug.log__ (
+            in_action_name  => in_action,
+            in_flag         => bug.flag_error,
+            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -641,12 +613,12 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         in_arg7         debug_log.arguments%TYPE    := NULL,
         in_arg8         debug_log.arguments%TYPE    := NULL
     ) AS
-        out_log_id      debug_log.log_id%TYPE;
-        out_action      debug_log.action_name%TYPE;
+        log_id          debug_log.log_id%TYPE;
+        action_name     debug_log.action_name%TYPE;
     BEGIN
-        out_action := COALESCE(in_action, bug.get_caller_name(), 'UNEXPECTED_ERROR');
-        out_log_id := bug.log_error (
-            in_action   => out_action,
+        action_name     := COALESCE(in_action, bug.get_caller_name(), 'UNEXPECTED_ERROR');
+        log_id          := bug.log_error (
+            in_action   => action_name,
             in_arg1     => in_arg1,
             in_arg2     => in_arg2,
             in_arg3     => in_arg3,
@@ -661,7 +633,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         -- we could raise this^, but without custom message
         -- so we append same code but with message to current err_stack
         -- and we can intercept this code in calls above
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, out_action || bug.splitter || out_log_id, TRUE);
+        RAISE_APPLICATION_ERROR(bug.app_exception_code, action_name || bug.splitter || log_id, TRUE);
     END;
 
 
@@ -686,7 +658,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END LOOP;
         --
         RETURN bug.log__ (
-            in_action_name  => NULL,
+            in_action_name  => bug.empty_action,
             in_flag         => bug.flag_info,
             in_arguments    => bug.get_arguments('LOG_CONTEXT', in_namespace, in_filter),
             in_message      => payload
@@ -725,7 +697,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END LOOP;
         --
         RETURN bug.log__ (
-            in_action_name  => NULL,
+            in_action_name  => bug.empty_action,
             in_flag         => bug.flag_info,
             in_arguments    => bug.get_arguments('LOG_NLS', in_filter),
             in_message      => payload
@@ -785,7 +757,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END LOOP;
         --
         RETURN bug.log__ (
-            in_action_name  => NULL,
+            in_action_name  => bug.empty_action,
             in_flag         => bug.flag_info,
             in_arguments    => bug.get_arguments('LOG_USERENV', in_filter),
             in_message      => payload
@@ -841,7 +813,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END LOOP;
         --
         RETURN bug.log__ (
-            in_action_name  => NULL,
+            in_action_name  => bug.empty_action,
             in_flag         => bug.flag_info,
             in_arguments    => bug.get_arguments('LOG_CGI', in_filter),
             in_message      => payload
@@ -884,7 +856,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             END LOOP;
             --
             RETURN bug.log__ (
-                in_action_name  => NULL,
+                in_action_name  => bug.empty_action,
                 in_flag         => bug.flag_info,
                 in_arguments    => bug.get_arguments('LOG_APEX_ITEMS', in_page_id, in_filter),
                 in_message      => payload
@@ -930,7 +902,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             END LOOP;
             --
             RETURN bug.log__ (
-                in_action_name  => NULL,
+                in_action_name  => bug.empty_action,
                 in_flag         => bug.flag_info,
                 in_arguments    => bug.get_arguments('LOG_APEX_GLOBALS', in_filter),
                 in_message      => payload
