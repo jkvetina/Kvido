@@ -1021,6 +1021,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
             -- recover app context values from log and set user
             ctx.set_contexts(rec.contexts);
+            ctx.set_user_id(rec.user_id);
         END IF;
 
         -- get user and update session info
