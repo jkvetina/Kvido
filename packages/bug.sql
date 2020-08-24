@@ -1,14 +1,5 @@
 CREATE OR REPLACE PACKAGE BODY bug AS
 
-    /**
-     * This package is part of the BUG project under MIT licence.
-     * https://github.com/jkvetina/BUG/
-     *
-     * Copyright (c) Jan Kvetina, 2020
-     */
-
-
-
     recent_log_id           debug_log.log_id%TYPE;    -- last log_id in session (any flag)
     recent_error_id         debug_log.log_id%TYPE;    -- last real log_id in session (with E flag)
     recent_tree_id          debug_log.log_id%TYPE;    -- selected log_id for DEBUG_LOG_TREE view
