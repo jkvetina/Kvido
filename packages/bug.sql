@@ -1635,7 +1635,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         count_before    PLS_INTEGER;
         count_after     PLS_INTEGER;
     BEGIN
-        bug.log_module(in_arg1 => in_age);                                                                              -- @TODO: conflict on log_module(in_scheduler)
+        bug.log_module(in_age);
 
         -- purge all
         IF in_age < 0 THEN
