@@ -65,7 +65,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         in_user_id  debug_log.user_id%TYPE
     ) AS
     BEGIN
-        bug.log_module('SET_USER_ID', in_user_id);  -- when called thru scheduler then parent_log is missing
+        bug.log_module(in_user_id);
         --
         DBMS_SESSION.SET_CONTEXT (
             namespace    => ctx.app_namespace,
@@ -200,8 +200,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         );
     EXCEPTION
     WHEN OTHERS THEN
-        bug.log_error();
-        RAISE;
+        RAISE_APPLICATION_ERROR(-20000, 'SET_CTX_FAILED');
     END;
 
 
@@ -214,12 +213,12 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     ) AS
         rec                 contexts%ROWTYPE;
     BEGIN
-        rec.app_id          := NVL(in_app_id,        NVL(ctx.get_app_id(), 0));
-        rec.user_id         := NVL(in_user_id,       ctx.get_user_id());
-        rec.session_apex    := NVL(in_session_apex,  NVL(ctx.get_session_apex(), 0));
-        rec.session_db      := NVL(in_session_db,    NVL(ctx.get_session_db(),   0));
+        rec.app_id          := COALESCE(in_app_id,          ctx.get_app_id(),       0);
+        rec.user_id         := COALESCE(in_user_id,         ctx.get_user_id());
+        rec.session_apex    := COALESCE(in_session_apex,    ctx.get_session_apex(), 0);
+        rec.session_db      := COALESCE(in_session_db,      ctx.get_session_db(),   0);
         --
-        bug.log_module(rec.user_id, rec.session_db, rec.session_apex);
+        bug.log_module(rec.app_id, rec.user_id, rec.session_db, rec.session_apex);
 
         -- retrieve latest payload
         BEGIN
@@ -263,6 +262,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         in_payload          contexts.payload%TYPE
     ) AS
     BEGIN
+        bug.log_module();
+        --
         IF in_payload IS NULL THEN
             RETURN;
         END IF;
