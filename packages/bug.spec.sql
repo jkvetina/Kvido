@@ -716,23 +716,6 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
-    -- ^
-    --
-    PROCEDURE log__ (
-        in_action_name      debug_log.action_name%TYPE,
-        in_flag             debug_log.flag%TYPE,
-        in_arguments        debug_log.arguments%TYPE    := NULL,
-        in_message          debug_log.message%TYPE      := NULL,
-        in_parent_id        debug_log.log_parent%TYPE   := NULL
-    )
-    ACCESSIBLE BY (
-        PACKAGE err,
-        PACKAGE err_ut
-    );
-
-
-
-    --
     -- Purge old records from `debug_log` table
     --
     PROCEDURE purge_old (

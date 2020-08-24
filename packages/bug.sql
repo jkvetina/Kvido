@@ -1140,30 +1140,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
-    PROCEDURE log__ (
-        in_action_name      debug_log.action_name%TYPE,
-        in_flag             debug_log.flag%TYPE,
-        in_arguments        debug_log.arguments%TYPE    := NULL,
-        in_message          debug_log.message%TYPE      := NULL,
-        in_parent_id        debug_log.log_parent%TYPE   := NULL
-    )
-    ACCESSIBLE BY (
-        PACKAGE err,
-        PACKAGE err_ut
-    ) AS
-        out_log_id          debug_log.log_id%TYPE;
-    BEGIN
-        out_log_id := bug.log__ (
-            in_action_name  => in_action_name,
-            in_flag         => in_flag,
-            in_arguments    => in_arguments,
-            in_message      => in_message,
-            in_parent_id    => in_parent_id
-        );
-    END;
-
-
-
     PROCEDURE attach_clob (
         in_payload          CLOB,
         in_lob_name         debug_log_lobs.lob_name%TYPE    := NULL,
@@ -1227,6 +1203,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     PROCEDURE start_profilers (
         rec                 debug_log%ROWTYPE
     ) AS
+        out_log_id          debug_log.log_id%TYPE;
     BEGIN
         -- avoid infinite loop
         IF rec.flag = bug.flag_profiler THEN
@@ -1244,14 +1221,14 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                         DBMS_OUTPUT.PUT_LINE('  > START_PROFILER ' || curr_profiler_id);
                     $END
                     --
-                    bug.log__ (         -- be aware that this may cause infinite loop
+                    out_log_id := bug.log__ (                   -- be aware that this may cause infinite loop
                         in_action_name  => 'START_PROFILER',    -- used in debug_log_profiler view
                         in_flag         => bug.flag_profiler,
                         in_arguments    => curr_profiler_id,
                         in_parent_id    => rec.log_id
                     );
                     --
-                    curr_profiler_id    := rec.log_id;      -- store current and parent log_id so we can stop profiler later
+                    curr_profiler_id    := rec.log_id;          -- store current and parent log_id so we can stop profiler later
                     parent_profiler_id  := rec.log_parent;
                     --
                     EXIT;  -- one profiler is enough
