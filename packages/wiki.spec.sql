@@ -1,5 +1,14 @@
 CREATE OR REPLACE PACKAGE wiki AS
 
+    /**
+     * This package is part of the BUG project under MIT licence.
+     * https://github.com/jkvetina/BUG/
+     *
+     * Copyright (c) Jan Kvetina, 2020
+     */
+
+
+
     PROCEDURE desc_table (
         in_name VARCHAR2
     );

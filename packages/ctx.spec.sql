@@ -1,5 +1,14 @@
 CREATE OR REPLACE PACKAGE ctx AS
 
+    /**
+     * This package is part of the BUG project under MIT licence.
+     * https://github.com/jkvetina/BUG/
+     *
+     * Copyright (c) Jan Kvetina, 2020
+     */
+
+
+
     -- context namespace
     app_namespace       CONSTANT VARCHAR2(30)       := 'APP';
 

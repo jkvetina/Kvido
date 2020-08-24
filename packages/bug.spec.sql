@@ -1,5 +1,14 @@
 CREATE OR REPLACE PACKAGE bug AS
 
+    /**
+     * This package is part of the BUG project under MIT licence.
+     * https://github.com/jkvetina/BUG/
+     *
+     * Copyright (c) Jan Kvetina, 2020
+     */
+
+
+
     -- error log table name and max age fo records
     table_name              CONSTANT VARCHAR2(30)           := 'DEBUG_LOG';     -- used in purge_old
     table_rows_max_age      CONSTANT PLS_INTEGER            := 14;              -- max logs age in days
