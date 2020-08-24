@@ -40,15 +40,14 @@ COMMENT ON TABLE  debug_log                  IS 'Various messages raised in appl
 COMMENT ON COLUMN debug_log.log_id           IS 'Error ID generated from sequence LOG_ID';
 COMMENT ON COLUMN debug_log.log_parent       IS 'Parent error to easily create tree; dont use FK to avoid deadlocks';
 --
-COMMENT ON COLUMN debug_log.module_name      IS 'Module name (procedure or function name)';
-COMMENT ON COLUMN debug_log.module_line      IS 'Line in the module';
---
-COMMENT ON COLUMN debug_log.action_name      IS 'Action name to distinguish position in module or warning and error names';
-COMMENT ON COLUMN debug_log.flag             IS 'Type of error listed in ERR package specification; FK missing for performance reasons';
---
 COMMENT ON COLUMN debug_log.user_id          IS 'User ID';
 COMMENT ON COLUMN debug_log.app_id           IS 'APEX Application ID';
 COMMENT ON COLUMN debug_log.page_id          IS 'APEX Application PAGE ID';
+COMMENT ON COLUMN debug_log.flag             IS 'Type of error listed in ERR package specification; FK missing for performance reasons';
+--
+COMMENT ON COLUMN debug_log.action_name      IS 'Action name to distinguish position in module or warning and error names';
+COMMENT ON COLUMN debug_log.module_name      IS 'Module name (procedure or function name)';
+COMMENT ON COLUMN debug_log.module_line      IS 'Line in the module';
 --
 COMMENT ON COLUMN debug_log.arguments        IS 'Arguments passed to module';
 COMMENT ON COLUMN debug_log.message          IS 'Formatted call stack, error stack or query with DML error';
