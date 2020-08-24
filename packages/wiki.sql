@@ -307,8 +307,6 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
     END;
 
 BEGIN
-    bug.output_enabled := FALSE;
-    --
     DBMS_SNAPSHOT.REFRESH('DEBUG_LOG_MODULES');
 END;
 /
