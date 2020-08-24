@@ -1,5 +1,6 @@
 CREATE OR REPLACE PACKAGE BODY ctx AS
 
+    recent_session_db       debug_log.session_db%TYPE;      -- to save resources
 
 
 
@@ -74,13 +75,14 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
     FUNCTION get_session_db
     RETURN debug_log.session_db%TYPE AS
-        out_session     debug_log.session_db%TYPE;
     BEGIN
-        SELECT TO_NUMBER(s.sid || '.' || s.serial#) INTO out_session
-        FROM v$session s
-        WHERE s.audsid = SYS_CONTEXT('USERENV', 'SESSIONID');
+        IF recent_session_db IS NULL THEN
+            SELECT TO_NUMBER(s.sid || '.' || s.serial#) INTO recent_session_db
+            FROM v$session s
+            WHERE s.audsid = SYS_CONTEXT('USERENV', 'SESSIONID');
+        END IF;
         --
-        RETURN out_session;
+        RETURN recent_session_db;
     EXCEPTION
     WHEN NO_DATA_FOUND THEN
         RETURN NULL;
