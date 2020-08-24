@@ -24,6 +24,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     -- module_name LIKE to switch flag_module to flag_context
     trigger_ctx             CONSTANT debug_log.module_name%TYPE     := 'CTX.%';
 
+    internal_log_fn         CONSTANT debug_log.module_name%TYPE     := 'BUG.LOG__';
+
     -- arrays to specify adhoc requests
     TYPE arr_log_setup      IS VARRAY(20) OF debug_log_setup%ROWTYPE;
     --
@@ -56,11 +58,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         FOR i IN REVERSE 2 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP  -- 2 = ignore this function
             out_module := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i));
             CONTINUE WHEN
-                out_module LIKE $$PLSQL_UNIT || '.LOG__'    -- skip target function
+                (out_module = internal_log_fn AND i <= 2)   -- skip target function
                 OR UTL_CALL_STACK.UNIT_LINE(i) IS NULL;     -- skip DML queries
             --
-            out_stack := out_stack || --(UTL_CALL_STACK.DYNAMIC_DEPTH - i + 1) || ') ' ||
-                out_module || ' [' || UTL_CALL_STACK.UNIT_LINE(i) || ']' || CHR(10);
+            out_stack := out_stack || out_module || ' [' || UTL_CALL_STACK.UNIT_LINE(i) || ']' || CHR(10);
         END LOOP;
 
         -- cleanup useless info
@@ -224,45 +225,57 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     BEGIN
         out_parent_id := in_parent_id;
         --
-        FOR i IN REVERSE 2 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP  -- 2 = ignore this function
+        FOR i IN 2 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP  -- 2 = ignore this function
             curr_module := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i));
+            --
             CONTINUE WHEN
-                curr_module LIKE $$PLSQL_UNIT || '.LOG__'   -- skip target function
+                curr_module LIKE $$PLSQL_UNIT || '.%'       -- skip this package
                 OR UTL_CALL_STACK.UNIT_LINE(i) IS NULL;     -- skip DML queries
-    
-            -- first call to this package stops the search
-            IF curr_module LIKE $$PLSQL_UNIT || '.%' THEN
-                out_module_name     := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i + 1));
-                out_module_line     := UTL_CALL_STACK.UNIT_LINE(i + 1);
-                curr_index          := (UTL_CALL_STACK.DYNAMIC_DEPTH - i) || '|' || out_module_name;
-                parent_index        := curr_index;
-    
-                -- create child
-                IF in_flag IN (bug.flag_action) THEN
-                    map_actions(curr_index) := in_log_id;
-                    --
-                ELSIF in_flag IN (bug.flag_module, bug.flag_scheduler) THEN
-                    map_modules(curr_index) := in_log_id;
-                    
-                    -- find previous module (on another depth)
-                    BEGIN
-                        parent_index := (UTL_CALL_STACK.DYNAMIC_DEPTH - i - 1) || '|' || UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i + 2));
-                    EXCEPTION
-                    WHEN BAD_DEPTH THEN
-                        NULL;
-                    END;
-                END IF;
+            --
+            out_module_name     := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i));
+            out_module_line     := UTL_CALL_STACK.UNIT_LINE(i);
+            curr_index          := (UTL_CALL_STACK.DYNAMIC_DEPTH - i) || '|' || out_module_name;
+            parent_index        := curr_index;
 
-                -- recover parent_id
-                IF out_parent_id IS NULL AND map_actions.EXISTS(parent_index) THEN
-                    out_parent_id := NULLIF(map_actions(parent_index), in_log_id);
+            -- map CTX called thru schedulers
+            IF UTL_CALL_STACK.DYNAMIC_DEPTH >= i + 1 AND in_parent_id IS NULL THEN
+                IF (
+                        UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i)) LIKE trigger_ctx
+                    AND UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i + 1)) = internal_log_fn
+                ) THEN
+                    out_module_line := 0;
+                    out_parent_id   := NVL(recent_log_id, in_log_id);
+                    --
+                    RETURN;  -- exit procedure
                 END IF;
-                IF out_parent_id IS NULL AND map_modules.EXISTS(parent_index) THEN
-                    out_parent_id := NULLIF(map_modules(parent_index), in_log_id);
-                END IF;
-                --
-                EXIT;  -- break
             END IF;
+
+            -- create child
+            IF in_flag IN (bug.flag_action) THEN
+                map_actions(curr_index) := in_log_id;
+                --
+            ELSIF in_flag IN (bug.flag_module, bug.flag_scheduler) THEN
+                map_modules(curr_index) := in_log_id;
+                
+                -- find previous module (on another depth)
+                BEGIN
+                    parent_index := (UTL_CALL_STACK.DYNAMIC_DEPTH - i - 1) || '|' || UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i + 1));
+                EXCEPTION
+                WHEN BAD_DEPTH THEN
+                    NULL;
+                END;
+            END IF;
+
+            -- recover parent_id
+            IF out_parent_id IS NULL AND map_actions.EXISTS(parent_index) THEN
+                out_parent_id := NULLIF(map_actions(parent_index), in_log_id);
+            END IF;
+            --
+            IF out_parent_id IS NULL AND map_modules.EXISTS(parent_index) THEN
+                out_parent_id := NULLIF(map_modules(parent_index), in_log_id);
+            END IF;
+            --
+            EXIT;  -- break, we need just first one
         END LOOP;
         --
         out_module_line := NVL(out_module_line, 0);
@@ -995,8 +1008,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         blacklisted         BOOLEAN := FALSE;   -- dont log
     BEGIN
         -- get caller info and parent id
-        rec.log_id          := log_id.NEXTVAL;
-        recent_log_id       := rec.log_id;
+        rec.log_id := log_id.NEXTVAL;
         --
         bug.get_caller__ (
             in_log_id           => rec.log_id,
@@ -1020,6 +1032,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             END;
 
             -- recover app context values from log and set user
+            recent_log_id := rec.log_id;  -- to link CTX calls to proper branch
             ctx.set_contexts(rec.contexts);
             ctx.set_user_id(rec.user_id);
         END IF;
@@ -1107,6 +1120,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         -- finally store record in table
         INSERT INTO debug_log VALUES rec;
         COMMIT;
+        --
+        recent_log_id := rec.log_id;
 
         -- print message to console
         $IF $$OUTPUT_ENABLED $THEN
