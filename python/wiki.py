@@ -5,6 +5,14 @@ import collections, multiprocessing, itertools, timeit, glob, re
 sys.path.append(os.getcwd())
 from oracle_wrapper import Oracle
 
+#
+# cd ~/Documents/JOB/DPP_UAT/python; source DPP/bin/activate
+# cd ~/Documents/PROJECTS/GITHUB/BUG/python
+# python wiki.py "../../BUG.wiki/*.md"
+#
+
+target  = sys.argv[1]
+
 
 
 #
@@ -24,18 +32,50 @@ print('=' * 80)
 print('CONNECTING TO ORACLE:', tns['host'], '\n')
 ora = Oracle(tns)
 
-
-
-ora.execute('BEGIN bug.log_module(); ctx.set_user_id(\'JKVETINA\'); ctx.init(); END;')
+ora.execute('BEGIN bug.log_module(); ctx.init(\'JKVETINA\'); END;')
 data    = ora.fetch('SELECT bug.get_log_id() FROM DUAL')
 log_id  = data[0][0]
 
 
 
 #
+# CREATE MISSING FILES
+#
+data = ora.fetch_assoc("""
+SELECT
+    LOWER(REPLACE(object_type, 'MATERIALIZED VIEW', 'VIEW') || 'S-' || object_name) || '.md' AS file_name
+FROM user_objects
+WHERE object_type IN (
+        'TABLE',
+        --'PACKAGE',
+        'PROCEDURE',
+        'VIEW',
+        'MATERIALIZED VIEW',
+        'JOB'
+    )
+    AND object_name NOT LIKE 'DBMS%'
+    AND object_name NOT LIKE 'PLSQL%'
+    AND object_name NOT LIKE '%\_E$' ESCAPE '\\'
+UNION ALL
+SELECT DISTINCT LOWER('PACKAGES-' || object_name || '.' || procedure_name) || '.md'
+FROM user_procedures
+WHERE object_name IN (
+        'CTX', 'BUG'
+    )
+    AND procedure_name IS NOT NULL
+ORDER BY 1
+""")
+for row in data:
+  file_name = '{}/{}'.format('/'.join(target.split('/')[0:-1]), row.file_name)
+  if not os.path.exists(file_name):
+    with open(file_name, 'w'):
+      pass
+
+
+
+#
 # GO THRU FILES IN TARGET DIR
 #
-target  = sys.argv[1]
 files   = glob.glob(target)
 print('TARGET:', target, len(files))
 for file in sorted(files):
@@ -84,14 +124,18 @@ for file in sorted(files):
           overload = m.group(1) or 1
 
         if '<!-- SIGNATURE ' in line:
-          fresh     = ora.get_output("BEGIN wiki.desc_spec('{}', '{}', {}); END;".format(object_name, fp, overload))[1]
-          fresh     = re.sub('\n    ', '\n', fresh)[4:]
+          query   = "BEGIN wiki.desc_spec('{}', '{}', {}); END;".format(object_name, fp, overload)
+          fresh   = ora.get_output(query)[1]
+          print(query, len(fresh))
+          fresh   = re.sub('\n    ', '\n', fresh)[4:]
           #
           out.append('\n```sql\n{}```\n'.format(fresh))
 
         if '<!-- SOURCE_CODE ' in line:
-          fresh     = ora.get_output("BEGIN wiki.desc_body('{}', '{}', {}); END;".format(object_name, fp, overload))[1]
-          fresh     = re.sub('\n    ', '\n', fresh)[4:]
+          query   = "BEGIN wiki.desc_body('{}', '{}', {}); END;".format(object_name, fp, overload)
+          fresh   = ora.get_output(query)[1]
+          print(query, len(fresh))
+          fresh   = re.sub('\n    ', '\n', fresh)[4:]
           #
           out.append('<details><summary>Show code ({} lines)</summary><p>\n'.format(fresh.count('\n')))
           out.append('\n```sql\n{}```\n'.format(fresh))
