@@ -292,8 +292,8 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
                     END IF;
                     --
                     DBMS_OUTPUT.PUT_LINE (
-                        RPAD('| [`' || d.module_name || '`](./packages-' || d.package_name || '.' || d.module_name || ')&' ||
-                            'nbsp;<sup title="Overload">' || d.overload || '</sup>', 100) || ' | ' ||
+                        '| [`' || d.module_name || '`](./packages-' || d.package_name || '.' || d.module_name || ')&' ||
+                        'nbsp;<sup title="Overload">' || d.overload || '</sup> | ' ||
                         d.module_type   || ' | ' || CASE WHEN sum_private > 0 THEN d.private || ' | ' END ||
                         d.args_in       || ' | ' || d.args_out  || ' | ' ||
                         d.body_lines    || ' | ' || d.comment_  || ' |'
