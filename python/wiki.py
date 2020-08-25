@@ -74,12 +74,43 @@ for row in data:
 
 
 #
+# PACKAGES OVERVIEW
+#
+data = ora.fetch_assoc("""
+SELECT DISTINCT LOWER('PACKAGES-' || object_name) || '.md' AS file_name, object_name
+FROM user_objects
+WHERE object_name IN (
+        'CTX', 'BUG'
+    )
+ORDER BY 1
+""")
+#
+packages = []
+for row in data:
+  file_name = '{}/{}'.format('/'.join(target.split('/')[0:-1]), row.file_name)
+  with open(file_name, 'w') as f:
+    packages.append(file_name)
+    query = "BEGIN wiki.desc_package('{}'); END;".format(row.object_name)
+    fresh = ora.get_output(query)
+    #print(query, len(fresh))
+    if fresh and len(fresh):
+      for line in fresh:
+        if line == None:
+          line = ''
+        f.write(line + '\n')
+      f.write('\n')
+
+
+
+#
 # GO THRU FILES IN TARGET DIR
 #
 files   = glob.glob(target)
 print('TARGET:', target, len(files))
 for file in sorted(files):
   if not ('-' in file.split('/')[-1]):
+    continue
+  if file in packages:
     continue
 
   # get object type and name from filename
@@ -126,20 +157,22 @@ for file in sorted(files):
         if '<!-- SIGNATURE ' in line:
           query   = "BEGIN wiki.desc_spec('{}', '{}', {}); END;".format(object_name, fp, overload)
           fresh   = ora.get_output(query)[1]
-          print(query, len(fresh))
-          fresh   = re.sub('\n    ', '\n', fresh)[4:]
-          #
-          out.append('\n```sql\n{}```\n'.format(fresh))
+          #print(query, len(fresh))
+          if fresh and len(fresh):
+            fresh = re.sub('\n    ', '\n', fresh)[4:]
+            #
+            out.append('\n```sql\n{}```\n'.format(fresh))
 
         if '<!-- SOURCE_CODE ' in line:
           query   = "BEGIN wiki.desc_body('{}', '{}', {}); END;".format(object_name, fp, overload)
           fresh   = ora.get_output(query)[1]
-          print(query, len(fresh))
-          fresh   = re.sub('\n    ', '\n', fresh)[4:]
-          #
-          out.append('<details><summary>Show code ({} lines)</summary><p>\n'.format(fresh.count('\n')))
-          out.append('\n```sql\n{}```\n'.format(fresh))
-          out.append('</p></details>\n')
+          #print(query, len(fresh))
+          if fresh and len(fresh):
+            fresh = re.sub('\n    ', '\n', fresh)[4:]
+            #
+            out.append('<details><summary>Show code ({} lines)</summary><p>\n'.format(fresh.count('\n')))
+            out.append('\n```sql\n{}```\n'.format(fresh))
+            out.append('</p></details>\n')
 
     # check new content
     #for i, line in enumerate(out):
