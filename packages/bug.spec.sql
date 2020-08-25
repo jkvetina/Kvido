@@ -483,9 +483,6 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     -- Get `APEX` items for selected/current page
     --
-    --
-    -- ^
-    --
     PROCEDURE log_apex_items (
         in_page_id          debug_log.page_id%TYPE      := NULL,
         in_filter           debug_log.arguments%TYPE    := '%'
