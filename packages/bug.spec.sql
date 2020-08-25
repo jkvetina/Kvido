@@ -446,17 +446,6 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     -- Log requested `SYS_CONTEXT` values
     --
-    FUNCTION log_context (
-        in_namespace        debug_log.arguments%TYPE    := '%',
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- ^
-    --
     PROCEDURE log_context (
         in_namespace        debug_log.arguments%TYPE    := '%',
         in_filter           debug_log.arguments%TYPE    := '%'
@@ -467,16 +456,6 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     -- Log session `NLS` parameters
     --
-    FUNCTION log_nls (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- ^
-    --
     PROCEDURE log_nls (
         in_filter           debug_log.arguments%TYPE    := '%'
     );
@@ -485,16 +464,6 @@ CREATE OR REPLACE PACKAGE bug AS
 
     --
     -- Log `USERENV` values
-    --
-    FUNCTION log_userenv (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- ^
     --
     PROCEDURE log_userenv (
         in_filter           debug_log.arguments%TYPE    := '%'
@@ -505,16 +474,6 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     -- Log `CGI_ENV` values (when called from web/APEX)
     --
-    FUNCTION log_cgi (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- ^
-    --
     PROCEDURE log_cgi (
         in_filter           debug_log.arguments%TYPE    := '%'
     );
@@ -524,14 +483,6 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     -- Get `APEX` items for selected/current page
     --
-    FUNCTION log_apex_items (
-        in_page_id          debug_log.page_id%TYPE      := NULL,
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
     --
     -- ^
     --
@@ -544,16 +495,6 @@ CREATE OR REPLACE PACKAGE bug AS
 
     --
     -- Get `APEX` global/app items
-    --
-    FUNCTION log_apex_globals (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE;
-
-
-
-    --
-    -- ^
     --
     PROCEDURE log_apex_globals (
         in_filter           debug_log.arguments%TYPE    := '%'

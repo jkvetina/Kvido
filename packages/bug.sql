@@ -588,11 +588,11 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
-    FUNCTION log_context (
+    PROCEDURE log_context (
         in_namespace        debug_log.arguments%TYPE    := '%',
         in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE AS
+    ) AS
+        out_log_id          debug_log.log_id%TYPE;
         payload             VARCHAR2(32767);
     BEGIN
         FOR c IN (
@@ -607,7 +607,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             payload := payload || c.key_value_pair || bug.splitter_rows;
         END LOOP;
         --
-        RETURN bug.log__ (
+        out_log_id := bug.log__ (
             in_action_name  => bug.empty_action,
             in_flag         => bug.flag_info,
             in_arguments    => bug.get_arguments('LOG_CONTEXT', in_namespace, in_filter),
@@ -617,24 +617,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
-    PROCEDURE log_context (
-        in_namespace        debug_log.arguments%TYPE    := '%',
+    PROCEDURE log_nls (
         in_filter           debug_log.arguments%TYPE    := '%'
     ) AS
         out_log_id          debug_log.log_id%TYPE;
-    BEGIN
-        out_log_id := bug.log_context (
-            in_namespace    => in_namespace,
-            in_filter       => in_filter
-        );
-    END;
-
-
-
-    FUNCTION log_nls (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE AS
         payload             VARCHAR2(32767);
     BEGIN
         FOR c IN (
@@ -646,7 +632,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             payload := payload || c.key_value_pair || bug.splitter_rows;
         END LOOP;
         --
-        RETURN bug.log__ (
+        out_log_id := bug.log__ (
             in_action_name  => bug.empty_action,
             in_flag         => bug.flag_info,
             in_arguments    => bug.get_arguments('LOG_NLS', in_filter),
@@ -656,22 +642,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
-    PROCEDURE log_nls (
+    PROCEDURE log_userenv (
         in_filter           debug_log.arguments%TYPE    := '%'
     ) AS
         out_log_id          debug_log.log_id%TYPE;
-    BEGIN
-        out_log_id := bug.log_nls (
-            in_filter       => in_filter
-        );
-    END;
-
-
-
-    FUNCTION log_userenv (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE AS
         payload             VARCHAR2(32767);
     BEGIN
         FOR c IN (
@@ -706,7 +680,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             payload := payload || c.key_value_pair || bug.splitter_rows;
         END LOOP;
         --
-        RETURN bug.log__ (
+        out_log_id := bug.log__ (
             in_action_name  => bug.empty_action,
             in_flag         => bug.flag_info,
             in_arguments    => bug.get_arguments('LOG_USERENV', in_filter),
@@ -716,22 +690,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
-    PROCEDURE log_userenv (
+    PROCEDURE log_cgi (
         in_filter           debug_log.arguments%TYPE    := '%'
     ) AS
         out_log_id          debug_log.log_id%TYPE;
-    BEGIN
-        out_log_id := bug.log_userenv (
-            in_filter       => in_filter
-        );
-    END;
-
-
-
-    FUNCTION log_cgi (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE AS
         payload             VARCHAR2(32767);
     BEGIN
         FOR c IN (
@@ -762,7 +724,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             END;
         END LOOP;
         --
-        RETURN bug.log__ (
+        out_log_id := bug.log__ (
             in_action_name  => bug.empty_action,
             in_flag         => bug.flag_info,
             in_arguments    => bug.get_arguments('LOG_CGI', in_filter),
@@ -772,23 +734,11 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
-    PROCEDURE log_cgi (
+    PROCEDURE log_apex_items (
+        in_page_id          debug_log.page_id%TYPE      := NULL,
         in_filter           debug_log.arguments%TYPE    := '%'
     ) AS
         out_log_id          debug_log.log_id%TYPE;
-    BEGIN
-        out_log_id := bug.log_cgi (
-            in_filter       => in_filter
-        );
-    END;
-
-
-
-    FUNCTION log_apex_items (
-        in_page_id          debug_log.page_id%TYPE      := NULL,
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE AS
         payload             VARCHAR2(32767);
     BEGIN
         $IF $$APEX_INSTALLED $THEN
@@ -805,37 +755,23 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 payload := payload || c.name || bug.splitter_values || c.value || bug.splitter_rows;
             END LOOP;
             --
-            RETURN bug.log__ (
+            out_log_id := bug.log__ (
                 in_action_name  => bug.empty_action,
                 in_flag         => bug.flag_info,
                 in_arguments    => bug.get_arguments('LOG_APEX_ITEMS', in_page_id, in_filter),
                 in_message      => payload
             );
         $ELSE
-            RETURN NULL;
-        $END    
+            NULL;
+        $END
     END;
 
 
 
-    PROCEDURE log_apex_items (
-        in_page_id          debug_log.page_id%TYPE      := NULL,
+    PROCEDURE log_apex_globals (
         in_filter           debug_log.arguments%TYPE    := '%'
     ) AS
         out_log_id          debug_log.log_id%TYPE;
-    BEGIN
-        out_log_id := bug.log_apex_items (
-            in_page_id      => in_page_id,
-            in_filter       => in_filter
-        );
-    END;
-
-
-
-    FUNCTION log_apex_globals (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    )
-    RETURN debug_log.log_id%TYPE AS
         payload             VARCHAR2(32767);
     BEGIN
         $IF $$APEX_INSTALLED $THEN
@@ -851,27 +787,15 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 payload := payload || c.name || bug.splitter_values || c.value || bug.splitter_rows;
             END LOOP;
             --
-            RETURN bug.log__ (
+            out_log_id := bug.log__ (
                 in_action_name  => bug.empty_action,
                 in_flag         => bug.flag_info,
                 in_arguments    => bug.get_arguments('LOG_APEX_GLOBALS', in_filter),
                 in_message      => payload
             );
         $ELSE
-            RETURN NULL;
-        $END    
-    END;
-
-
-
-    PROCEDURE log_apex_globals (
-        in_filter           debug_log.arguments%TYPE    := '%'
-    ) AS
-        out_log_id          debug_log.log_id%TYPE;
-    BEGIN
-        out_log_id := bug.log_apex_globals (
-            in_filter       => in_filter
-        );
+            NULL;
+        $END
     END;
 
 
