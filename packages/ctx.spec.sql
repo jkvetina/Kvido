@@ -157,21 +157,9 @@ CREATE OR REPLACE PACKAGE ctx AS
 
 
     --
-    -- Load/get contexts from `contexts` table and set them as current
-    --
-    PROCEDURE get_contexts (
-        in_app_id           contexts.app_id%TYPE        := NULL,
-        in_user_id          contexts.user_id%TYPE       := NULL,
-        in_session_db       contexts.session_db%TYPE    := NULL,
-        in_session_apex     contexts.session_apex%TYPE  := NULL
-    );
-
-
-
-    --
     -- Parse/set payload as current contexts (available thru `SYS_CONTEXT`)
     --
-    PROCEDURE set_contexts (
+    PROCEDURE apply_payload (
         in_payload          contexts.payload%TYPE
     );
 
@@ -180,7 +168,19 @@ CREATE OR REPLACE PACKAGE ctx AS
     --
     -- Store current contexts to `contexts` table
     --
-    PROCEDURE update_contexts;
+    PROCEDURE save_contexts;
+
+
+
+    --
+    -- Load/get contexts from `contexts` table and set them as current
+    --
+    PROCEDURE load_contexts (
+        in_app_id           contexts.app_id%TYPE        := NULL,
+        in_user_id          contexts.user_id%TYPE       := NULL,
+        in_session_db       contexts.session_db%TYPE    := NULL,
+        in_session_apex     contexts.session_apex%TYPE  := NULL
+    );
 
 
 

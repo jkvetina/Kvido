@@ -201,7 +201,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
 
-    PROCEDURE get_contexts (
+    PROCEDURE load_contexts (
         in_app_id           contexts.app_id%TYPE        := NULL,
         in_user_id          contexts.user_id%TYPE       := NULL,
         in_session_db       contexts.session_db%TYPE    := NULL,
@@ -245,7 +245,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         END;
 
         -- parse payload to SYS_CONTEXT and set user
-        ctx.set_contexts(rec.payload);
+        ctx.apply_payload(rec.payload);
         ctx.set_user_id(in_user_id);
     EXCEPTION
     WHEN NO_DATA_FOUND THEN
@@ -254,7 +254,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
 
-    PROCEDURE set_contexts (
+    PROCEDURE apply_payload (
         in_payload          contexts.payload%TYPE
     ) AS
     BEGIN
@@ -288,7 +288,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
 
-    PROCEDURE update_contexts
+    PROCEDURE save_contexts
     AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
