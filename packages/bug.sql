@@ -213,6 +213,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         curr_module     debug_log.module_name%TYPE;
         curr_index      debug_log.module_name%TYPE;
         parent_index    debug_log.module_name%TYPE;
+        next_module     debug_log.module_name%TYPE;
+        prev_module     debug_log.module_name%TYPE;
     BEGIN
         out_parent_id := in_parent_id;
         --
@@ -227,13 +229,18 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             out_module_line     := UTL_CALL_STACK.UNIT_LINE(i);
             curr_index          := (UTL_CALL_STACK.DYNAMIC_DEPTH - i) || '|' || out_module_name;
             parent_index        := curr_index;
+            --
+            BEGIN
+                next_module     := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i + 1));
+                prev_module     := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i - 1));
+            EXCEPTION
+            WHEN BAD_DEPTH THEN
+                NULL;
+            END;
 
             -- map CTX called thru schedulers
             IF UTL_CALL_STACK.DYNAMIC_DEPTH >= i + 1 AND in_parent_id IS NULL THEN
-                IF (
-                        UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i)) LIKE trigger_ctx
-                    AND UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i + 1)) = internal_log_fn
-                ) THEN
+                IF (out_module_name LIKE trigger_ctx AND next_module = internal_log_fn) THEN
                     out_module_line := 0;
                     out_parent_id   := NVL(recent_log_id, in_log_id);
                     --
@@ -249,12 +256,17 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 map_modules(curr_index) := in_log_id;
                 
                 -- find previous module (on another depth)
-                BEGIN
-                    parent_index := (UTL_CALL_STACK.DYNAMIC_DEPTH - i - 1) || '|' || UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i + 1));
-                EXCEPTION
-                WHEN BAD_DEPTH THEN
-                    NULL;
-                END;
+                parent_index := (UTL_CALL_STACK.DYNAMIC_DEPTH - i - 1) || '|' || next_module;
+            END IF;
+
+            -- fix bug.update_timer, it must updates M flags and not A flags
+            IF in_log_id IS NULL AND prev_module = 'BUG.UPDATE_TIMER' THEN
+                -- recover log_id only from map_modules
+                IF out_parent_id IS NULL AND map_modules.EXISTS(parent_index) THEN
+                    out_parent_id := NULLIF(map_modules(parent_index), in_log_id);
+                END IF;
+                --
+                EXIT;  -- break
             END IF;
 
             -- recover parent_id
