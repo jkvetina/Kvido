@@ -955,7 +955,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 WHERE e.log_id = in_parent_id;
             EXCEPTION
             WHEN NO_DATA_FOUND THEN
-                RAISE_APPLICATION_ERROR(-20000, 'SCHEDULER_ROOT_MISSING ' || in_parent_id);
+                RAISE_APPLICATION_ERROR(-20000, 'SCHEDULER_ROOT_MISSING ' || in_parent_id, TRUE);
             END;
 
             -- recover app context values from log and set user
