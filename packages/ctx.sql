@@ -201,6 +201,25 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
 
+    PROCEDURE set_context (
+        in_name     VARCHAR2,
+        in_value    DATE
+    ) AS
+        str_value   VARCHAR2(30);
+    BEGIN
+        str_value := TO_CHAR(in_value, format_date);
+        --
+        ctx.set_context (
+            in_name     => in_name,
+            in_value    => str_value
+        );
+    EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20000, 'SET_CTX_DATE_FAILED', TRUE);
+    END;
+
+
+
     PROCEDURE load_contexts (
         in_app_id           contexts.app_id%TYPE        := NULL,
         in_user_id          contexts.user_id%TYPE       := NULL,
