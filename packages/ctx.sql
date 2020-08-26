@@ -19,7 +19,9 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             action_name => NULL
         );
         --
-        ctx.set_user_id(new_user_id);
+        IF new_user_id IS NOT NULL THEN
+            ctx.set_user_id(new_user_id);
+        END IF;
     END;
 
 
@@ -118,10 +120,10 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     RETURN VARCHAR2 AS
     BEGIN
         IF in_format IS NOT NULL THEN
-            RETURN TO_CHAR(ctx.get_context_date(in_name), in_format);
+            RETURN TO_CHAR(ctx.get_context_date(UPPER(in_name)), in_format);
         END IF;
         --
-        RETURN SYS_CONTEXT(ctx.app_namespace, in_name);
+        RETURN SYS_CONTEXT(ctx.app_namespace, UPPER(in_name));
     EXCEPTION
     WHEN OTHERS THEN
         IF in_raise = 'Y' THEN
@@ -139,7 +141,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     )
     RETURN NUMBER AS
     BEGIN
-        RETURN TO_NUMBER(SYS_CONTEXT(ctx.app_namespace, in_name));
+        RETURN TO_NUMBER(SYS_CONTEXT(ctx.app_namespace, UPPER(in_name)));
     EXCEPTION
     WHEN OTHERS THEN
         IF in_raise = 'Y' THEN
@@ -157,7 +159,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     )
     RETURN DATE AS
     BEGIN
-        RETURN TO_DATE(SYS_CONTEXT(ctx.app_namespace, in_name), 'YYYY-MM-DD HH24:MI:SS');
+        RETURN TO_DATE(SYS_CONTEXT(ctx.app_namespace, UPPER(in_name)), ctx.format_date_time);
     EXCEPTION
     WHEN OTHERS THEN
         IF in_raise = 'Y' THEN
@@ -182,14 +184,14 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             DBMS_SESSION.CLEAR_CONTEXT (
                 namespace           => ctx.app_namespace,
                 --client_identifier   => ctx.get_client_id(),
-                attribute           => in_name
+                attribute           => UPPER(in_name)
             );
             RETURN;
         END IF;
         --
         DBMS_SESSION.SET_CONTEXT (
             namespace    => ctx.app_namespace,
-            attribute    => in_name,
+            attribute    => UPPER(in_name),
             value        => in_value,
             username     => ctx.get_user_id(),
             client_id    => ctx.get_client_id()
