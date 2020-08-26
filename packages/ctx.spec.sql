@@ -13,7 +13,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     app_namespace       CONSTANT VARCHAR2(30)       := 'APP';
 
     -- context name for user_id
-    app_user_id         CONSTANT VARCHAR2(30)       := 'USER_ID';
+    app_user_id         CONSTANT VARCHAR2(30)       := 'USER_ID__';
 
     -- splitters for payload
     splitter_values     CONSTANT CHAR := '=';

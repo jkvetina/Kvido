@@ -174,8 +174,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         in_value    VARCHAR2
     ) AS
     BEGIN
-        IF in_name = ctx.app_user_id OR in_name IS NULL THEN
-            RETURN;  -- cant update this directly
+        IF in_name LIKE '%\_\_' ESCAPE '\' OR in_name IS NULL THEN
+            RAISE_APPLICATION_ERROR(-20000, 'SET_CTX_FORBIDDEN', TRUE);
         END IF;
         --
         IF in_value IS NULL THEN
@@ -196,7 +196,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         );
     EXCEPTION
     WHEN OTHERS THEN
-        RAISE_APPLICATION_ERROR(-20000, 'SET_CTX_FAILED');
+        RAISE_APPLICATION_ERROR(-20000, 'SET_CTX_FAILED', TRUE);
     END;
 
 
