@@ -209,7 +209,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     ) AS
         str_value   VARCHAR2(30);
     BEGIN
-        str_value := TO_CHAR(in_value, format_date);
+        str_value := TO_CHAR(in_value, ctx.format_date_time);
         --
         ctx.set_context (
             in_name     => in_name,
