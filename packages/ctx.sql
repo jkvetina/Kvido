@@ -223,8 +223,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     PROCEDURE load_contexts (
-        in_app_id           contexts.app_id%TYPE        := NULL,
         in_user_id          contexts.user_id%TYPE       := NULL,
+        in_app_id           contexts.app_id%TYPE        := NULL,
         in_session_db       contexts.session_db%TYPE    := NULL,
         in_session_apex     contexts.session_apex%TYPE  := NULL
     ) AS
@@ -348,7 +348,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             SELECT s.attribute, s.value
             FROM session_context s
             WHERE s.namespace   = ctx.app_namespace
-                AND s.attribute != ctx.app_user_id      -- user_id has dedicated column
+                AND s.attribute != ctx.app_user_id              -- user_id has dedicated column
+                AND s.attribute NOT LIKE '%\_\_' ESCAPE '\'     -- ignore private contexts
                 AND s.value     IS NOT NULL
             ORDER BY 1
         ) LOOP
