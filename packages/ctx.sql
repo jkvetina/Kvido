@@ -7,9 +7,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     PROCEDURE init (
         in_user_id      debug_log.user_id%TYPE := NULL
     ) AS
-        new_user_id     CONSTANT debug_log.user_id%TYPE := NVL(in_user_id, ctx.get_user_id());
     BEGIN
-        bug.log_module(new_user_id);
+        bug.log_module(in_user_id);
         --
         DBMS_SESSION.CLEAR_ALL_CONTEXT(ctx.app_namespace);
         DBMS_SESSION.CLEAR_IDENTIFIER();
@@ -19,8 +18,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             action_name => NULL
         );
         --
-        IF new_user_id IS NOT NULL THEN
-            ctx.set_user_id(new_user_id);
+        IF in_user_id IS NOT NULL THEN
+            ctx.set_user_id(in_user_id);
         END IF;
     END;
 
