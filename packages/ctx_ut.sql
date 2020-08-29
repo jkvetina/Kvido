@@ -95,6 +95,35 @@ CREATE OR REPLACE PACKAGE BODY git.ctx_ut AS
 
 
 
+    PROCEDURE get_context_date AS
+        exp_date        CONSTANT DATE   := TRUNC(SYSDATE) + 19/24 + 32/1440 + 58/86400;  -- 19:32:58
+        curr_date       DATE;
+        curr_string     VARCHAR2(30);
+    BEGIN
+        ctx.set_context('DATE', exp_date);
+        --
+        curr_date   := ctx.get_context_date('DATE');
+        curr_string := ctx.get_context('DATE');
+        --
+        ut.expect(curr_date).to_equal(exp_date);
+        --
+        ut.expect(TO_CHAR(curr_date, 'YYYY-MM-DD HH24:MI:SS')).to_equal(TO_CHAR(exp_date, 'YYYY-MM-DD HH24:MI:SS'));
+        --
+        ut.expect(curr_string).to_equal(TO_CHAR(exp_date, ctx.format_date_time));
+    END;
+
+
+
+    PROCEDURE get_context_date#wrong_format AS
+        curr_date       DATE;
+    BEGIN
+        ctx.set_context('DATE', 'NOT A VALID DATE');
+        --
+        curr_date := ctx.get_context_date('DATE');  -- throws ORA-01841
+    END;
+
+
+
     PROCEDURE save_contexts AS
         curr_user_id    CONSTANT contexts.user_id%TYPE  := 'TESTER__';
         --curr_app_id     CONSTANT contexts.app_id%TYPE   := 0;
@@ -160,7 +189,7 @@ CREATE OR REPLACE PACKAGE BODY git.ctx_ut AS
 
         -- check session_db
         --
-        -- @TODO;
+        -- @TODO:
         --
     END;
 

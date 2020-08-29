@@ -34,8 +34,12 @@ CREATE OR REPLACE PACKAGE git.ctx_ut AS
     -- retrieve context number
 
     -- %test
-    --PROCEDURE get_context_date;
+    PROCEDURE get_context_date;
     -- retrieve context date
+
+    -- %test
+    -- %throws(-1841)
+    PROCEDURE get_context_date#wrong_format;
 
     -- %test
     --PROCEDURE set_user_id;
