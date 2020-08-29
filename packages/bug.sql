@@ -863,7 +863,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             FROM debug_log e
             WHERE e.log_id = rec.log_parent;
             --
-            rec.scn             := DBMS_APPLICATION_INFO.SET_SESSION_LONGOPS_NOHINT;
+            rec.scn             := DBMS_APPLICATION_INFO.SET_SESSION_LONGOPS_NOHINT;    -- rindex
             rec.log_parent      := rec.log_id;  -- create fresh child
             rec.log_id          := log_id.NEXTVAL;
             rec.flag            := bug.flag_longops;
@@ -1049,11 +1049,14 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         COMMIT;
         --
         recent_log_id := rec.log_id;
+        IF SQLCODE != 0 OR rec.flag = bug.flag_error THEN
+            recent_error_id := rec.log_id;  -- save last error for easy access
+        END IF;
 
         -- print message to console
         $IF $$OUTPUT_ENABLED $THEN
             DBMS_OUTPUT.PUT_LINE(
-                rec.log_id || ' [' || rec.flag || ']: ' ||
+                rec.log_id || ' ^' || NVL(rec.log_parent, 0) || ' [' || rec.flag || ']: ' ||
                 --RPAD(' ', (rec.module_depth - 1) * 2, ' ') ||
                 rec.module_name || ' [' || rec.module_line || '] ' || NULLIF(rec.action_name, bug.empty_action) ||
                 RTRIM(': ' || SUBSTR(in_arguments, 1, 40), ': ')
@@ -1061,11 +1064,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         $END
 
         bug.start_profilers(rec);
-
-        -- save last error for easy access
-        IF SQLCODE != 0 THEN
-            recent_error_id := rec.log_id;
-        END IF;
         --
         RETURN rec.log_id;
     EXCEPTION
