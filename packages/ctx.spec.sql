@@ -97,7 +97,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Set user_id when running from `DBMS_SCHEDULER`, trigger...
     --
     PROCEDURE set_user_id (
-        in_user_id  debug_log.user_id%TYPE
+        in_user_id      logs.user_id%TYPE
     );
 
 
@@ -111,7 +111,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns APEX application id
     --
     FUNCTION get_app_id
-    RETURN debug_log.app_id%TYPE;
+    RETURN logs.app_id%TYPE;
 
 
 
@@ -119,7 +119,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns APEX page id
     --
     FUNCTION get_page_id
-    RETURN debug_log.page_id%TYPE;
+    RETURN logs.page_id%TYPE;
 
 
 
@@ -127,7 +127,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns current user id (APEX user, CONTEXT user, DB user..., whatever fits your needs)
     --
     FUNCTION get_user_id
-    RETURN debug_log.user_id%TYPE;
+    RETURN logs.user_id%TYPE;
 
 
 
@@ -135,7 +135,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns database session id
     --
     FUNCTION get_session_db
-    RETURN debug_log.session_db%TYPE;
+    RETURN logs.session_db%TYPE;
 
 
 
@@ -143,7 +143,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns APEX session id
     --
     FUNCTION get_session_apex
-    RETURN debug_log.session_apex%TYPE;
+    RETURN logs.session_apex%TYPE;
 
 
 
@@ -151,7 +151,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns client_id for `DBMS_SESSION`
     --
     FUNCTION get_client_id (
-        in_user_id      contexts.user_id%TYPE := NULL
+        in_user_id          contexts.user_id%TYPE := NULL
     )
     RETURN VARCHAR2;
 
@@ -202,7 +202,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Initialize app contexts and `DBMS_SESSION`
     --
     PROCEDURE init (
-        in_user_id    debug_log.user_id%TYPE := NULL
+        in_user_id    logs.user_id%TYPE := NULL
     );
 
 END;

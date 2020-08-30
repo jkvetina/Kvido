@@ -1,4 +1,4 @@
-CREATE OR REPLACE PACKAGE git.ctx_ut AS
+CREATE OR REPLACE PACKAGE ctx_ut AS
 
     -- %suite
     -- %rollback(manual)

@@ -3,11 +3,11 @@ CREATE OR REPLACE PACKAGE BODY bug_ut AS
     PROCEDURE before_all AS
     BEGIN
         -- clear log
-        DELETE FROM debug_log;
+        DELETE FROM logs;
         COMMIT;
 
         -- clear log setup
-        DELETE FROM debug_log_setup
+        DELETE FROM logs_setup
         WHERE user_id = ctx.get_user_id();
         COMMIT;
     END;
@@ -27,7 +27,7 @@ CREATE OR REPLACE PACKAGE BODY bug_ut AS
     PROCEDURE before_each AS
     BEGIN
         -- clear log
-        DELETE FROM debug_log;
+        DELETE FROM logs;
         COMMIT;
     END;
 
@@ -41,11 +41,11 @@ CREATE OR REPLACE PACKAGE BODY bug_ut AS
 
 
     PROCEDURE raise_error AS
-        first_record        debug_log%ROWTYPE;
-        exp_module_name     CONSTANT debug_log.module_name%TYPE := $$PLSQL_UNIT || '.RAISE_ERROR';
-        exp_module_line     debug_log.module_line%TYPE;
-        exp_action_name     CONSTANT debug_log.action_name%TYPE := 'ERROR_NAME';
-        exp_args            debug_log.arguments%TYPE;
+        first_record        logs%ROWTYPE;
+        exp_module_name     CONSTANT logs.module_name%TYPE := $$PLSQL_UNIT || '.RAISE_ERROR';
+        exp_module_line     logs.module_line%TYPE;
+        exp_action_name     CONSTANT logs.action_name%TYPE := 'ERROR_NAME';
+        exp_args            logs.arguments%TYPE;
         --
         test_string         CONSTANT VARCHAR2(30)   := 'TODAY';
         test_number         CONSTANT VARCHAR2(30)   := 3.1415;
@@ -67,7 +67,7 @@ CREATE OR REPLACE PACKAGE BODY bug_ut AS
         WHEN OTHERS THEN
             -- check log for E flag and action_name
             SELECT * INTO first_record
-            FROM debug_log
+            FROM logs
             WHERE flag = bug.flag_error;
             --
             ut.expect(first_record.module_name).to_equal(exp_module_name);
@@ -85,8 +85,8 @@ CREATE OR REPLACE PACKAGE BODY bug_ut AS
 
 
     PROCEDURE update_timer AS
-        parent_id           debug_log.log_id%TYPE;
-        next_record         debug_log%ROWTYPE;
+        parent_id           logs.log_id%TYPE;
+        next_record         logs%ROWTYPE;
     BEGIN
         parent_id := bug.log_module('PARENT');  -- parent needed
         --
@@ -96,7 +96,7 @@ CREATE OR REPLACE PACKAGE BODY bug_ut AS
 
         -- check log
         SELECT * INTO next_record
-        FROM debug_log
+        FROM logs
         WHERE log_id = parent_id;
         --
         ut.expect(SUBSTR(next_record.timer, 1, 9)).to_equal('00:00:01,');
@@ -105,8 +105,8 @@ CREATE OR REPLACE PACKAGE BODY bug_ut AS
 
 
     PROCEDURE log_progress AS
-        first_record        debug_log%ROWTYPE;
-        next_record         debug_log%ROWTYPE;
+        first_record        logs%ROWTYPE;
+        next_record         logs%ROWTYPE;
     BEGIN
         -- init
         bug.log_module('PARENT');  -- parent needed
@@ -115,7 +115,7 @@ CREATE OR REPLACE PACKAGE BODY bug_ut AS
         );
         --
         SELECT * INTO first_record
-        FROM debug_log
+        FROM logs
         WHERE flag = bug.flag_longops;
         --
         ut.expect(first_record.arguments).to_equal('0%');
@@ -123,6 +123,7 @@ CREATE OR REPLACE PACKAGE BODY bug_ut AS
         -- check session longops
         --
         -- @TODO:
+        --SELECT * FROM v$session_longops;
         --
 
         -- increase progress
@@ -134,7 +135,7 @@ CREATE OR REPLACE PACKAGE BODY bug_ut AS
 
         -- check log
         SELECT * INTO next_record
-        FROM debug_log
+        FROM logs
         WHERE log_id = first_record.log_id;
         --
         ut.expect(next_record.arguments).to_equal('50%');

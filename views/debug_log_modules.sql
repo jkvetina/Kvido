@@ -1,5 +1,5 @@
---DROP MATERIALIZED VIEW debug_log_modules;
-CREATE MATERIALIZED VIEW debug_log_modules
+--DROP MATERIALIZED VIEW logs_modules;
+CREATE MATERIALIZED VIEW logs_modules
 BUILD IMMEDIATE
 REFRESH COMPLETE ON DEMAND
 AS
@@ -169,26 +169,26 @@ LEFT JOIN (
     )
 ORDER BY t.package_name, t.spec_start;
 --
-CREATE INDEX ix_debug_log_modules ON debug_log_modules (package_name, module_name, module_type, overload);
+CREATE INDEX ix_logs_modules ON logs_modules (package_name, module_name, module_type, overload);
 --
-COMMENT ON MATERIALIZED VIEW debug_log_modules IS 'Find package modules (procedures and functions) and their boundaries (start-end lines)';
+COMMENT ON MATERIALIZED VIEW logs_modules IS 'Find package modules (procedures and functions) and their boundaries (start-end lines)';
 --
-COMMENT ON COLUMN debug_log_modules.package_name    IS 'Package name';
-COMMENT ON COLUMN debug_log_modules.module_name     IS 'Module name';
-COMMENT ON COLUMN debug_log_modules.module_type     IS 'Module type';
-COMMENT ON COLUMN debug_log_modules.overload        IS 'Overload ID';
-COMMENT ON COLUMN debug_log_modules.spec_start      IS 'Module start in specification';
-COMMENT ON COLUMN debug_log_modules.spec_end        IS 'Module end in specification';
-COMMENT ON COLUMN debug_log_modules.spec_lines      IS 'Lines in specification';
-COMMENT ON COLUMN debug_log_modules.body_start      IS 'Module start in body';
-COMMENT ON COLUMN debug_log_modules.body_end        IS 'Module end in body';
-COMMENT ON COLUMN debug_log_modules.body_lines      IS 'Lines in body';
-COMMENT ON COLUMN debug_log_modules.private         IS 'Flag for private procedures';
-COMMENT ON COLUMN debug_log_modules.args_in         IS 'Number of IN arguments';
-COMMENT ON COLUMN debug_log_modules.args_out        IS 'Number of OUT arguments';
-COMMENT ON COLUMN debug_log_modules.comment_        IS 'Description for package spec';
-COMMENT ON COLUMN debug_log_modules.group_line      IS 'Group ID for blocks in Wiki';
-COMMENT ON COLUMN debug_log_modules.f_id            IS 'Overload ID for F/P clone';
+COMMENT ON COLUMN logs_modules.package_name    IS 'Package name';
+COMMENT ON COLUMN logs_modules.module_name     IS 'Module name';
+COMMENT ON COLUMN logs_modules.module_type     IS 'Module type';
+COMMENT ON COLUMN logs_modules.overload        IS 'Overload ID';
+COMMENT ON COLUMN logs_modules.spec_start      IS 'Module start in specification';
+COMMENT ON COLUMN logs_modules.spec_end        IS 'Module end in specification';
+COMMENT ON COLUMN logs_modules.spec_lines      IS 'Lines in specification';
+COMMENT ON COLUMN logs_modules.body_start      IS 'Module start in body';
+COMMENT ON COLUMN logs_modules.body_end        IS 'Module end in body';
+COMMENT ON COLUMN logs_modules.body_lines      IS 'Lines in body';
+COMMENT ON COLUMN logs_modules.private         IS 'Flag for private procedures';
+COMMENT ON COLUMN logs_modules.args_in         IS 'Number of IN arguments';
+COMMENT ON COLUMN logs_modules.args_out        IS 'Number of OUT arguments';
+COMMENT ON COLUMN logs_modules.comment_        IS 'Description for package spec';
+COMMENT ON COLUMN logs_modules.group_line      IS 'Group ID for blocks in Wiki';
+COMMENT ON COLUMN logs_modules.f_id            IS 'Overload ID for F/P clone';
 
 
 
@@ -196,17 +196,6 @@ COMMENT ON COLUMN debug_log_modules.f_id            IS 'Overload ID for F/P clon
 -- REFRESH MVIEW
 --
 BEGIN
-    DBMS_SNAPSHOT.REFRESH('DEBUG_LOG_MODULES');
+    DBMS_SNAPSHOT.REFRESH('LOGS_MODULES');
 END;
 /
-
-
-
---
--- PACKAGE DOCUMENTATION FOR GIT
---
-BEGIN
-    wiki.desc_package('BUG');   -- CLEAR CONSOLE FIRST
-END;
-/
-

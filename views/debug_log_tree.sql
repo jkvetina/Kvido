@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW debug_log_tree AS
+CREATE OR REPLACE VIEW logs_tree AS
 SELECT
     e.log_id,
     e.log_parent,
@@ -17,7 +17,7 @@ SELECT
     e.scn,
     e.timer,
     e.created_at
-FROM debug_log e
+FROM logs e
 CONNECT BY e.log_parent = PRIOR e.log_id
 START WITH e.log_id     = bug.get_tree_id()
 ORDER SIBLINGS BY e.log_id;

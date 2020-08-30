@@ -1,11 +1,11 @@
-CREATE OR REPLACE VIEW debug_log_profiler AS
+CREATE OR REPLACE VIEW logs_profiler AS
 WITH x AS (
     SELECT
         MAX(CASE e.action_name WHEN 'START_PROFILER' THEN TO_NUMBER(e.arguments) END) AS profiler_id,
         MAX(CASE e.action_name WHEN 'START_COVERAGE' THEN TO_NUMBER(e.arguments) END) AS coverage_id
     FROM (
         SELECT e.action_name, e.flag, e.arguments
-        FROM debug_log e
+        FROM logs e
         CONNECT BY PRIOR e.log_id   = e.log_parent
         START WITH e.log_id         = bug.get_tree_id()
     ) e
@@ -36,7 +36,7 @@ JOIN user_source s
     AND s.type          = p.unit_type
     AND s.line          = d.line#
 CROSS JOIN x
-LEFT JOIN debug_log_modules m
+LEFT JOIN logs_modules m
     ON m.package_name   = s.name
     AND s.type          = 'PACKAGE BODY'
     AND s.line          BETWEEN m.body_start AND m.body_end
@@ -51,16 +51,16 @@ LEFT JOIN dbmspcc_blocks b
 WHERE p.runid           = x.profiler_id
     AND p.unit_owner    = USER;
 --
-COMMENT ON COLUMN debug_log_profiler.name           IS 'Object name';
-COMMENT ON COLUMN debug_log_profiler.type           IS 'Object type';
-COMMENT ON COLUMN debug_log_profiler.line           IS 'Line in source code';
-COMMENT ON COLUMN debug_log_profiler.total_calls    IS 'Number of occurences/calls';
-COMMENT ON COLUMN debug_log_profiler.total_time     IS 'Time spent on module';
-COMMENT ON COLUMN debug_log_profiler.max_time       IS 'Time spent on one iteration';
-COMMENT ON COLUMN debug_log_profiler.block          IS 'Block from coverage';
-COMMENT ON COLUMN debug_log_profiler.col            IS 'Column from source line';
-COMMENT ON COLUMN debug_log_profiler.covered        IS 'Covered flag';
-COMMENT ON COLUMN debug_log_profiler.source_line    IS 'Source line';
-COMMENT ON COLUMN debug_log_profiler.profiler_id    IS 'Profiler ID';
-COMMENT ON COLUMN debug_log_profiler.coverage_id    IS 'Coverage ID';
+COMMENT ON COLUMN logs_profiler.name           IS 'Object name';
+COMMENT ON COLUMN logs_profiler.type           IS 'Object type';
+COMMENT ON COLUMN logs_profiler.line           IS 'Line in source code';
+COMMENT ON COLUMN logs_profiler.total_calls    IS 'Number of occurences/calls';
+COMMENT ON COLUMN logs_profiler.total_time     IS 'Time spent on module';
+COMMENT ON COLUMN logs_profiler.max_time       IS 'Time spent on one iteration';
+COMMENT ON COLUMN logs_profiler.block          IS 'Block from coverage';
+COMMENT ON COLUMN logs_profiler.col            IS 'Column from source line';
+COMMENT ON COLUMN logs_profiler.covered        IS 'Covered flag';
+COMMENT ON COLUMN logs_profiler.source_line    IS 'Source line';
+COMMENT ON COLUMN logs_profiler.profiler_id    IS 'Profiler ID';
+COMMENT ON COLUMN logs_profiler.coverage_id    IS 'Coverage ID';
 

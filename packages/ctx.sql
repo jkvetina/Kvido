@@ -1,11 +1,11 @@
 CREATE OR REPLACE PACKAGE BODY ctx AS
 
-    recent_session_db       debug_log.session_db%TYPE;      -- to save resources
+    recent_session_db       logs.session_db%TYPE;      -- to save resources
 
 
 
     PROCEDURE init (
-        in_user_id      debug_log.user_id%TYPE := NULL
+        in_user_id      logs.user_id%TYPE := NULL
     ) AS
     BEGIN
         bug.log_module(in_user_id);
@@ -26,7 +26,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     FUNCTION get_app_id
-    RETURN debug_log.app_id%TYPE AS
+    RETURN logs.app_id%TYPE AS
     BEGIN
         RETURN TO_NUMBER(SYS_CONTEXT('APEX$SESSION', 'APP_ID'));
     END;
@@ -34,7 +34,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     FUNCTION get_page_id
-    RETURN debug_log.page_id%TYPE AS
+    RETURN logs.page_id%TYPE AS
     BEGIN
         $IF $$APEX_INSTALLED $THEN
             RETURN NV('APP_PAGE_ID');
@@ -46,7 +46,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     FUNCTION get_user_id
-    RETURN debug_log.user_id%TYPE AS
+    RETURN logs.user_id%TYPE AS
     BEGIN
         RETURN COALESCE(
             SYS_CONTEXT(ctx.app_namespace, ctx.app_user_id),
@@ -58,24 +58,24 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     PROCEDURE set_user_id (
-        in_user_id  debug_log.user_id%TYPE
+        in_user_id      logs.user_id%TYPE
     ) AS
     BEGIN
         bug.log_module(in_user_id);
         --
         DBMS_SESSION.SET_CONTEXT (
-            namespace    => ctx.app_namespace,
-            attribute    => ctx.app_user_id,
-            value        => in_user_id,
-            username     => in_user_id,
-            client_id    => ctx.get_client_id(in_user_id)
+            namespace   => ctx.app_namespace,
+            attribute   => ctx.app_user_id,
+            value       => in_user_id,
+            username    => in_user_id,
+            client_id   => ctx.get_client_id(in_user_id)
         );
     END;
 
 
 
     FUNCTION get_session_db
-    RETURN debug_log.session_db%TYPE AS
+    RETURN logs.session_db%TYPE AS
     BEGIN
         IF recent_session_db IS NULL THEN
             SELECT TO_NUMBER(s.sid || '.' || s.serial#) INTO recent_session_db
@@ -92,7 +92,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     FUNCTION get_session_apex
-    RETURN debug_log.session_apex%TYPE AS
+    RETURN logs.session_apex%TYPE AS
     BEGIN
         RETURN SYS_CONTEXT('APEX$SESSION', 'APP_SESSION');
     END;
@@ -100,7 +100,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     FUNCTION get_client_id (
-        in_user_id      contexts.user_id%TYPE := NULL
+        in_user_id          contexts.user_id%TYPE := NULL
     )
     RETURN VARCHAR2 AS
     BEGIN
