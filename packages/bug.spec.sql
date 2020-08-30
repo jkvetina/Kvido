@@ -15,6 +15,7 @@ CREATE OR REPLACE PACKAGE bug AS
 
     -- view which holds all DML errors
     view_dml_errors         CONSTANT VARCHAR2(30)       := 'LOGS_DML_ERRORS';
+    view_logs_modules       CONSTANT VARCHAR2(30)       := 'LOGS_MODULES';
 
     -- flags
     flag_module             CONSTANT logs.flag%TYPE     := 'M';     -- start of any module (procedure/function)
