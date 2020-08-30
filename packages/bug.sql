@@ -818,9 +818,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     RETURN logs.log_id%TYPE AS
     BEGIN
         RETURN bug.log__ (
-            in_action_name  => NULL,
+            in_action_name  => 'LOG_SCHEDULER',
             in_flag         => bug.flag_scheduler,
-            in_arguments    => 'LOG_SCHEDULER|' || in_scheduler_id,
+            in_arguments    => in_scheduler_id,
             in_parent_id    => in_scheduler_id
         );
     END;
@@ -833,9 +833,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         out_log_id          logs.log_id%TYPE;
     BEGIN
         out_log_id := bug.log__ (
-            in_action_name  => NULL,
+            in_action_name  => 'LOG_SCHEDULER',
             in_flag         => bug.flag_scheduler,
-            in_arguments    => 'LOG_SCHEDULER|' || in_scheduler_id,
+            in_arguments    => in_scheduler_id,
             in_parent_id    => in_scheduler_id
         );
     END;
@@ -949,8 +949,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         -- recover contexts for scheduler
         IF in_flag = bug.flag_scheduler AND in_parent_id IS NOT NULL THEN
             BEGIN
-                SELECT e.user_id, e.action_name, e.contexts
-                INTO rec.user_id, rec.action_name, rec.contexts
+                SELECT e.user_id, e.contexts
+                INTO rec.user_id, rec.contexts
                 FROM logs e
                 WHERE e.log_id = in_parent_id;
             EXCEPTION
