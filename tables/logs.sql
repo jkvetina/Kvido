@@ -37,15 +37,15 @@ INTERVAL (NUMTODSINTERVAL(1, 'DAY')) (
 --
 COMMENT ON TABLE  logs                  IS 'Various messages raised in application; daily partitions';
 --
-COMMENT ON COLUMN logs.log_id           IS 'Error ID generated from sequence LOG_ID';
-COMMENT ON COLUMN logs.log_parent       IS 'Parent error to easily create tree; dont use FK to avoid deadlocks';
+COMMENT ON COLUMN logs.log_id           IS 'Log ID generated from `LOG_ID` sequence';
+COMMENT ON COLUMN logs.log_parent       IS 'Parent log record; dont use FK to avoid deadlocks';
 --
 COMMENT ON COLUMN logs.user_id          IS 'User ID';
 COMMENT ON COLUMN logs.app_id           IS 'APEX Application ID';
 COMMENT ON COLUMN logs.page_id          IS 'APEX Application PAGE ID';
-COMMENT ON COLUMN logs.flag             IS 'Type of error listed in ERR package specification; FK missing for performance reasons';
+COMMENT ON COLUMN logs.flag             IS 'Type of error listed in `bug` package specification; FK missing for performance reasons';
 --
-COMMENT ON COLUMN logs.action_name      IS 'Action name to distinguish position in module or warning and error names';
+COMMENT ON COLUMN logs.action_name      IS 'Action name to distinguish position in module or use it as warning/error names';
 COMMENT ON COLUMN logs.module_name      IS 'Module name (procedure or function name)';
 COMMENT ON COLUMN logs.module_line      IS 'Line in the module';
 --
