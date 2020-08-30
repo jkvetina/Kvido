@@ -620,9 +620,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END LOOP;
         --
         out_log_id := bug.log__ (
-            in_action_name  => bug.empty_action,
+            in_action_name  => 'LOG_CONTEXT',
             in_flag         => bug.flag_info,
-            in_arguments    => bug.get_arguments('LOG_CONTEXT', in_namespace, in_filter),
+            in_arguments    => bug.get_arguments(in_namespace, in_filter),
             in_message      => payload
         );
     END;
@@ -645,9 +645,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END LOOP;
         --
         out_log_id := bug.log__ (
-            in_action_name  => bug.empty_action,
+            in_action_name  => 'LOG_NLS',
             in_flag         => bug.flag_info,
-            in_arguments    => bug.get_arguments('LOG_NLS', in_filter),
+            in_arguments    => bug.get_arguments(in_filter),
             in_message      => payload
         );
     END;
@@ -693,9 +693,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END LOOP;
         --
         out_log_id := bug.log__ (
-            in_action_name  => bug.empty_action,
+            in_action_name  => 'LOG_USERENV',
             in_flag         => bug.flag_info,
-            in_arguments    => bug.get_arguments('LOG_USERENV', in_filter),
+            in_arguments    => bug.get_arguments(in_filter),
             in_message      => payload
         );
     END;
@@ -737,9 +737,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END LOOP;
         --
         out_log_id := bug.log__ (
-            in_action_name  => bug.empty_action,
+            in_action_name  => 'LOG_CGI',
             in_flag         => bug.flag_info,
-            in_arguments    => bug.get_arguments('LOG_CGI', in_filter),
+            in_arguments    => bug.get_arguments(in_filter),
             in_message      => payload
         );
     END;
@@ -768,9 +768,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             END LOOP;
             --
             out_log_id := bug.log__ (
-                in_action_name  => bug.empty_action,
+                in_action_name  => 'LOG_APEX_ITEMS',
                 in_flag         => bug.flag_info,
-                in_arguments    => bug.get_arguments('LOG_APEX_ITEMS', in_page_id, in_filter),
+                in_arguments    => bug.get_arguments(in_page_id, in_filter),
                 in_message      => payload
             );
         $ELSE
@@ -800,9 +800,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             END LOOP;
             --
             out_log_id := bug.log__ (
-                in_action_name  => bug.empty_action,
+                in_action_name  => 'LOG_APEX_GLOBALS',
                 in_flag         => bug.flag_info,
-                in_arguments    => bug.get_arguments('LOG_APEX_GLOBALS', in_filter),
+                in_arguments    => bug.get_arguments(in_filter),
                 in_message      => payload
             );
         $ELSE
