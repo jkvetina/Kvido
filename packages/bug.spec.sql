@@ -81,14 +81,14 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Main function called at the very start of every app module (procedure, function)
     --
     FUNCTION log_module (
-        in_arg1         logs.arguments%TYPE    := NULL,
-        in_arg2         logs.arguments%TYPE    := NULL,
-        in_arg3         logs.arguments%TYPE    := NULL,
-        in_arg4         logs.arguments%TYPE    := NULL,
-        in_arg5         logs.arguments%TYPE    := NULL,
-        in_arg6         logs.arguments%TYPE    := NULL,
-        in_arg7         logs.arguments%TYPE    := NULL,
-        in_arg8         logs.arguments%TYPE    := NULL
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
     )
     RETURN logs.log_id%TYPE;
 
@@ -98,14 +98,14 @@ CREATE OR REPLACE PACKAGE bug AS
     -- ^
     --
     PROCEDURE log_module (
-        in_arg1         logs.arguments%TYPE    := NULL,
-        in_arg2         logs.arguments%TYPE    := NULL,
-        in_arg3         logs.arguments%TYPE    := NULL,
-        in_arg4         logs.arguments%TYPE    := NULL,
-        in_arg5         logs.arguments%TYPE    := NULL,
-        in_arg6         logs.arguments%TYPE    := NULL,
-        in_arg7         logs.arguments%TYPE    := NULL,
-        in_arg8         logs.arguments%TYPE    := NULL
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
     );
 
 
@@ -115,14 +115,14 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     FUNCTION log_action (
         in_action       logs.action_name%TYPE,
-        in_arg1         logs.arguments%TYPE    := NULL,
-        in_arg2         logs.arguments%TYPE    := NULL,
-        in_arg3         logs.arguments%TYPE    := NULL,
-        in_arg4         logs.arguments%TYPE    := NULL,
-        in_arg5         logs.arguments%TYPE    := NULL,
-        in_arg6         logs.arguments%TYPE    := NULL,
-        in_arg7         logs.arguments%TYPE    := NULL,
-        in_arg8         logs.arguments%TYPE    := NULL
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
     )
     RETURN logs.log_id%TYPE;
 
@@ -133,14 +133,14 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     PROCEDURE log_action (
         in_action       logs.action_name%TYPE,
-        in_arg1         logs.arguments%TYPE    := NULL,
-        in_arg2         logs.arguments%TYPE    := NULL,
-        in_arg3         logs.arguments%TYPE    := NULL,
-        in_arg4         logs.arguments%TYPE    := NULL,
-        in_arg5         logs.arguments%TYPE    := NULL,
-        in_arg6         logs.arguments%TYPE    := NULL,
-        in_arg7         logs.arguments%TYPE    := NULL,
-        in_arg8         logs.arguments%TYPE    := NULL
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
     );
 
 
@@ -149,14 +149,14 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Store record in log with `D` flag
     --
     FUNCTION log_debug (
-        in_arg1         logs.arguments%TYPE    := NULL,
-        in_arg2         logs.arguments%TYPE    := NULL,
-        in_arg3         logs.arguments%TYPE    := NULL,
-        in_arg4         logs.arguments%TYPE    := NULL,
-        in_arg5         logs.arguments%TYPE    := NULL,
-        in_arg6         logs.arguments%TYPE    := NULL,
-        in_arg7         logs.arguments%TYPE    := NULL,
-        in_arg8         logs.arguments%TYPE    := NULL
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
     )
     RETURN logs.log_id%TYPE;
 
@@ -166,14 +166,14 @@ CREATE OR REPLACE PACKAGE bug AS
     -- ^
     --
     PROCEDURE log_debug (
-        in_arg1         logs.arguments%TYPE    := NULL,
-        in_arg2         logs.arguments%TYPE    := NULL,
-        in_arg3         logs.arguments%TYPE    := NULL,
-        in_arg4         logs.arguments%TYPE    := NULL,
-        in_arg5         logs.arguments%TYPE    := NULL,
-        in_arg6         logs.arguments%TYPE    := NULL,
-        in_arg7         logs.arguments%TYPE    := NULL,
-        in_arg8         logs.arguments%TYPE    := NULL
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
     );
 
 
@@ -182,14 +182,14 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Store record in log with `R` flag
     --
     FUNCTION log_result (
-        in_arg1         logs.arguments%TYPE    := NULL,
-        in_arg2         logs.arguments%TYPE    := NULL,
-        in_arg3         logs.arguments%TYPE    := NULL,
-        in_arg4         logs.arguments%TYPE    := NULL,
-        in_arg5         logs.arguments%TYPE    := NULL,
-        in_arg6         logs.arguments%TYPE    := NULL,
-        in_arg7         logs.arguments%TYPE    := NULL,
-        in_arg8         logs.arguments%TYPE    := NULL
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
     )
     RETURN logs.log_id%TYPE;
 
@@ -199,14 +199,14 @@ CREATE OR REPLACE PACKAGE bug AS
     -- ^
     --
     PROCEDURE log_result (
-        in_arg1         logs.arguments%TYPE    := NULL,
-        in_arg2         logs.arguments%TYPE    := NULL,
-        in_arg3         logs.arguments%TYPE    := NULL,
-        in_arg4         logs.arguments%TYPE    := NULL,
-        in_arg5         logs.arguments%TYPE    := NULL,
-        in_arg6         logs.arguments%TYPE    := NULL,
-        in_arg7         logs.arguments%TYPE    := NULL,
-        in_arg8         logs.arguments%TYPE    := NULL
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
     );
 
 
@@ -215,15 +215,15 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Store record in log with `W` flag; pass `action_name`
     --
     FUNCTION log_warning (
-        in_action       logs.action_name%TYPE  := NULL,
-        in_arg1         logs.arguments%TYPE    := NULL,
-        in_arg2         logs.arguments%TYPE    := NULL,
-        in_arg3         logs.arguments%TYPE    := NULL,
-        in_arg4         logs.arguments%TYPE    := NULL,
-        in_arg5         logs.arguments%TYPE    := NULL,
-        in_arg6         logs.arguments%TYPE    := NULL,
-        in_arg7         logs.arguments%TYPE    := NULL,
-        in_arg8         logs.arguments%TYPE    := NULL
+        in_action       logs.action_name%TYPE   := NULL,
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
     )
     RETURN logs.log_id%TYPE;
 
@@ -233,15 +233,15 @@ CREATE OR REPLACE PACKAGE bug AS
     -- ^
     --
     PROCEDURE log_warning (
-        in_action       logs.action_name%TYPE  := NULL,
-        in_arg1         logs.arguments%TYPE    := NULL,
-        in_arg2         logs.arguments%TYPE    := NULL,
-        in_arg3         logs.arguments%TYPE    := NULL,
-        in_arg4         logs.arguments%TYPE    := NULL,
-        in_arg5         logs.arguments%TYPE    := NULL,
-        in_arg6         logs.arguments%TYPE    := NULL,
-        in_arg7         logs.arguments%TYPE    := NULL,
-        in_arg8         logs.arguments%TYPE    := NULL
+        in_action       logs.action_name%TYPE   := NULL,
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
     );
 
 
@@ -250,15 +250,15 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Store record in log with `E` flag; pass `action_name`
     --
     FUNCTION log_error (
-        in_action       logs.action_name%TYPE  := NULL,
-        in_arg1         logs.arguments%TYPE    := NULL,
-        in_arg2         logs.arguments%TYPE    := NULL,
-        in_arg3         logs.arguments%TYPE    := NULL,
-        in_arg4         logs.arguments%TYPE    := NULL,
-        in_arg5         logs.arguments%TYPE    := NULL,
-        in_arg6         logs.arguments%TYPE    := NULL,
-        in_arg7         logs.arguments%TYPE    := NULL,
-        in_arg8         logs.arguments%TYPE    := NULL
+        in_action       logs.action_name%TYPE   := NULL,
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
     )
     RETURN logs.log_id%TYPE;
 
@@ -268,15 +268,15 @@ CREATE OR REPLACE PACKAGE bug AS
     -- ^
     --
     PROCEDURE log_error (
-        in_action       logs.action_name%TYPE  := NULL,
-        in_arg1         logs.arguments%TYPE    := NULL,
-        in_arg2         logs.arguments%TYPE    := NULL,
-        in_arg3         logs.arguments%TYPE    := NULL,
-        in_arg4         logs.arguments%TYPE    := NULL,
-        in_arg5         logs.arguments%TYPE    := NULL,
-        in_arg6         logs.arguments%TYPE    := NULL,
-        in_arg7         logs.arguments%TYPE    := NULL,
-        in_arg8         logs.arguments%TYPE    := NULL
+        in_action       logs.action_name%TYPE   := NULL,
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
     );
 
 
@@ -286,14 +286,14 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     PROCEDURE raise_error (
         in_action       logs.action_name%TYPE  := NULL,
-        in_arg1         logs.arguments%TYPE    := NULL,
-        in_arg2         logs.arguments%TYPE    := NULL,
-        in_arg3         logs.arguments%TYPE    := NULL,
-        in_arg4         logs.arguments%TYPE    := NULL,
-        in_arg5         logs.arguments%TYPE    := NULL,
-        in_arg6         logs.arguments%TYPE    := NULL,
-        in_arg7         logs.arguments%TYPE    := NULL,
-        in_arg8         logs.arguments%TYPE    := NULL
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
     );
 
 
@@ -307,7 +307,7 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Update `logs.timer` for current/requested record
     --
     PROCEDURE update_timer (
-        in_log_id           logs.log_id%TYPE := NULL
+        in_log_id           logs.log_id%TYPE    := NULL
     );
 
 
@@ -316,7 +316,7 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Update/track progress for LONGOPS
     --
     PROCEDURE log_progress (
-        in_progress         NUMBER := NULL  -- in percent (0-1)
+        in_progress         NUMBER              := NULL  -- in percent (0-1)
     );
 
 
@@ -355,8 +355,8 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     PROCEDURE attach_clob (
         in_payload          CLOB,
-        in_lob_name         logs_lobs.lob_name%TYPE    := NULL,
-        in_log_id           logs_lobs.log_id%TYPE      := NULL
+        in_lob_name         logs_lobs.lob_name%TYPE     := NULL,
+        in_log_id           logs_lobs.log_id%TYPE       := NULL
     );
 
 
@@ -366,8 +366,8 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     PROCEDURE attach_clob (
         in_payload          XMLTYPE,
-        in_lob_name         logs_lobs.lob_name%TYPE    := NULL,
-        in_log_id           logs_lobs.log_id%TYPE      := NULL
+        in_lob_name         logs_lobs.lob_name%TYPE     := NULL,
+        in_log_id           logs_lobs.log_id%TYPE       := NULL
     );
 
 
@@ -377,8 +377,8 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     PROCEDURE attach_blob (
         in_payload          BLOB,
-        in_lob_name         logs_lobs.lob_name%TYPE    := NULL,
-        in_log_id           logs_lobs.log_id%TYPE      := NULL
+        in_lob_name         logs_lobs.lob_name%TYPE     := NULL,
+        in_log_id           logs_lobs.log_id%TYPE       := NULL
     );
 
 
@@ -448,8 +448,8 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Log requested `SYS_CONTEXT` values
     --
     PROCEDURE log_context (
-        in_namespace        logs.arguments%TYPE    := '%',
-        in_filter           logs.arguments%TYPE    := '%'
+        in_namespace        logs.arguments%TYPE     := '%',
+        in_filter           logs.arguments%TYPE     := '%'
     );
 
 
@@ -458,7 +458,7 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Log session `NLS` parameters
     --
     PROCEDURE log_nls (
-        in_filter           logs.arguments%TYPE    := '%'
+        in_filter           logs.arguments%TYPE     := '%'
     );
 
 
@@ -467,7 +467,7 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Log `USERENV` values
     --
     PROCEDURE log_userenv (
-        in_filter           logs.arguments%TYPE    := '%'
+        in_filter           logs.arguments%TYPE     := '%'
     );
 
 
@@ -476,7 +476,7 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Log `CGI_ENV` values (when called from web/APEX)
     --
     PROCEDURE log_cgi (
-        in_filter           logs.arguments%TYPE    := '%'
+        in_filter           logs.arguments%TYPE     := '%'
     );
 
 
@@ -485,8 +485,8 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Get `APEX` items for selected/current page
     --
     PROCEDURE log_apex_items (
-        in_page_id          logs.page_id%TYPE      := NULL,
-        in_filter           logs.arguments%TYPE    := '%'
+        in_page_id          logs.page_id%TYPE       := NULL,
+        in_filter           logs.arguments%TYPE     := '%'
     );
 
 
@@ -495,7 +495,7 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Get `APEX` global/app items
     --
     PROCEDURE log_apex_globals (
-        in_filter           logs.arguments%TYPE    := '%'
+        in_filter           logs.arguments%TYPE     := '%'
     );
 
 
@@ -525,7 +525,7 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Finds and returns root `log_id` for passed `log_id`
     --
     FUNCTION get_root_id (
-        in_log_id       logs.log_id%TYPE := NULL
+        in_log_id       logs.log_id%TYPE        := NULL
     )
     RETURN logs.log_id%TYPE;
 
@@ -569,9 +569,9 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Return detailed info about caller
     --
     PROCEDURE get_caller__ (
-        in_log_id               logs.log_id%TYPE       := NULL,
-        in_parent_id            logs.log_parent%TYPE   := NULL,
-        in_flag                 logs.flag%TYPE         := NULL,
+        in_log_id               logs.log_id%TYPE        := NULL,
+        in_parent_id            logs.log_parent%TYPE    := NULL,
+        in_flag                 logs.flag%TYPE          := NULL,
         out_module_name     OUT logs.module_name%TYPE,
         out_module_line     OUT logs.module_line%TYPE,
         out_parent_id       OUT logs.log_parent%TYPE
@@ -603,14 +603,14 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Returns arguments merged into one string
     --
     FUNCTION get_arguments (
-        in_arg1         logs.arguments%TYPE    := NULL,
-        in_arg2         logs.arguments%TYPE    := NULL,
-        in_arg3         logs.arguments%TYPE    := NULL,
-        in_arg4         logs.arguments%TYPE    := NULL,
-        in_arg5         logs.arguments%TYPE    := NULL,
-        in_arg6         logs.arguments%TYPE    := NULL,
-        in_arg7         logs.arguments%TYPE    := NULL,
-        in_arg8         logs.arguments%TYPE    := NULL
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
     )
     RETURN logs.arguments%TYPE;
 
@@ -651,9 +651,9 @@ CREATE OR REPLACE PACKAGE bug AS
     FUNCTION log__ (
         in_action_name      logs.action_name%TYPE,
         in_flag             logs.flag%TYPE,
-        in_arguments        logs.arguments%TYPE    := NULL,
-        in_message          logs.message%TYPE      := NULL,
-        in_parent_id        logs.log_parent%TYPE   := NULL
+        in_arguments        logs.arguments%TYPE     := NULL,
+        in_message          logs.message%TYPE       := NULL,
+        in_parent_id        logs.log_parent%TYPE    := NULL
     )
     RETURN logs.log_id%TYPE
     ACCESSIBLE BY (
