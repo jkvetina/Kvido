@@ -287,16 +287,12 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
     PROCEDURE set_session (
-        in_user_id          logs.user_id%TYPE,
         in_module_name      logs.module_name%TYPE,
         in_action_name      logs.action_name%TYPE
     ) AS
     BEGIN
-        DBMS_SESSION.SET_IDENTIFIER(in_user_id);                                -- CLIENT_IDENTIFIER
-        DBMS_APPLICATION_INFO.SET_CLIENT_INFO(in_user_id);                      -- CLIENT_INFO
-        --
         IF in_module_name IS NOT NULL THEN
-            DBMS_APPLICATION_INFO.SET_MODULE(in_module_name, in_action_name);   -- MODULE, ACTION
+            DBMS_APPLICATION_INFO.SET_MODULE(in_module_name, in_action_name);   -- USERENV.MODULE, ACTION
         END IF;
         --
         IF in_action_name IS NOT NULL THEN
@@ -970,7 +966,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         rec.module_line     := NVL(rec.module_line, 0);
         --
         bug.set_session (
-            in_user_id      => rec.user_id,
             in_module_name  => rec.module_name,
             in_action_name  => NVL(in_action_name, rec.module_name || bug.splitter || rec.module_line)
         );

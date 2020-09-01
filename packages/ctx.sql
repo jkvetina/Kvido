@@ -63,6 +63,9 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     BEGIN
         bug.log_module(in_user_id);
         --
+        DBMS_SESSION.SET_IDENTIFIER(in_user_id);                -- USERENV.CLIENT_IDENTIFIER
+        DBMS_APPLICATION_INFO.SET_CLIENT_INFO(in_user_id);      -- CLIENT_INFO, v$
+        --
         DBMS_SESSION.SET_CONTEXT (
             namespace   => ctx.app_namespace,
             attribute   => ctx.app_user_id,
@@ -102,7 +105,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     FUNCTION get_client_id (
         in_user_id          contexts.user_id%TYPE := NULL
     )
-    RETURN VARCHAR2 AS
+    RETURN VARCHAR2 AS      -- mimic APEX client_id
     BEGIN
         RETURN
             NVL(in_user_id, ctx.get_user_id()) || ':' ||

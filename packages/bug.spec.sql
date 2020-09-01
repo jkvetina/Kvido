@@ -620,7 +620,6 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Update `DBMS_SESSION` and `DBMS_APPLICATION_INFO` with current module and action
     --
     PROCEDURE set_session (
-        in_user_id          logs.user_id%TYPE,
         in_module_name      logs.module_name%TYPE,
         in_action_name      logs.action_name%TYPE
     );
