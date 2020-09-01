@@ -71,5 +71,9 @@ CREATE OR REPLACE PACKAGE ctx_ut AS
     -- %test
     PROCEDURE init;
 
+    -- %test
+    -- %throws(-01031)
+    PROCEDURE set_directly;
+
 END;
 /

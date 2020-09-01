@@ -267,10 +267,30 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
         curr_user_id    contexts.user_id%TYPE;
         --
         count_contexts  PLS_INTEGER;
+        r_expected      SYS_REFCURSOR;
+        r_current       SYS_REFCURSOR;
     BEGIN
         -- set any context for negative test
         ctx.set_context('NEGATIVE_TEST', 'TRUE');
         ctx.init();
+
+        -- check client identifier
+        -- check app info module and action
+        OPEN r_expected FOR
+            SELECT
+                NULL AS client_id,
+                NULL AS module_name,
+                NULL AS action_name
+            FROM DUAL;
+        --
+        OPEN r_current FOR
+            SELECT
+                SYS_CONTEXT('USERENV', 'CLIENT_IDENTIFIER') AS client_id,
+                SYS_CONTEXT('USERENV', 'MODULE')            AS module_name,
+                SYS_CONTEXT('USERENV', 'ACTION')            AS action_name
+            FROM DUAL;
+        --
+        ut.expect(r_current).to_equal(r_expected);
 
         -- check number of contexts, zero is expected
         SELECT COUNT(*) INTO count_contexts
@@ -279,22 +299,43 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
         --
         ut.expect(count_contexts).to_equal(0);
 
-        -- check client identifier
-        --
-        -- @TODO:
-        --
-
-        -- check app info module and action
-        --
-        -- @TODO:
-        --
-
         -- check user_id if passed
         ctx.init(exp_user_id);
         --
         curr_user_id := ctx.get_user_id();
         --
         ut.expect(curr_user_id).to_equal(exp_user_id);
+
+        -- check client identifier
+        -- check app info module and action
+        OPEN r_expected FOR
+            SELECT
+                exp_user_id         AS client_id,
+                'CTX.SET_USER_ID'   AS module_name,     -- the most recent log_module
+                bug.empty_action    AS action_name      -- the most recent action
+            FROM DUAL;
+        --
+        OPEN r_current FOR
+            SELECT
+                SYS_CONTEXT('USERENV', 'CLIENT_IDENTIFIER') AS client_id,
+                SYS_CONTEXT('USERENV', 'MODULE')            AS module_name,
+                SYS_CONTEXT('USERENV', 'ACTION')            AS action_name
+            FROM DUAL;
+        --
+        ut.expect(r_current).to_equal(r_expected);
+    END;
+
+
+
+    PROCEDURE set_directly AS
+    BEGIN
+        DBMS_SESSION.SET_CONTEXT (
+            namespace    => ctx.app_namespace,
+            attribute    => 'DIRECT_SET_MUST_FAIL',
+            value        => 'TRUE'
+        );
+        --
+        ut.fail('ERR_EXPECTED');  -- ORA-01031
     END;
 
 END;
