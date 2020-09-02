@@ -951,13 +951,15 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 WHERE e.log_id = in_parent_id;
             EXCEPTION
             WHEN NO_DATA_FOUND THEN
-                RAISE_APPLICATION_ERROR(-20000, 'SCHEDULER_ROOT_MISSING ' || in_parent_id, TRUE);
+                RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SCHEDULER_ROOT_MISSING ' || in_parent_id, TRUE);
             END;
 
             -- recover app context values from log and set user
             recent_log_id := rec.log_id;  -- to link CTX calls to proper branch
-            ctx.apply_payload(rec.contexts);
-            ctx.set_user_id(rec.user_id);
+            ctx.set_user_id (
+                in_user_id  => rec.user_id,
+                in_payload  => rec.contexts
+            );
         END IF;
 
         -- get user and update session info
@@ -1070,7 +1072,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         DBMS_OUTPUT.PUT_LINE('-- ^');
         --
         COMMIT;
-        RAISE_APPLICATION_ERROR(-20000, 'LOG_FAILED', TRUE);
+        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'LOG_FAILED', TRUE);
     END;
 
 

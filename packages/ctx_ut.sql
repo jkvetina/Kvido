@@ -2,7 +2,8 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
 
     PROCEDURE before_all AS
     BEGIN
-        NULL;
+        DELETE FROM contexts t;
+        COMMIT;
     END;
 
 
@@ -19,7 +20,8 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
 
     PROCEDURE before_each AS
     BEGIN
-        NULL;
+        DELETE FROM contexts t;
+        COMMIT;
     END;
 
 
@@ -34,11 +36,18 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
     PROCEDURE set_context AS
         curr_value      contexts.payload%TYPE;
     BEGIN
+        ctx.init();
+        --
         FOR c IN (
-            SELECT 'TEST' AS name, '1'  AS value FROM DUAL-- UNION ALL
-            --SELECT 'TEST' AS name, NULL AS value FROM DUAL
+            SELECT 'TEST' AS name, '1'          AS value FROM DUAL UNION ALL
+            SELECT 'TEST' AS name, '3.1415'     AS value FROM DUAL UNION ALL
+            SELECT 'TEST' AS name, '3,1415'     AS value FROM DUAL UNION ALL
+            SELECT 'TEST' AS name, 'STRING'     AS value FROM DUAL UNION ALL
+            SELECT 'TEST' AS name, NULL         AS value FROM DUAL
         ) LOOP
             -- make sure current value is empty
+            ctx.set_context(c.name);  -- clear context variable
+            --
             curr_value := SYS_CONTEXT(ctx.app_namespace, c.name);
             --
             ut.expect(curr_value).to_be_null();
@@ -119,7 +128,78 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
     BEGIN
         ctx.set_context('DATE', 'NOT A VALID DATE');
         --
-        curr_date := ctx.get_context_date('DATE');  -- throws ORA-01841
+        curr_date := ctx.get_context_date('DATE');  -- throws ORA-20000
+    END;
+
+
+
+    PROCEDURE set_user_id AS
+        exp_user_id     contexts.user_id%TYPE := 'TEST_USER';
+        exp_payload     contexts.payload%TYPE;
+        curr            contexts%ROWTYPE;
+        count_contexts  PLS_INTEGER;
+    BEGIN
+        ctx.init();
+
+        -- check number of contexts, zero is expected
+        SELECT COUNT(*) INTO count_contexts
+        FROM session_context s
+        WHERE s.namespace       = ctx.app_namespace
+            AND s.attribute     != ctx.app_user_id;
+        --
+        ut.expect(count_contexts).to_equal(0);
+
+        -- set user and overwrite payload
+        exp_payload :=
+            'NAME' || ctx.splitter_values || 'VALUE' || ctx.splitter_rows ||
+            'NAME2' || ctx.splitter_values || 'VALUE2';
+        --
+        ctx.init (
+            in_user_id  => exp_user_id,
+            in_payload  => exp_payload
+        );
+        --
+        ut.expect(exp_payload).to_equal(ctx.get_payload());
+        ctx.save_contexts();
+
+        -- check that contexts record exists
+        SELECT x.* INTO curr
+        FROM contexts x
+        WHERE x.user_id         = exp_user_id
+            AND x.updated_at    >= SYSDATE - 1/86400;
+        --
+        ut.expect(curr.payload).to_equal(exp_payload);
+
+        -- test payload recovery
+        ctx.init();  -- clear session variables
+        ctx.init (
+            in_user_id  => exp_user_id,
+            in_payload  => NULL         -- recover previous values
+        );
+        --
+        ut.expect(exp_payload).to_equal(ctx.get_payload());
+        --
+        SELECT COUNT(*) INTO count_contexts
+        FROM session_context s
+        WHERE s.namespace       = ctx.app_namespace
+            AND s.attribute     != ctx.app_user_id;
+        --
+        ut.expect(count_contexts).to_be_greater_than(0);
+
+        -- set user and empty payload
+        ctx.init (
+            in_user_id  => exp_user_id,
+            in_payload  => ' '          -- post single space to clear existing values
+        );
+        --
+        ut.expect(ctx.get_payload()).to_be_null();
+        --
+        SELECT COUNT(*) INTO count_contexts
+        FROM session_context s
+        WHERE s.namespace       = ctx.app_namespace
+            AND s.attribute     != ctx.app_user_id;
+        --
+        ut.expect(count_contexts).to_equal(0);
     END;
 
 
@@ -147,27 +227,24 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
         ctx.set_context('NUMBER',   test_number);
         ctx.set_context('DATE',     test_date);
 
-        -- delete records for user
-        DELETE FROM contexts t
-        WHERE t.user_id = curr_user_id;
-        --
-        COMMIT;
-
         -- test insert
         ctx.save_contexts();
         --
         exp_payload := ctx.get_payload();
         --
-        SELECT t.payload, t.updated_at
+        SELECT x.payload, x.updated_at
         INTO curr_payload, curr_timestamp
-        FROM contexts t
-        WHERE t.user_id = curr_user_id;
+        FROM contexts x
+        WHERE x.user_id         = curr_user_id
+            AND x.updated_at    >= SYSDATE - 1/86400;
         --
         ut.expect(curr_payload).to_equal(exp_payload);
 
         -- alter contexts
         ctx.set_context('DATE',     test_date + 1/24);  -- change existing context
         ctx.set_context('EXTRA',    test_extra);        -- add one more
+        --
+        DBMS_SESSION.SLEEP(1);
 
         -- test update
         ctx.save_contexts();
@@ -216,12 +293,6 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
         ctx.set_context('NUMBER',   test_number);
         ctx.set_context('DATE',     test_date);
 
-        -- delete records for user
-        DELETE FROM contexts t
-        WHERE t.user_id = curr_user_id;
-        --
-        COMMIT;
-
         -- update table
         ctx.save_contexts();
 
@@ -242,16 +313,17 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
 
         -- check contexts
         OPEN r_expected FOR
-            SELECT ctx.app_user_id  AS name,    curr_user_id                                AS value FROM DUAL UNION ALL
-            SELECT 'STRING'         AS name,    test_string                                 AS value FROM DUAL UNION ALL
-            SELECT 'NUMBER'         AS name,    TO_CHAR(test_number)                        AS value FROM DUAL UNION ALL
-            SELECT 'DATE'           AS name,    TO_CHAR(test_date, ctx.format_date_time)    AS value FROM DUAL
+            SELECT 'STRING' AS name,    test_string                                 AS value FROM DUAL UNION ALL
+            SELECT 'NUMBER' AS name,    TO_CHAR(test_number)                        AS value FROM DUAL UNION ALL
+            SELECT 'DATE'   AS name,    TO_CHAR(test_date, ctx.format_date_time)    AS value FROM DUAL
             ORDER BY 1;
         --
         OPEN r_current FOR
             SELECT s.attribute AS name, s.value
             FROM session_context s
-            WHERE s.namespace = ctx.app_namespace
+            WHERE s.namespace       = ctx.app_namespace
+                AND s.attribute     != ctx.app_user_id              -- user_id has dedicated column
+                AND s.attribute     NOT LIKE '%\_\_' ESCAPE '\'     -- ignore private contexts
             ORDER BY 1;
         --
         ut.expect(r_current).to_equal(r_expected);
@@ -312,7 +384,7 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
             SELECT
                 exp_user_id         AS client_id,
                 'CTX.SET_USER_ID'   AS module_name,     -- the most recent log_module
-                bug.empty_action    AS action_name      -- the most recent action
+                'LOG_USERENV'       AS action_name      -- the most recent action
             FROM DUAL;
         --
         OPEN r_current FOR

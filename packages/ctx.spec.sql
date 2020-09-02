@@ -78,7 +78,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     --
     PROCEDURE set_context (
         in_name     VARCHAR2,
-        in_value    VARCHAR2
+        in_value    VARCHAR2        := NULL
     );
 
 
@@ -97,7 +97,8 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Set user_id when running from `DBMS_SCHEDULER`, trigger...
     --
     PROCEDURE set_user_id (
-        in_user_id      logs.user_id%TYPE
+        in_user_id          logs.user_id%TYPE,
+        in_payload          contexts.payload%TYPE       := NULL
     );
 
 
@@ -202,7 +203,8 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Initialize app contexts and `DBMS_SESSION`
     --
     PROCEDURE init (
-        in_user_id    logs.user_id%TYPE := NULL
+        in_user_id          logs.user_id%TYPE           := NULL,
+        in_payload          contexts.payload%TYPE       := NULL
     );
 
 END;

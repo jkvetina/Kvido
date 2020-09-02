@@ -38,12 +38,11 @@ CREATE OR REPLACE PACKAGE ctx_ut AS
     -- retrieve context date
 
     -- %test
-    -- %throws(-1841)
+    -- %throws(-20000)
     PROCEDURE get_context_date#wrong_format;
 
     -- %test
-    --PROCEDURE set_user_id;
-    -- set user_id
+    PROCEDURE set_user_id;
 
     -- %test
     --PROCEDURE get_user_id;
