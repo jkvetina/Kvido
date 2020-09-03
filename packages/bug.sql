@@ -207,8 +207,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         out_parent_id       OUT logs.log_parent%TYPE
     )
     ACCESSIBLE BY (
-        PACKAGE err,
-        PACKAGE err_ut
+        PACKAGE bug,
+        PACKAGE bug_ut
     ) AS
         curr_module     logs.module_name%TYPE;
         curr_index      logs.module_name%TYPE;
@@ -919,8 +919,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     )
     RETURN logs.log_id%TYPE
     ACCESSIBLE BY (
-        PACKAGE err,
-        PACKAGE err_ut
+        PACKAGE bug,
+        PACKAGE bug_ut
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
