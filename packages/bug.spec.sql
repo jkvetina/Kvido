@@ -577,8 +577,8 @@ CREATE OR REPLACE PACKAGE bug AS
         out_parent_id       OUT logs.log_parent%TYPE
     )
     ACCESSIBLE BY (
-        PACKAGE err,
-        PACKAGE err_ut
+        PACKAGE bug,
+        PACKAGE bug_ut
     );
 
 
@@ -656,8 +656,8 @@ CREATE OR REPLACE PACKAGE bug AS
     )
     RETURN logs.log_id%TYPE
     ACCESSIBLE BY (
-        PACKAGE err,
-        PACKAGE err_ut
+        PACKAGE bug,
+        PACKAGE bug_ut
     );
 
 
