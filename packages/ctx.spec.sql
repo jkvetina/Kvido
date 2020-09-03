@@ -36,6 +36,38 @@ CREATE OR REPLACE PACKAGE ctx AS
 
 
 
+    -- ### Initialization
+    --
+
+    --
+    -- Initialize app contexts and `DBMS_SESSION`
+    --
+    PROCEDURE init (
+        in_user_id          logs.user_id%TYPE           := NULL,
+        in_payload          contexts.payload%TYPE       := NULL
+    );
+
+
+
+    --
+    -- Set user_id when running from `DBMS_SCHEDULER`, trigger...
+    --
+    PROCEDURE set_user_id (
+        in_user_id          logs.user_id%TYPE,
+        in_payload          contexts.payload%TYPE       := NULL
+    );
+
+
+
+    --
+    -- Store current contexts to `contexts` table
+    --
+    PROCEDURE save_contexts;
+
+
+
+
+
     -- ### Basic functionality
     --
 
@@ -93,20 +125,18 @@ CREATE OR REPLACE PACKAGE ctx AS
 
 
 
-    --
-    -- Set user_id when running from `DBMS_SCHEDULER`, trigger...
-    --
-    PROCEDURE set_user_id (
-        in_user_id          logs.user_id%TYPE,
-        in_payload          contexts.payload%TYPE       := NULL
-    );
-
-
-
 
 
     -- ### Getters for `bug` package
     --
+
+    --
+    -- Returns current user id (APEX user, CONTEXT user, DB user..., whatever fits your needs)
+    --
+    FUNCTION get_user_id
+    RETURN logs.user_id%TYPE;
+
+
 
     --
     -- Returns APEX application id
@@ -121,14 +151,6 @@ CREATE OR REPLACE PACKAGE ctx AS
     --
     FUNCTION get_page_id
     RETURN logs.page_id%TYPE;
-
-
-
-    --
-    -- Returns current user id (APEX user, CONTEXT user, DB user..., whatever fits your needs)
-    --
-    FUNCTION get_user_id
-    RETURN logs.user_id%TYPE;
 
 
 
@@ -160,7 +182,7 @@ CREATE OR REPLACE PACKAGE ctx AS
 
 
 
-    -- ### Storing and retrieving contexts
+    -- ### Storing and retrieving contexts, more like for internal use
     --
 
     --
@@ -181,13 +203,6 @@ CREATE OR REPLACE PACKAGE ctx AS
 
 
     --
-    -- Store current contexts to `contexts` table
-    --
-    PROCEDURE save_contexts;
-
-
-
-    --
     -- Load/get contexts from `contexts` table and set them as current
     --
     PROCEDURE load_contexts (
@@ -195,16 +210,6 @@ CREATE OR REPLACE PACKAGE ctx AS
         in_app_id           contexts.app_id%TYPE        := NULL,
         in_session_db       contexts.session_db%TYPE    := NULL,
         in_session_apex     contexts.session_apex%TYPE  := NULL
-    );
-
-
-
-    --
-    -- Initialize app contexts and `DBMS_SESSION`
-    --
-    PROCEDURE init (
-        in_user_id          logs.user_id%TYPE           := NULL,
-        in_payload          contexts.payload%TYPE       := NULL
     );
 
 END;
