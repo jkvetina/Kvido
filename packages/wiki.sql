@@ -200,6 +200,7 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
     ) AS
         sum_public      PLS_INTEGER;
         sum_private     PLS_INTEGER;
+        count_out       PLS_INTEGER;
     BEGIN
         DBMS_OUTPUT.PUT_LINE('# `' || LOWER(in_package) || '` package');
         DBMS_OUTPUT.PUT_LINE('');
@@ -254,15 +255,16 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
             IF c.line = c.group_end THEN  -- last group line
                 SELECT
                     SUM(CASE private WHEN 'Y' THEN 0 ELSE 1 END),
-                    SUM(CASE private WHEN 'Y' THEN 1 ELSE 0 END)
-                INTO sum_public, sum_private
+                    SUM(CASE private WHEN 'Y' THEN 1 ELSE 0 END),
+                    COUNT(args_out)
+                INTO sum_public, sum_private, count_out
                 FROM logs_modules
                 WHERE package_name  = UPPER(in_package)
                     AND group_line  = c.group_line;
                 --
                 IF sum_public > 0 OR sum_private > 0 THEN
-                    DBMS_OUTPUT.PUT_LINE('| Module name | Type | ' || CASE WHEN sum_private > 0 THEN 'Private | ' END || 'IN | OUT | Lines | Description |');
-                    DBMS_OUTPUT.PUT_LINE('| :---------- | :--: | ' || CASE WHEN sum_private > 0 THEN ':-----: | ' END || '-: | --: | ----: | :---------- |');
+                    DBMS_OUTPUT.PUT_LINE('| Module name | Type | ' || CASE WHEN sum_private > 0 THEN 'Private | ' END || 'IN | ' || CASE WHEN count_out > 0 THEN 'OUT | ' END || 'Lines | Description |');
+                    DBMS_OUTPUT.PUT_LINE('| :---------- | :--: | ' || CASE WHEN sum_private > 0 THEN ':-----: | ' END || '-: | ' || CASE WHEN count_out > 0 THEN '--: | ' END || '----: | :---------- |');
                 END IF;
                 --
                 FOR d IN (
@@ -295,7 +297,8 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
                         '| [`' || d.module_name || '`](./packages-' || d.package_name || '.' || d.module_name || ')&' ||
                         'nbsp;<sup title="Overload">' || d.overload || '</sup> | ' ||
                         d.module_type   || ' | ' || CASE WHEN sum_private > 0 THEN d.private || ' | ' END ||
-                        d.args_in       || ' | ' || d.args_out  || ' | ' ||
+                        d.args_in       || ' | ' ||
+                        CASE WHEN count_out > 0 THEN d.args_out || ' | ' END ||
                         d.body_lines    || ' | ' || d.comment_  || ' |'
                     );
                 END LOOP;
