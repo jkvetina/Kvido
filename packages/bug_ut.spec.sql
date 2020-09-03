@@ -24,5 +24,7 @@ CREATE OR REPLACE PACKAGE bug_ut AS
     -- %test
     PROCEDURE log_progress;
 
+    -- %test
+    PROCEDURE get_root_id;
 END;
 /

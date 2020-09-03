@@ -147,5 +147,39 @@ CREATE OR REPLACE PACKAGE BODY bug_ut AS
         --
     END;
 
+
+
+    PROCEDURE get_root_id AS
+        log_id      logs.log_id%TYPE;
+        log_id2     logs.log_id%TYPE;
+        log_id3     logs.log_id%TYPE;
+        log_id4     logs.log_id%TYPE;
+        root_id     logs.log_id%TYPE;
+    BEGIN
+        log_id := bug.log_module('PARENT');  -- parent needed
+        --
+        log_id2 := bug.log__ (
+            in_action_name  => '',
+            in_flag         => bug.flag_debug,
+            in_parent_id    => log_id
+        );
+        --
+        log_id3 := bug.log__ (
+            in_action_name  => '',
+            in_flag         => bug.flag_debug,
+            in_parent_id    => log_id2
+        );
+        --
+        log_id4 := bug.log__ (
+            in_action_name  => '',
+            in_flag         => bug.flag_debug,
+            in_parent_id    => log_id3
+        );
+        --
+        root_id := bug.get_root_id(log_id4);
+        --
+        ut.expect(root_id).to_equal(log_id);
+    END;
+
 END;
 /
