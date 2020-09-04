@@ -16,7 +16,7 @@ CREATE TABLE logs (
     --
     arguments           VARCHAR2(1000),
     message             VARCHAR2(4000),
-    contexts            VARCHAR2(1000),
+    contexts            VARCHAR2(1000),             -- should match contexts.payload
     --
     session_apex        NUMBER,
     session_db          NUMBER,

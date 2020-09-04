@@ -15,8 +15,6 @@ CREATE TABLE logs_lobs (
         REFERENCES logs (log_id)
 );
 --
--- missing index on log_parent
---
 COMMENT ON TABLE  logs_lobs                  IS 'Large objects storage for LOGS table';
 --
 COMMENT ON COLUMN logs_lobs.log_id           IS 'ID to have multiple LOBs attached to single row in LOGS';
@@ -25,4 +23,7 @@ COMMENT ON COLUMN logs_lobs.lob_name         IS 'Optional name of the object/fil
 COMMENT ON COLUMN logs_lobs.lob_length       IS 'Length in bytes';
 COMMENT ON COLUMN logs_lobs.payload_blob     IS 'BLOB payload';
 COMMENT ON COLUMN logs_lobs.payload_clob     IS 'CLOB payload';
+
+-- missing index on log_parent
+CREATE INDEX fk_logs_lobs_logs ON logs_lobs (log_parent);
 

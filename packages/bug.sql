@@ -838,6 +838,40 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
 
+    PROCEDURE start_scheduler (
+        in_job_name     VARCHAR2,
+        in_statement    VARCHAR2    := NULL,
+        in_comments     VARCHAR2    := NULL
+    ) AS
+        log_id          logs.log_id%TYPE;
+    BEGIN
+        log_id := bug.log_module(in_job_name, in_statement, in_comments);
+        --
+        ctx.save_contexts(log_id);  -- to pass contexts to job
+        --
+        DBMS_SCHEDULER.CREATE_JOB (
+            in_job_name,
+            job_type        => 'PLSQL_BLOCK',
+            job_action      => 'BEGIN' || CHR(10) ||
+                               '    bug.log_scheduler(' || log_id || ');' || CHR(10) ||
+                               '    ' || in_statement || CHR(10) ||
+                               '    bug.update_timer(' || log_id || ');' || CHR(10) ||
+                               'EXCEPTION' || CHR(10) ||
+                               'WHEN OTHERS THEN' || CHR(10) ||
+                               '    bug.raise_error(''JOB_FAILED'');' || CHR(10) ||
+                               'END;',
+            start_date      => SYSDATE,
+            enabled         => TRUE,
+            auto_drop       => TRUE,
+            comments        => in_comments
+        );
+        COMMIT;
+        --
+        bug.update_timer(log_id);
+    END;
+
+
+
     PROCEDURE log_progress (
         in_progress         NUMBER          := NULL
     ) AS

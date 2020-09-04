@@ -377,7 +377,32 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             AND x.session_apex  = rec.session_apex;
         --
         IF SQL%ROWCOUNT = 0 THEN
-            RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SESSION_MISSING', TRUE);
+            RAISE NO_DATA_FOUND;
+        END IF;
+        --
+        COMMIT;
+    EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SAVE_CONTEXTS_FAILED', TRUE);
+    END;
+
+
+
+    PROCEDURE save_contexts (
+        in_log_id           logs.log_id%TYPE
+    ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+    BEGIN
+        bug.log_module(in_log_id);
+
+        -- store new values
+        UPDATE logs e
+        SET e.contexts  = ctx.get_payload()
+        WHERE e.log_id  = in_log_id;
+        --
+        IF SQL%ROWCOUNT = 0 THEN
+            RAISE NO_DATA_FOUND;
         END IF;
         --
         COMMIT;

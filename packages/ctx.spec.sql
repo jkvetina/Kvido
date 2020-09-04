@@ -66,6 +66,15 @@ CREATE OR REPLACE PACKAGE ctx AS
 
 
 
+    --
+    -- Store contexts into `logs.log_id` for `bug.log_scheduler`
+    --
+    PROCEDURE save_contexts (
+        in_log_id           logs.log_id%TYPE
+    );
+
+
+
 
 
     -- ### Basic functionality

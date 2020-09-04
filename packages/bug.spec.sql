@@ -345,6 +345,17 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
 
+    --
+    -- Create and start one time scheduler
+    --
+    PROCEDURE start_scheduler (
+        in_job_name     VARCHAR2,
+        in_statement    VARCHAR2    := NULL,
+        in_comments     VARCHAR2    := NULL
+    );
+
+
+
 
 
     -- ### Logging large objects
