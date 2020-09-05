@@ -139,12 +139,10 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
 
     PROCEDURE desc_spec (
         in_name         VARCHAR2,
-        in_type         VARCHAR2    := NULL,
         in_overload     NUMBER      := 1
     ) AS
         in_package      CONSTANT VARCHAR2(30) := UPPER(SUBSTR(in_name, 1, INSTR(in_name, '.') - 1));
         in_module       CONSTANT VARCHAR2(30) := UPPER(SUBSTR(in_name, INSTR(in_name, '.') + 1));
-        in_type__       CONSTANT VARCHAR2(30) := UPPER(SUBSTR(in_type, 1, 1));
     BEGIN
         DBMS_OUTPUT.PUT_LINE('');
         FOR c IN (
@@ -156,7 +154,6 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
                 AND s.line              BETWEEN m.spec_start AND m.spec_end
             WHERE m.package_name        = in_package
                 AND m.module_name       = in_module
-                AND m.module_type       LIKE in_type__ || '%'
                 AND NVL(m.overload, 1)  = in_overload
         ) LOOP
             DBMS_OUTPUT.PUT(c.text);
@@ -168,12 +165,10 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
 
     PROCEDURE desc_body (
         in_name         VARCHAR2,
-        in_type         VARCHAR2    := NULL,
         in_overload     NUMBER      := 1
     ) AS
         in_package      CONSTANT VARCHAR2(30) := UPPER(SUBSTR(in_name, 1, INSTR(in_name, '.') - 1));
         in_module       CONSTANT VARCHAR2(30) := UPPER(SUBSTR(in_name, INSTR(in_name, '.') + 1));
-        in_type__       CONSTANT VARCHAR2(30) := UPPER(SUBSTR(in_type, 1, 1));
     BEGIN
         DBMS_OUTPUT.PUT_LINE('');
         FOR c IN (
@@ -185,7 +180,6 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
                 AND s.line              BETWEEN m.body_start AND m.body_end
             WHERE m.package_name        = in_package
                 AND m.module_name       = in_module
-                AND m.module_type       LIKE in_type__ || '%'
                 AND NVL(m.overload, 1)  = in_overload
         ) LOOP
             DBMS_OUTPUT.PUT(c.text);

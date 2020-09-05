@@ -32,7 +32,7 @@ print('=' * 80)
 print('CONNECTING TO ORACLE:', tns['host'], '\n')
 ora = Oracle(tns)
 
-ora.execute('BEGIN bug.log_module(); ctx.init(\'JKVETINA\'); END;')
+ora.execute('BEGIN bug.log_module(); ctx.set_user_id(\'JKVETINA\', \'\'); END;')
 data    = ora.fetch('SELECT bug.get_log_id() FROM DUAL')
 log_id  = data[0][0]
 
@@ -102,6 +102,8 @@ for row in data:
 
 
 
+end_tag = '<!-- END -->'
+
 #
 # GO THRU FILES IN TARGET DIR
 #
@@ -117,6 +119,13 @@ for file in sorted(files):
   object_type, object_name = file.split('/')[-1].replace('.md', '').split('-')
   print('  ', object_type, object_name)
 
+  package_name = object_name.split('.')[0]
+  module_name  = object_name.split('.')[1]
+
+  this__ = object_name
+  spec__ = "../blob/master/{}/{}.spec.sql#{}".format(object_type, package_name, module_name)
+  body__ = "../blob/master/{}/{}.sql#{}".format(object_type, package_name, module_name)
+
   # modify file content
   out     = []
   hook    = None  # ignore lines until hook is found
@@ -128,34 +137,34 @@ for file in sorted(files):
       if hook != None and hook in line:  # reset hook when END found
         hook = None
 
+      line = line.replace('<!-- $this -->', this__);
+      line = line.replace('<!-- $spec -->', spec__);
+      line = line.replace('<!-- $body -->', body__);
+
       out.append(line)
 
       # include table description
-      if '<!-- TABLE -->' in line:
-        hook  = '<!-- END -->'  # ignore next lines until hook is found
+      if '<!-- TABLE -->' in line or '<!-- desc_table(' in line:
+        hook  = end_tag  # ignore next lines until hook is found
         fresh = ora.get_output("BEGIN wiki.desc_table('{}'); END;".format(object_name))
         #
         out.append('\n'.join(fresh) + '\n')
 
-      if '<!-- VIEW -->' in line:
-        hook  = '<!-- END -->'  # ignore next lines until hook is found
+      if '<!-- VIEW -->' in line or '<!-- desc_view(' in line:
+        hook  = end_tag  # ignore next lines until hook is found
         fresh = ora.get_output("BEGIN wiki.desc_view('{}'); END;".format(object_name))
         #
         out.append('\n```sql\n{};\n```\n'.format('\n'.join(fresh).rstrip()))
 
-      if ('<!-- SIGNATURE ' in line or '<!-- SOURCE_CODE ' in line):
-        hook      = '<!-- END -->'  # ignore next lines until hook is found
-        fp        = '%'
-        if '<!-- SOURCE_CODE P' in line: fp = 'P'
-        if '<!-- SOURCE_CODE F' in line: fp = 'F'
-        #
+      if ('<!-- SIGNATURE ' in line or '<!-- SOURCE_CODE ' in line) or '<!-- desc_spec(' in line or '<!-- desc_body(' in line:
+        hook      = end_tag  # ignore next lines until hook is found
         overload  = 1
-        m         = re.search('\s(\d+)\s*-->', line)
+        m         = re.search(',\s*(\d+)[)]\s*-->', line)
         if m:
           overload = m.group(1) or 1
 
-        if '<!-- SIGNATURE ' in line:
-          query   = "BEGIN wiki.desc_spec('{}', '{}', {}); END;".format(object_name, fp, overload)
+        if '<!-- SIGNATURE ' in line or '<!-- desc_spec(' in line:
+          query   = "BEGIN wiki.desc_spec('{}', {}); END;".format(object_name, overload)
           fresh   = ora.get_output(query)[1]
           #print(query, len(fresh))
           if fresh and len(fresh):
@@ -163,8 +172,8 @@ for file in sorted(files):
             #
             out.append('\n```sql\n{}```\n'.format(fresh))
 
-        if '<!-- SOURCE_CODE ' in line:
-          query   = "BEGIN wiki.desc_body('{}', '{}', {}); END;".format(object_name, fp, overload)
+        if '<!-- SOURCE_CODE ' in line or '<!-- desc_body(' in line:
+          query   = "BEGIN wiki.desc_body('{}', {}); END;".format(object_name, overload)
           fresh   = ora.get_output(query)[1]
           #print(query, len(fresh))
           if fresh and len(fresh):

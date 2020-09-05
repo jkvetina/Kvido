@@ -23,7 +23,6 @@ CREATE OR REPLACE PACKAGE wiki AS
 
     PROCEDURE desc_spec (
         in_name         VARCHAR2,
-        in_type         VARCHAR2    := NULL,
         in_overload     NUMBER      := 1
     );
 
@@ -31,7 +30,6 @@ CREATE OR REPLACE PACKAGE wiki AS
 
     PROCEDURE desc_body (
         in_name         VARCHAR2,
-        in_type         VARCHAR2    := NULL,
         in_overload     NUMBER      := 1
     );
 
