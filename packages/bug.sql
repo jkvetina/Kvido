@@ -840,8 +840,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
     PROCEDURE start_scheduler (
         in_job_name     VARCHAR2,
-        in_statement    VARCHAR2    := NULL,
-        in_comments     VARCHAR2    := NULL
+        in_statement    VARCHAR2        := NULL,
+        in_comments     VARCHAR2        := NULL,
+        in_priority     PLS_INTEGER     := NULL
     ) AS
         log_id          logs.log_id%TYPE;
     BEGIN
@@ -861,10 +862,16 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                                '    bug.raise_error(''JOB_FAILED'');' || CHR(10) ||
                                'END;',
             start_date      => SYSDATE,
-            enabled         => TRUE,
+            enabled         => FALSE,
             auto_drop       => TRUE,
             comments        => in_comments
         );
+        --
+        IF in_priority IS NOT NULL THEN
+            DBMS_SCHEDULER.SET_ATTRIBUTE(in_job_name, 'JOB_PRIORITY', in_priority);
+        END IF;
+        --
+        DBMS_SCHEDULER.ENABLE(in_job_name);
         COMMIT;
         --
         bug.update_timer(log_id);

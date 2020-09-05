@@ -350,8 +350,9 @@ CREATE OR REPLACE PACKAGE bug AS
     --
     PROCEDURE start_scheduler (
         in_job_name     VARCHAR2,
-        in_statement    VARCHAR2    := NULL,
-        in_comments     VARCHAR2    := NULL
+        in_statement    VARCHAR2        := NULL,
+        in_comments     VARCHAR2        := NULL,
+        in_priority     PLS_INTEGER     := NULL
     );
 
 
