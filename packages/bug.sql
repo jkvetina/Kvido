@@ -809,30 +809,30 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
 
     FUNCTION log_scheduler (
-        in_scheduler_id     logs.log_id%TYPE
+        in_log_id           logs.log_id%TYPE
     )
     RETURN logs.log_id%TYPE AS
     BEGIN
         RETURN bug.log__ (
             in_action_name  => 'LOG_SCHEDULER',
             in_flag         => bug.flag_scheduler,
-            in_arguments    => in_scheduler_id,
-            in_parent_id    => in_scheduler_id
+            in_arguments    => in_log_id,
+            in_parent_id    => in_log_id
         );
     END;
 
 
 
     PROCEDURE log_scheduler (
-        in_scheduler_id     logs.log_id%TYPE
+        in_log_id           logs.log_id%TYPE
     ) AS
         out_log_id          logs.log_id%TYPE;
     BEGIN
         out_log_id := bug.log__ (
             in_action_name  => 'LOG_SCHEDULER',
             in_flag         => bug.flag_scheduler,
-            in_arguments    => in_scheduler_id,
-            in_parent_id    => in_scheduler_id
+            in_arguments    => in_log_id,
+            in_parent_id    => in_log_id
         );
     END;
 

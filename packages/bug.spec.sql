@@ -330,7 +330,7 @@ CREATE OR REPLACE PACKAGE bug AS
     -- Log scheduler call and link its logs to this `log_id`
     --
     FUNCTION log_scheduler (
-        in_scheduler_id     logs.log_id%TYPE
+        in_log_id           logs.log_id%TYPE
     )
     RETURN logs.log_id%TYPE;
 
@@ -340,7 +340,7 @@ CREATE OR REPLACE PACKAGE bug AS
     -- ^
     --
     PROCEDURE log_scheduler (
-        in_scheduler_id     logs.log_id%TYPE
+        in_log_id           logs.log_id%TYPE
     );
 
 
