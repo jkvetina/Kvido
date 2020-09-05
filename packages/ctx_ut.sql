@@ -36,7 +36,7 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
     PROCEDURE set_context AS
         curr_value      contexts.payload%TYPE;
     BEGIN
-        ctx.init();
+        ctx.set_user_id();
         --
         FOR c IN (
             SELECT 'TEST' AS name, '1'          AS value FROM DUAL UNION ALL
@@ -84,7 +84,7 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
         -- try to change user_id thru regular set_context
         BEGIN
             ctx.set_context (
-                in_name     => ctx.app_user_id,
+                in_name     => ctx.app_user_attr,
                 in_value    => new_user_id
             );
             ut.fail('NO_EXCEPTION_RAISED');
@@ -97,7 +97,7 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
         END;
 
         -- check that user_id was not modified
-        curr_user_id := SYS_CONTEXT(ctx.app_namespace, ctx.app_user_id);
+        curr_user_id := SYS_CONTEXT(ctx.app_namespace, ctx.app_user_attr);
         --
         ut.expect(curr_user_id).to_equal(exp_user_id);
     END;
@@ -139,13 +139,13 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
         curr            contexts%ROWTYPE;
         count_contexts  PLS_INTEGER;
     BEGIN
-        ctx.init();
+        ctx.set_user_id();
 
         -- check number of contexts, zero is expected
         SELECT COUNT(*) INTO count_contexts
         FROM session_context s
         WHERE s.namespace       = ctx.app_namespace
-            AND s.attribute     != ctx.app_user_id;
+            AND s.attribute     != ctx.app_user_attr;
         --
         ut.expect(count_contexts).to_equal(0);
 
@@ -154,7 +154,7 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
             'NAME' || ctx.splitter_values || 'VALUE' || ctx.splitter_rows ||
             'NAME2' || ctx.splitter_values || 'VALUE2';
         --
-        ctx.init (
+        ctx.set_user_id (
             in_user_id  => exp_user_id,
             in_payload  => exp_payload
         );
@@ -171,10 +171,8 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
         ut.expect(curr.payload).to_equal(exp_payload);
 
         -- test payload recovery
-        ctx.init();  -- clear session variables
-        ctx.init (
-            in_user_id  => exp_user_id,
-            in_payload  => NULL         -- recover previous values
+        ctx.set_user_id (
+            in_user_id  => exp_user_id      -- recover previous values
         );
         --
         ut.expect(exp_payload).to_equal(ctx.get_payload());
@@ -182,14 +180,14 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
         SELECT COUNT(*) INTO count_contexts
         FROM session_context s
         WHERE s.namespace       = ctx.app_namespace
-            AND s.attribute     != ctx.app_user_id;
+            AND s.attribute     != ctx.app_user_attr;
         --
         ut.expect(count_contexts).to_be_greater_than(0);
 
         -- set user and empty payload
-        ctx.init (
+        ctx.set_user_id (
             in_user_id  => exp_user_id,
-            in_payload  => ' '          -- post single space to clear existing values
+            in_payload  => ''           -- clear existing values
         );
         --
         ut.expect(ctx.get_payload()).to_be_null();
@@ -197,7 +195,7 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
         SELECT COUNT(*) INTO count_contexts
         FROM session_context s
         WHERE s.namespace       = ctx.app_namespace
-            AND s.attribute     != ctx.app_user_id;
+            AND s.attribute     != ctx.app_user_attr;
         --
         ut.expect(count_contexts).to_equal(0);
     END;
@@ -220,7 +218,7 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
         exp_payload     contexts.payload%TYPE;
     BEGIN
         -- clear contexts and set user
-        ctx.init(curr_user_id);
+        ctx.set_user_id(curr_user_id);
 
         -- set some contexts
         ctx.set_context('STRING',   test_string);
@@ -286,7 +284,7 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
         r_current       SYS_REFCURSOR;
     BEGIN
         -- clear contexts and set user
-        ctx.init(curr_user_id);
+        ctx.set_user_id(curr_user_id);
 
         -- set some contexts
         ctx.set_context('STRING',   test_string);
@@ -297,7 +295,7 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
         ctx.save_contexts();
 
         -- clear current contexts
-        ctx.init();
+        ctx.set_user_id();
 
         -- check number of contexts, zero is expected
         SELECT COUNT(*) INTO count_contexts
@@ -322,7 +320,7 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
             SELECT s.attribute AS name, s.value
             FROM session_context s
             WHERE s.namespace       = ctx.app_namespace
-                AND s.attribute     != ctx.app_user_id              -- user_id has dedicated column
+                AND s.attribute     != ctx.app_user_attr            -- user_id has dedicated column
                 AND s.attribute     NOT LIKE '%\_\_' ESCAPE '\'     -- ignore private contexts
             ORDER BY 1;
         --
@@ -344,7 +342,7 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
     BEGIN
         -- set any context for negative test
         ctx.set_context('NEGATIVE_TEST', 'TRUE');
-        ctx.init();
+        ctx.set_user_id();
 
         -- check client identifier
         -- check app info module and action
@@ -372,7 +370,7 @@ CREATE OR REPLACE PACKAGE BODY ctx_ut AS
         ut.expect(count_contexts).to_equal(0);
 
         -- check user_id if passed
-        ctx.init(exp_user_id);
+        ctx.set_user_id(exp_user_id);
         --
         curr_user_id := ctx.get_user_id();
         --

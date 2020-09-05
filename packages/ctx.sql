@@ -4,13 +4,12 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
 
-    PROCEDURE init (
-        in_user_id          logs.user_id%TYPE           := NULL,
-        in_payload          contexts.payload%TYPE       := NULL
+    PROCEDURE init__
+    ACCESSIBLE BY (
+        PACKAGE ctx,
+        PACKAGE ctx_ut
     ) AS
     BEGIN
-        bug.log_module(in_user_id, LENGTH(in_payload));
-        --
         DBMS_SESSION.CLEAR_ALL_CONTEXT(ctx.app_namespace);
         DBMS_SESSION.CLEAR_IDENTIFIER();
         --
@@ -18,13 +17,94 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             module_name => NULL,
             action_name => NULL
         );
-        --
+    END;
+
+
+
+    PROCEDURE set_user_id (
+        in_user_id          logs.user_id%TYPE       := NULL
+    ) AS
+    BEGIN
+        ctx.init__();
+
+        -- load contexts from previous session
         IF in_user_id IS NOT NULL THEN
+            ctx.load_contexts (
+                in_user_id          => in_user_id,
+                in_app_id           => ctx.get_app_id(),
+                in_session_db       => ctx.get_session_db(),
+                in_session_apex     => ctx.get_session_apex()
+            );
+            --
             ctx.set_user_id (
                 in_user_id  => in_user_id,
-                in_payload  => in_payload
+                in_payload  => ctx.get_payload()
             );
         END IF;
+    END;
+
+
+
+    PROCEDURE set_user_id (
+        in_user_id          logs.user_id%TYPE,
+        in_payload          contexts.payload%TYPE
+    ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+        --
+        rec                 contexts%ROWTYPE;
+        old_sess_db         contexts.session_db%TYPE;
+        old_sess_apex       contexts.session_apex%TYPE;
+    BEGIN
+        bug.log_module(in_user_id, LENGTH(in_payload));
+        --
+        ctx.init__();
+
+        -- set session things
+        DBMS_SESSION.SET_IDENTIFIER(in_user_id);                -- USERENV.CLIENT_IDENTIFIER
+        DBMS_APPLICATION_INFO.SET_CLIENT_INFO(in_user_id);      -- CLIENT_INFO, v$
+        --
+        DBMS_SESSION.SET_CONTEXT (
+            namespace   => ctx.app_namespace,
+            attribute   => ctx.app_user_attr,
+            value       => in_user_id,
+            username    => in_user_id,
+            client_id   => ctx.get_client_id(in_user_id)
+        );
+
+        -- prepare record
+        rec.app_id          := NVL(ctx.get_app_id(), 0);
+        rec.user_id         := in_user_id;
+        rec.session_db      := NVL(ctx.get_session_db(),    0);
+        rec.session_apex    := NVL(ctx.get_session_apex(),  0);
+        rec.updated_at      := SYSDATE;
+
+        -- load contexts
+        IF in_payload IS NOT NULL THEN
+            ctx.apply_payload(in_payload);
+            rec.payload := in_payload;
+        END IF;
+
+        -- store new values
+        UPDATE contexts x
+        SET x.payload           = rec.payload,
+            x.updated_at        = rec.updated_at
+        WHERE x.app_id          = rec.app_id
+            AND x.user_id       = rec.user_id
+            AND x.session_db    = rec.session_db
+            AND x.session_apex  = rec.session_apex;
+        --
+        IF SQL%ROWCOUNT = 0 THEN
+            INSERT INTO contexts VALUES rec;
+            COMMIT;
+            --
+            bug.log_userenv();
+        END IF;
+        --
+        COMMIT;
+    EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_USER_ID_FAILED', TRUE);
     END;
 
 
@@ -53,80 +133,10 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     RETURN logs.user_id%TYPE AS
     BEGIN
         RETURN COALESCE(
-            SYS_CONTEXT(ctx.app_namespace, ctx.app_user_id),
+            SYS_CONTEXT(ctx.app_namespace, ctx.app_user_attr),
             SYS_CONTEXT('APEX$SESSION', 'APP_USER'),
-            USER
+            ctx.app_user
         );
-    END;
-
-
-
-    PROCEDURE set_user_id (
-        in_user_id          logs.user_id%TYPE,
-        in_payload          contexts.payload%TYPE       := NULL
-    ) AS
-        PRAGMA AUTONOMOUS_TRANSACTION;
-        --
-        rec                 contexts%ROWTYPE;
-        old_sess_db         contexts.session_db%TYPE;
-        old_sess_apex       contexts.session_apex%TYPE;
-    BEGIN
-        bug.log_module(in_user_id, LENGTH(in_payload));
-
-        -- set session things
-        DBMS_SESSION.SET_IDENTIFIER(in_user_id);                -- USERENV.CLIENT_IDENTIFIER
-        DBMS_APPLICATION_INFO.SET_CLIENT_INFO(in_user_id);      -- CLIENT_INFO, v$
-        --
-        DBMS_SESSION.SET_CONTEXT (
-            namespace   => ctx.app_namespace,
-            attribute   => ctx.app_user_id,
-            value       => in_user_id,
-            username    => in_user_id,
-            client_id   => ctx.get_client_id(in_user_id)
-        );
-
-        -- prepare record
-        rec.app_id          := NVL(ctx.get_app_id(), 0);
-        rec.user_id         := in_user_id;
-        rec.session_db      := NVL(ctx.get_session_db(),    0);
-        rec.session_apex    := NVL(ctx.get_session_apex(),  0);
-        rec.updated_at      := SYSDATE;
-
-        -- check previous session
-        IF in_payload IS NULL THEN
-            ctx.load_contexts (
-                in_user_id          => rec.user_id,
-                in_app_id           => rec.app_id,
-                in_session_db       => rec.session_db,
-                in_session_apex     => rec.session_apex
-            );
-            rec.payload := ctx.get_payload();
-        ELSE
-            ctx.apply_payload(in_payload);
-            rec.payload := in_payload;
-        END IF;
-
-        -- store new values
-        UPDATE contexts x
-        SET x.payload           = rec.payload,
-            x.updated_at        = rec.updated_at
-        WHERE x.app_id          = rec.app_id
-            AND x.user_id       = rec.user_id
-            AND x.session_db    = rec.session_db
-            AND x.session_apex  = rec.session_apex;
-        --
-        IF SQL%ROWCOUNT = 0 THEN
-            INSERT INTO contexts VALUES rec;
-            COMMIT;
-            --
-            bug.log_userenv();
-        END IF;
-        --
-        COMMIT;
-    EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_USER_ID_FAILED', TRUE);
     END;
 
 
@@ -360,6 +370,14 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     BEGIN
         rec.app_id          := NVL(ctx.get_app_id(), 0);
         rec.user_id         := ctx.get_user_id();
+
+        -- dont store contexts for generic user
+        IF rec.user_id = ctx.app_user THEN
+            bug.log_module(rec.app_id, rec.user_id);
+            --
+            RAISE NO_DATA_FOUND;
+        END IF;
+
         rec.session_db      := NVL(ctx.get_session_db(),    0);
         rec.session_apex    := NVL(ctx.get_session_apex(),  0);
         rec.payload         := ctx.get_payload();
@@ -398,7 +416,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
         -- store new values
         UPDATE logs e
-        SET e.contexts  = ctx.get_payload()
+        SET e.contexts  = ctx.get_payload(),
+            e.user_id   = ctx.get_user_id()
         WHERE e.log_id  = in_log_id;
         --
         IF SQL%ROWCOUNT = 0 THEN
@@ -425,7 +444,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         INTO out_payload
         FROM session_context s
         WHERE s.namespace       = ctx.app_namespace
-            AND s.attribute     != ctx.app_user_id              -- user_id has dedicated column
+            AND s.attribute     != ctx.app_user_attr            -- user_id has dedicated column
             AND s.attribute     NOT LIKE '%\_\_' ESCAPE '\'     -- ignore private contexts
             AND s.value         IS NOT NULL;
         --

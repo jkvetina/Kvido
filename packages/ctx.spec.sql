@@ -13,7 +13,8 @@ CREATE OR REPLACE PACKAGE ctx AS
     app_namespace       CONSTANT VARCHAR2(30)       := 'APP';
 
     -- context name for user_id
-    app_user_id         CONSTANT VARCHAR2(30)       := 'USER_ID__';
+    app_user_attr       CONSTANT VARCHAR2(30)       := 'USER_ID__';
+    app_user            CONSTANT VARCHAR2(30)       := USER;
 
     -- splitters for payload
     splitter_values     CONSTANT CHAR := '=';
@@ -40,21 +41,31 @@ CREATE OR REPLACE PACKAGE ctx AS
     --
 
     --
-    -- Initialize app contexts and `DBMS_SESSION`
+    -- Initialize contexts and `DBMS_SESSION` things
     --
-    PROCEDURE init (
-        in_user_id          logs.user_id%TYPE           := NULL,
-        in_payload          contexts.payload%TYPE       := NULL
+    PROCEDURE init__
+    ACCESSIBLE BY (
+        PACKAGE ctx,
+        PACKAGE ctx_ut
     );
 
 
 
     --
-    -- Set user_id when running from `DBMS_SCHEDULER`, trigger...
+    -- Set user_id and contexts from previous session
+    --
+    PROCEDURE set_user_id (
+        in_user_id          logs.user_id%TYPE       := NULL
+    );
+
+
+
+    --
+    -- Set user_id and set contexts from payload
     --
     PROCEDURE set_user_id (
         in_user_id          logs.user_id%TYPE,
-        in_payload          contexts.payload%TYPE       := NULL
+        in_payload          contexts.payload%TYPE
     );
 
 
