@@ -844,11 +844,19 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         in_comments     VARCHAR2        := NULL,
         in_priority     PLS_INTEGER     := NULL
     ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+        --
         log_id          logs.log_id%TYPE;
     BEGIN
-        log_id := bug.log_module(in_job_name, in_statement, in_comments);
+        log_id := bug.log__ (
+            in_action_name  => 'START_SCHEDULER',
+            in_flag         => bug.flag_module,
+            in_arguments    => bug.get_arguments(in_job_name, in_comments, in_priority),
+            in_message      => in_statement,
+            in_parent_id    => bug.recent_log_id
+        );
         --
-        ctx.save_contexts(log_id);  -- to pass contexts to job
+        ctx.save_contexts(log_id);              -- store current contexts and user_id for job
         --
         DBMS_SCHEDULER.CREATE_JOB (
             in_job_name,
@@ -856,10 +864,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             job_action      => 'BEGIN' || CHR(10) ||
                                '    bug.log_scheduler(' || log_id || ');' || CHR(10) ||
                                '    ' || in_statement || CHR(10) ||
-                               '    bug.update_timer(' || log_id || ');' || CHR(10) ||
+                               '    bug.update_timer();' || CHR(10) ||
                                'EXCEPTION' || CHR(10) ||
                                'WHEN OTHERS THEN' || CHR(10) ||
-                               '    bug.raise_error(''JOB_FAILED'');' || CHR(10) ||
+                               '    bug.raise_error();' || CHR(10) ||
                                'END;',
             start_date      => SYSDATE,
             enabled         => FALSE,
@@ -875,6 +883,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         COMMIT;
         --
         bug.update_timer(log_id);
+    EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'START_SCHEDULER_FAILED');
     END;
 
 
