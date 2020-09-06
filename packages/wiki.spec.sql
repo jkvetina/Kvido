@@ -39,6 +39,13 @@ CREATE OR REPLACE PACKAGE wiki AS
         in_package      VARCHAR2
     );
 
+
+
+    PROCEDURE desc_select (
+        in_cursor       IN OUT  SYS_REFCURSOR,
+        in_cols_width   IN OUT  SYS_REFCURSOR
+    );
+
 END;
 /
 

@@ -303,6 +303,127 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
         END LOOP;
     END;
 
+
+
+    PROCEDURE desc_select (
+        in_cursor       IN OUT  SYS_REFCURSOR,
+        in_cols_width   IN OUT  SYS_REFCURSOR
+    ) AS
+        curs            PLS_INTEGER;
+        cols            PLS_INTEGER;
+        col_widths      DBMS_SQL.DESC_TAB;
+        col_desc        DBMS_SQL.DESC_TAB;
+        col_value       VARCHAR2(2000);
+        col_name        VARCHAR2(30);
+        --
+        out_header      VARCHAR2(4000) := '|';
+        out_align       VARCHAR2(4000) := '|';
+        --
+        FUNCTION cleanup_value (
+            in_name         VARCHAR2,
+            in_value        VARCHAR2,
+            in_width        PLS_INTEGER := NULL,
+            in_numeric      BOOLEAN     := FALSE
+        )
+        RETURN VARCHAR2 AS
+            out_indent      PLS_INTEGER;
+            out_value       VARCHAR2(2000);
+        BEGIN
+            out_value := REPLACE(TO_CHAR(in_value), '|', '&' || 'vert;');
+            --
+            IF LENGTH(LTRIM(out_value)) < LENGTH(out_value) THEN
+                out_indent  := (LENGTH(out_value) - LENGTH(LTRIM(out_value))) / 2;
+                out_value   := LTRIM(out_value);
+                --
+                IF RTRIM(in_name, '_') != in_name THEN
+                    out_value := '`' || out_value || '`';
+                END IF;
+                --
+                FOR k IN 1 .. out_indent / 2 LOOP
+                    out_value := '&' || 'emsp; ' || out_value;
+                END LOOP;
+            ELSE
+                IF RTRIM(in_name, '_') != in_name THEN
+                    out_value := '`' || out_value || '`';
+                END IF;
+            END IF;
+            --
+            IF in_width IS NULL THEN
+                RETURN out_value;
+            END IF;
+            --
+            RETURN CASE WHEN in_numeric
+                THEN LPAD(NVL(out_value, ' '), GREATEST(NVL(in_width, 0), NVL(LENGTH(out_value), 0)))
+                ELSE RPAD(NVL(out_value, ' '), GREATEST(NVL(in_width, 0), NVL(LENGTH(out_value), 0))) END;
+        END;
+    BEGIN
+        -- calculate column width
+        curs := DBMS_SQL.TO_CURSOR_NUMBER(in_cols_width);
+        DBMS_SQL.DESCRIBE_COLUMNS(curs, cols, col_widths);
+        --
+        FOR i IN 1 .. cols LOOP
+            DBMS_SQL.DEFINE_COLUMN(curs, i, col_value, 2000);
+            --
+            col_widths(i).col_max_len := 0;  -- hijack variable
+        END LOOP;
+        --
+        WHILE DBMS_SQL.FETCH_ROWS(curs) > 0 LOOP
+            FOR i IN 1 .. cols LOOP
+                DBMS_SQL.COLUMN_VALUE(curs, i, col_value);
+                --
+                col_name    := col_widths(i).col_name;
+                col_value   := cleanup_value(col_name, col_value);
+                --
+                col_widths(i).col_max_len := GREATEST(col_widths(i).col_max_len, NVL(LENGTH(col_value), 0));
+            END LOOP;
+        END LOOP;
+        --
+        DBMS_SQL.CLOSE_CURSOR(curs);
+
+        -- get columns from cursor
+        curs := DBMS_SQL.TO_CURSOR_NUMBER(in_cursor);
+        DBMS_SQL.DESCRIBE_COLUMNS(curs, cols, col_desc);
+
+        -- create header
+        FOR i IN 1 .. cols LOOP
+            DBMS_SQL.DEFINE_COLUMN(curs, i, col_value, 2000);
+            --
+            col_name    := RTRIM(col_desc(i).col_name, '_');
+            out_header  := out_header || ' ' || col_name || ' |';
+            --
+            IF col_desc(i).col_type = DBMS_SQL.NUMBER_TYPE THEN
+                out_align := out_align || ' ' || LPAD('-:', LENGTH(col_name), '-') || ' |';
+            ELSE
+                out_align := out_align || ' ' || RPAD(':-', LENGTH(col_name), '-') || ' |';
+            END IF;
+        END LOOP;
+        --
+        DBMS_OUTPUT.PUT_LINE(out_header);
+        DBMS_OUTPUT.PUT_LINE(out_align);
+
+        -- create body
+        WHILE DBMS_SQL.FETCH_ROWS(curs) > 0 LOOP
+            DBMS_OUTPUT.PUT('|');
+            FOR i IN 1 .. cols LOOP
+                DBMS_SQL.COLUMN_VALUE(curs, i, col_value);
+                --
+                col_name    := col_desc(i).col_name;
+                col_value   := cleanup_value(col_name, col_value, col_widths(i).col_max_len, col_desc(i).col_type = DBMS_SQL.NUMBER_TYPE);
+                --
+                DBMS_OUTPUT.PUT(' ' || col_value || ' |');
+            END LOOP;
+            DBMS_OUTPUT.PUT_LINE('');
+        END LOOP;
+        --
+        DBMS_SQL.CLOSE_CURSOR(curs);
+    EXCEPTION
+    WHEN OTHERS THEN
+        IF DBMS_SQL.IS_OPEN(curs) THEN
+            DBMS_SQL.CLOSE_CURSOR(curs);
+        END IF;
+        RAISE;
+    END;
+
 BEGIN
     DBMS_SNAPSHOT.REFRESH(bug.view_logs_modules);
 END;
