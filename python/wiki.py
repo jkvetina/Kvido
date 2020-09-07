@@ -119,8 +119,9 @@ for file in sorted(files):
   object_type, object_name = file.split('/')[-1].replace('.md', '').split('-')
   print('  ', object_type, object_name)
 
-  package_name = object_name.split('.')[0]
-  module_name  = object_name.split('.')[1]
+  object_       = object_name.split('.')
+  package_name  = object_[0]
+  module_name   = object_[1] if len(object_) > 1 else object_[0]
 
   this__ = object_name
   spec__ = "../blob/master/{}/{}.spec.sql#{}".format(object_type, package_name, module_name)
