@@ -1043,7 +1043,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 IF (rec.page_id             = rows_whitelist(i).page_id         OR rows_whitelist(i).page_id        IS NULL)
                     AND (rec.user_id        LIKE rows_whitelist(i).user_id      OR rows_whitelist(i).user_id        IS NULL)
                     AND (rec.module_name    LIKE rows_whitelist(i).module_name  OR rows_whitelist(i).module_name    IS NULL)
-                    AND (rec.flag           LIKE rows_whitelist(i).flag         OR rows_whitelist(i).flag           IS NULL)
+                    AND (rec.flag           = rows_whitelist(i).flag            OR rows_whitelist(i).flag           IS NULL)
                 THEN
                     whitelisted := TRUE;
                 END IF;
@@ -1058,7 +1058,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 IF (rec.page_id             = rows_blacklist(i).page_id         OR rows_blacklist(i).page_id        IS NULL)
                     AND (rec.user_id        LIKE rows_blacklist(i).user_id      OR rows_blacklist(i).user_id        IS NULL)
                     AND (rec.module_name    LIKE rows_blacklist(i).module_name  OR rows_blacklist(i).module_name    IS NULL)
-                    AND (rec.flag           LIKE rows_blacklist(i).flag         OR rows_blacklist(i).flag           IS NULL)
+                    AND (rec.flag           = rows_blacklist(i).flag            OR rows_blacklist(i).flag           IS NULL)
                 THEN
                     blacklisted := TRUE;
                 END IF;
@@ -1211,7 +1211,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 IF (rec.page_id             = rows_profiler(i).page_id         OR rows_profiler(i).page_id      IS NULL)
                     AND (rec.user_id        LIKE rows_profiler(i).user_id      OR rows_profiler(i).user_id      IS NULL)
                     AND (rec.module_name    LIKE rows_profiler(i).module_name  OR rows_profiler(i).module_name  IS NULL)
-                    AND (rec.flag           LIKE rows_profiler(i).flag         OR rows_profiler(i).flag         IS NULL)
+                    AND (rec.flag           = rows_profiler(i).flag            OR rows_profiler(i).flag         IS NULL)
                 THEN
                     DBMS_PROFILER.START_PROFILER(rec.log_id, run_number => curr_profiler_id);
                     $IF $$OUTPUT_ENABLED $THEN

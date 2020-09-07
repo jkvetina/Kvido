@@ -27,7 +27,7 @@ COMMENT ON TABLE  logs_setup                IS 'Define what events will or wont 
 COMMENT ON COLUMN logs_setup.app_id         IS 'App ID; `0` for no APEX, `NULL` for any app';
 COMMENT ON COLUMN logs_setup.page_id        IS 'APEX page ID; `NULL` for any page';
 COMMENT ON COLUMN logs_setup.user_id        IS 'User ID; `NULL` or `%` for any user';
-COMMENT ON COLUMN logs_setup.flag           IS 'Flag to differentiate logs; % for any flag';
+COMMENT ON COLUMN logs_setup.flag           IS 'Flag to differentiate logs; `NULL` for any flag';
 COMMENT ON COLUMN logs_setup.module_name    IS 'Module name; `NULL` for any module';
 --
 COMMENT ON COLUMN logs_setup.track          IS '`Y` = track; `N` = dont track; `Y` > `N`';
