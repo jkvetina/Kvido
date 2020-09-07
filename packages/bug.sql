@@ -1635,6 +1635,16 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 bug.log_result(c.partition_name, partition_date, count_before - count_after);
             END IF;
         END LOOP;
+
+        -- delete profiler data
+        DELETE FROM plsql_profiler_data;
+        DELETE FROM plsql_profiler_units;
+        DELETE FROM plsql_profiler_runs;
+
+        -- delete code coverage data
+        DELETE FROM dbmspcc_blocks;
+        DELETE FROM dbmspcc_units;
+        DELETE FROM dbmspcc_runs;
     END;
 
 BEGIN
