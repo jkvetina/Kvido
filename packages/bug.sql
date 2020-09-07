@@ -980,8 +980,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         rec                 logs%ROWTYPE;
         map_index           logs.module_name%TYPE;
         --
-        whitelisted         BOOLEAN := FALSE;   -- force log
-        blacklisted         BOOLEAN := FALSE;   -- dont log
+        whitelisted         BOOLEAN := FALSE;   -- TRUE = log
+        blacklisted         BOOLEAN := FALSE;   -- TRUE = dont log; whitelisted > blacklisted
     BEGIN
         -- get caller info and parent id
         rec.log_id := log_id.NEXTVAL;
@@ -1016,7 +1016,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END IF;
 
         -- get user and update session info
-        rec.user_id         := NVL(rec.user_id, ctx.get_user_id());
+        rec.user_id         := NVL(NULLIF(NVL(rec.user_id, ctx.get_user_id()), bug.dml_tables_owner), bug.empty_user);
         rec.flag            := NVL(in_flag, '?');
         rec.module_line     := NVL(rec.module_line, 0);
         --
@@ -1040,9 +1040,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             FOR i IN 1 .. rows_whitelist.COUNT LOOP
                 EXIT WHEN whitelisted;
                 --
-                IF rec.user_id              LIKE rows_whitelist(i).user_id
-                    AND rec.module_name     LIKE rows_whitelist(i).module_name
-                    AND rec.flag            LIKE rows_whitelist(i).flag
+                IF (rec.page_id             = rows_whitelist(i).page_id         OR rows_whitelist(i).page_id        IS NULL)
+                    AND (rec.user_id        LIKE rows_whitelist(i).user_id      OR rows_whitelist(i).user_id        IS NULL)
+                    AND (rec.module_name    LIKE rows_whitelist(i).module_name  OR rows_whitelist(i).module_name    IS NULL)
+                    AND (rec.flag           LIKE rows_whitelist(i).flag         OR rows_whitelist(i).flag           IS NULL)
                 THEN
                     whitelisted := TRUE;
                 END IF;
@@ -1054,9 +1055,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             FOR i IN 1 .. rows_blacklist.COUNT LOOP
                 EXIT WHEN blacklisted;
                 --
-                IF rec.user_id              LIKE rows_blacklist(i).user_id
-                    AND rec.module_name     LIKE rows_blacklist(i).module_name
-                    AND rec.flag            LIKE rows_blacklist(i).flag
+                IF (rec.page_id             = rows_blacklist(i).page_id         OR rows_blacklist(i).page_id        IS NULL)
+                    AND (rec.user_id        LIKE rows_blacklist(i).user_id      OR rows_blacklist(i).user_id        IS NULL)
+                    AND (rec.module_name    LIKE rows_blacklist(i).module_name  OR rows_blacklist(i).module_name    IS NULL)
+                    AND (rec.flag           LIKE rows_blacklist(i).flag         OR rows_blacklist(i).flag           IS NULL)
                 THEN
                     blacklisted := TRUE;
                 END IF;
@@ -1113,7 +1115,11 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             );
         $END
 
-        bug.start_profilers(rec);
+        $IF $$PROFILER_INSTALLED $THEN
+            IF rec.flag != bug.flag_profiler AND rows_profiler.COUNT > 0 AND curr_profiler_id IS NULL THEN
+                bug.start_profilers(rec);
+            END IF;
+        $END
         --
         RETURN rec.log_id;
     EXCEPTION
@@ -1196,15 +1202,16 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         out_log_id          logs.log_id%TYPE;
     BEGIN
         -- avoid infinite loop
-        IF rec.flag = bug.flag_profiler THEN
+        IF (rec.flag = bug.flag_profiler OR rows_profiler.COUNT = 0 OR curr_profiler_id IS NOT NULL) THEN
             RETURN;
         END IF;
         --
         $IF $$PROFILER_INSTALLED $THEN
             FOR i IN 1 .. rows_profiler.COUNT LOOP
-                IF rows_profiler(i).profiler    = 'Y'
-                    AND rec.user_id             LIKE rows_profiler(i).user_id
-                    AND rec.module_name         LIKE rows_profiler(i).module_name
+                IF (rec.page_id             = rows_profiler(i).page_id         OR rows_profiler(i).page_id      IS NULL)
+                    AND (rec.user_id        LIKE rows_profiler(i).user_id      OR rows_profiler(i).user_id      IS NULL)
+                    AND (rec.module_name    LIKE rows_profiler(i).module_name  OR rows_profiler(i).module_name  IS NULL)
+                    AND (rec.flag           LIKE rows_profiler(i).flag         OR rows_profiler(i).flag         IS NULL)
                 THEN
                     DBMS_PROFILER.START_PROFILER(rec.log_id, run_number => curr_profiler_id);
                     $IF $$OUTPUT_ENABLED $THEN
@@ -1225,40 +1232,6 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 END IF;
             END LOOP;
         $END
-        --
-        /*
-        $IF $$PROFILER_INSTALLED OR $$COVERAGE_INSTALLED $THEN
-            IF rec.flag IN (bug.flag_module, bug.flag_context) AND rec.flag != bug.flag_profiler THEN
-                FOR i IN 1 .. rows_profiler.COUNT LOOP
-                    IF rec.user_id              LIKE rows_profiler(i).user_id
-                        AND rec.module_name     LIKE rows_profiler(i).module_name
-                    THEN
-                        $IF $$COVERAGE_INSTALLED $THEN
-                            IF rows_profiler(i).coverage = 'Y' THEN
-                                curr_coverage_id := DBMS_PLSQL_CODE_COVERAGE.START_COVERAGE(rec.log_id);
-                                $IF $$OUTPUT_ENABLED $THEN
-                                    DBMS_OUTPUT.PUT_LINE('  > START_COVERAGE ' || curr_coverage_id);
-                                $END
-                                --
-                                bug.log__ (         -- be aware that this may cause infinite loop
-                                    in_action_name  => 'START_COVERAGE',    -- used in logs_profiler view
-                                    in_flag         => bug.flag_profiler,
-                                    in_arguments    => curr_coverage_id,
-                                    in_parent_id    => rec.log_id
-                                );
-                                --
-                                curr_coverage_id    := rec.log_id;      -- store current and parent log_id so we can stop coverage later
-                                parent_coverage_id  := rec.log_parent;
-                                --
-                                EXIT;
-                            END IF;
-                        $END
-                    END IF;
-                END LOOP;
-            END IF;
-        $END*/
-        --
-        NULL;
     END;
 
 
@@ -1268,25 +1241,21 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
     BEGIN
         $IF $$PROFILER_INSTALLED $THEN
-            IF in_log_id IN (curr_profiler_id, parent_profiler_id) THEN
+            IF (in_log_id IN (curr_profiler_id, parent_profiler_id) OR in_log_id IS NULL) THEN
                 $IF $$OUTPUT_ENABLED $THEN
                     DBMS_OUTPUT.PUT_LINE('  > STOP_PROFILER');
                 $END
-                DBMS_PROFILER.STOP_PROFILER;
+                BEGIN
+                    DBMS_PROFILER.STOP_PROFILER;
+                EXCEPTION
+                WHEN OTHERS THEN
+                    NULL;
+                END;
             END IF;
         $END
         --
-        /*
-        $IF $$COVERAGE_INSTALLED $THEN
-            IF in_log_id IN (curr_coverage_id, parent_coverage_id) THEN
-                $IF $$OUTPUT_ENABLED $THEN
-                    DBMS_OUTPUT.PUT_LINE('  > STOP_COVERAGE');
-                $END
-                DBMS_PLSQL_CODE_COVERAGE.STOP_COVERAGE;
-            END IF;
-        $END*/
-        --
-        NULL;
+        curr_profiler_id    := NULL;
+        parent_profiler_id  := NULL;
     END;
 
 
@@ -1308,7 +1277,11 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END IF;
 
         -- when updating timer for same module which initiated start_profilers
-        bug.stop_profilers(NVL(in_log_id, rec.log_parent));
+        $IF $$PROFILER_INSTALLED $THEN
+            IF rec.flag != bug.flag_profiler AND rows_profiler.COUNT > 0 AND curr_profiler_id IS NOT NULL THEN
+                bug.stop_profilers(NVL(in_log_id, rec.log_parent));
+            END IF;
+        $END
 
         -- update timer
         UPDATE logs e
@@ -1665,20 +1638,19 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     END;
 
 BEGIN
-
     -- prepare arrays when session starts
     -- load whitelist/blacklist data from logs_tracing table
     SELECT t.*
     BULK COLLECT INTO rows_whitelist
     FROM logs_setup t
-    WHERE (t.app_id     = ctx.get_app_id() OR t.app_id < 0)
+    WHERE (t.app_id     = ctx.get_app_id() OR t.app_id IS NULL)
         AND t.track     = 'Y'
         AND ROWNUM      <= rows_limit;
     --
     SELECT t.*
     BULK COLLECT INTO rows_blacklist
     FROM logs_setup t
-    WHERE (t.app_id     = ctx.get_app_id() OR t.app_id < 0)
+    WHERE (t.app_id     = ctx.get_app_id() OR t.app_id IS NULL)
         AND t.track     = 'N'
         AND ROWNUM      <= rows_limit;
 
@@ -1686,9 +1658,9 @@ BEGIN
     SELECT t.*
     BULK COLLECT INTO rows_profiler
     FROM logs_setup t
-    WHERE (t.app_id     = ctx.get_app_id() OR t.app_id < 0)
+    WHERE (t.app_id     = ctx.get_app_id() OR t.app_id IS NULL)
         AND t.track     = 'Y'
-        AND (t.profiler = 'Y' OR t.coverage = 'Y')
+        AND t.profiler  = 'Y'
         AND ROWNUM      <= rows_limit;
 END;
 /

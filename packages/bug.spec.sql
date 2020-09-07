@@ -50,6 +50,7 @@ CREATE OR REPLACE PACKAGE bug AS
 
     -- action is mandatory, so we need default value
     empty_action            CONSTANT CHAR               := '-';
+    empty_user              CONSTANT CHAR               := '-';
 
     -- code for app exception
     app_exception_code      CONSTANT PLS_INTEGER        := -20000;

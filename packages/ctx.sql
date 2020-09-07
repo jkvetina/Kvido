@@ -112,7 +112,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     FUNCTION get_app_id
     RETURN logs.app_id%TYPE AS
     BEGIN
-        RETURN TO_NUMBER(SYS_CONTEXT('APEX$SESSION', 'APP_ID'));
+        RETURN NVL(TO_NUMBER(SYS_CONTEXT('APEX$SESSION', 'APP_ID')), 0);
     END;
 
 
@@ -132,7 +132,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     FUNCTION get_user_id
     RETURN logs.user_id%TYPE AS
     BEGIN
-        RETURN COALESCE(
+        RETURN COALESCE (
             SYS_CONTEXT(ctx.app_namespace, ctx.app_user_attr),
             SYS_CONTEXT('APEX$SESSION', 'APP_USER'),
             ctx.app_user
