@@ -563,7 +563,30 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
 
-    -- ### Others
+    -- ### Working with `DBMS_PROFILER`
+    --
+
+    --
+    -- Start profilers
+    --
+    PROCEDURE start_profilers (
+        rec                 logs%ROWTYPE
+    );
+
+
+
+    --
+    -- Stop running profilers
+    --
+    PROCEDURE stop_profilers (
+        in_log_id           logs.log_id%TYPE := NULL
+    );
+
+
+
+
+
+    -- ### Call stack parsers
     --
 
     --
@@ -612,6 +635,11 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
 
+
+
+    -- ### Others
+    --
+
     --
     -- Returns arguments merged into one string
     --
@@ -640,24 +668,6 @@ CREATE OR REPLACE PACKAGE bug AS
 
 
     --
-    -- Start profilers
-    --
-    PROCEDURE start_profilers (
-        rec                 logs%ROWTYPE
-    );
-
-
-
-    --
-    -- Stop running profilers
-    --
-    PROCEDURE stop_profilers (
-        in_log_id           logs.log_id%TYPE := NULL
-    );
-
-
-
-    --
     -- Internal function which creates records in logs table; returns assigned `log_id`
     --
     FUNCTION log__ (
@@ -674,6 +684,11 @@ CREATE OR REPLACE PACKAGE bug AS
     );
 
 
+
+
+
+    -- ### Purging
+    --
 
     --
     -- Purge old records from `logs` table
