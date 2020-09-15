@@ -35,9 +35,9 @@ BEGIN
         FROM user_objects o
         WHERE in_invalids       IS NULL
             AND o.object_type   IN ('PACKAGE', 'PACKAGE BODY', 'PROCEDURE', 'FUNCTION', 'TRIGGER', 'VIEW', 'SYNONYM')
-            AND o.object_type   LIKE in_filter_type
+            AND (o.object_type  LIKE in_filter_type OR in_filter_type IS NULL)
+            AND (o.object_name  LIKE in_filter_name OR in_filter_name IS NULL)
             AND o.object_name   != $$PLSQL_UNIT         -- not this procedure
-            AND o.object_name   LIKE in_filter_name
     ) LOOP
         -- apply ccflags only relevant to current object
         IF in_ccflags IS NOT NULL THEN
