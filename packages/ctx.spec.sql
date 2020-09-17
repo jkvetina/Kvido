@@ -10,15 +10,15 @@ CREATE OR REPLACE PACKAGE ctx AS
 
 
     -- context namespace
-    app_namespace       CONSTANT VARCHAR2(30)       := 'APP';
+    app_namespace       CONSTANT VARCHAR2(30)   := 'APP';
 
     -- context name for user_id
-    app_user_attr       CONSTANT VARCHAR2(30)       := 'USER_ID__';
-    app_user            CONSTANT VARCHAR2(30)       := USER;
+    app_user_attr       CONSTANT VARCHAR2(30)   := 'USER_ID__';
+    app_user            CONSTANT VARCHAR2(30)   := USER;
 
     -- splitters for payload
-    splitter_values     CONSTANT CHAR := '=';
-    splitter_rows       CONSTANT CHAR := '|';
+    splitter_values     CONSTANT CHAR           := '=';
+    splitter_rows       CONSTANT CHAR           := '|';
 
     -- internal date formats
     format_date         CONSTANT VARCHAR2(30)   := 'YYYY-MM-DD';
@@ -30,7 +30,7 @@ CREATE OR REPLACE PACKAGE ctx AS
 
     -- ### Introduction
     --
-    -- Best way to start is with [`contexts`](./tables-contexts) table.
+    -- Best way to start is with [`sessions`](./tables-sessions) table.
     --
 
 
@@ -41,7 +41,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     --
 
     --
-    -- Initialize contexts and `DBMS_SESSION` things
+    -- Initialize session
     --
     PROCEDURE init__
     ACCESSIBLE BY (
@@ -55,33 +55,19 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Set user_id and contexts from previous session
     --
     PROCEDURE set_user_id (
-        in_user_id          logs.user_id%TYPE       := NULL
+        in_user_id          sessions.user_id%TYPE   := NULL,
+        in_message          logs.message%TYPE       := NULL
     );
 
 
 
     --
-    -- Set user_id and set contexts from payload
+    -- Set user_id and apply contexts from `session` table
     --
     PROCEDURE set_user_id (
-        in_user_id          logs.user_id%TYPE,
-        in_payload          contexts.payload%TYPE
-    );
-
-
-
-    --
-    -- Store current contexts to `contexts` table
-    --
-    PROCEDURE save_contexts;
-
-
-
-    --
-    -- Store contexts into `logs.log_id` for `bug.log_scheduler`
-    --
-    PROCEDURE save_contexts (
-        in_log_id           logs.log_id%TYPE
+        in_user_id          sessions.user_id%TYPE,
+        in_contexts         sessions.contexts%TYPE,
+        in_message          logs.message%TYPE       := NULL
     );
 
 
@@ -154,7 +140,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns current user id (APEX user, CONTEXT user, DB user..., whatever fits your needs)
     --
     FUNCTION get_user_id
-    RETURN logs.user_id%TYPE;
+    RETURN sessions.user_id%TYPE;
 
 
 
@@ -162,7 +148,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns APEX application id
     --
     FUNCTION get_app_id
-    RETURN logs.app_id%TYPE;
+    RETURN sessions.app_id%TYPE;
 
 
 
@@ -170,7 +156,15 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns APEX page id
     --
     FUNCTION get_page_id
-    RETURN logs.page_id%TYPE;
+    RETURN sessions.page_id%TYPE;
+
+
+
+    --
+    -- Returns recent session_id
+    --
+    FUNCTION get_session_id
+    RETURN sessions.session_id%TYPE;
 
 
 
@@ -178,7 +172,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns database session id
     --
     FUNCTION get_session_db
-    RETURN logs.session_db%TYPE;
+    RETURN sessions.session_db%TYPE;
 
 
 
@@ -186,7 +180,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns APEX session id
     --
     FUNCTION get_session_apex
-    RETURN logs.session_apex%TYPE;
+    RETURN sessions.session_apex%TYPE;
 
 
 
@@ -194,7 +188,7 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Returns client_id for `DBMS_SESSION`
     --
     FUNCTION get_client_id (
-        in_user_id          contexts.user_id%TYPE := NULL
+        in_user_id          sessions.user_id%TYPE := NULL
     )
     RETURN VARCHAR2;
 
@@ -202,35 +196,44 @@ CREATE OR REPLACE PACKAGE ctx AS
 
 
 
-    -- ### Storing and retrieving contexts, more like for internal use
+    -- ### Storing and retrieving contexts and items
     --
 
     --
-    -- Prepare/get payload from current contexts
+    -- Prepare/get contexts payload from current values
     --
-    FUNCTION get_payload
-    RETURN contexts.payload%TYPE;
+    FUNCTION get_contexts
+    RETURN sessions.contexts%TYPE;
 
 
 
     --
     -- Parse/set payload as current contexts (available thru `SYS_CONTEXT`)
     --
-    PROCEDURE apply_payload (
-        in_payload          contexts.payload%TYPE
+    PROCEDURE apply_contexts (
+        in_contexts         sessions.contexts%TYPE
     );
 
 
 
     --
-    -- Load/get contexts from `contexts` table and set them as current
+    -- Load/get contexts from `sessions` table and set them as current
     --
-    PROCEDURE load_contexts (
-        in_user_id          contexts.user_id%TYPE       := NULL,
-        in_app_id           contexts.app_id%TYPE        := NULL,
-        in_session_db       contexts.session_db%TYPE    := NULL,
-        in_session_apex     contexts.session_apex%TYPE  := NULL
+    PROCEDURE load_session (
+        in_user_id          sessions.user_id%TYPE       := NULL,
+        in_app_id           sessions.app_id%TYPE        := NULL,
+        in_page_id          sessions.page_id%TYPE       := NULL,
+        in_session_db       sessions.session_db%TYPE    := NULL,
+        in_session_apex     sessions.session_apex%TYPE  := NULL,
+        in_created_at_min   sessions.created_at%TYPE    := NULL
     );
+
+
+
+    --
+    -- Store current contexts and items to `sessions` table
+    --
+    PROCEDURE update_session;
 
 END;
 /

@@ -1,6 +1,7 @@
 CREATE OR REPLACE PACKAGE BODY ctx AS
 
-    recent_session_db       logs.session_db%TYPE;      -- to save resources
+    recent_session_db       sessions.session_db%TYPE;      -- to save resources
+    recent_session_id       sessions.session_id%TYPE;
 
 
 
@@ -17,28 +18,34 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             module_name => NULL,
             action_name => NULL
         );
+        --
+        recent_session_id := NULL;
     END;
 
 
 
     PROCEDURE set_user_id (
-        in_user_id          logs.user_id%TYPE       := NULL
+        in_user_id          sessions.user_id%TYPE       := NULL,
+        in_message          logs.message%TYPE           := NULL
     ) AS
     BEGIN
         ctx.init__();
 
-        -- load contexts from previous session
+        -- load sessions from previous session
         IF in_user_id IS NOT NULL THEN
-            ctx.load_contexts (
+            ctx.load_session (
                 in_user_id          => in_user_id,
                 in_app_id           => ctx.get_app_id(),
+                in_page_id          => ctx.get_page_id(),
                 in_session_db       => ctx.get_session_db(),
-                in_session_apex     => ctx.get_session_apex()
+                in_session_apex     => ctx.get_session_apex(),
+                in_created_at_min   => NULL
             );
             --
             ctx.set_user_id (
                 in_user_id  => in_user_id,
-                in_payload  => ctx.get_payload()
+                in_contexts  => ctx.get_contexts(),
+                in_message  => in_message
             );
         END IF;
     END;
@@ -46,16 +53,13 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     PROCEDURE set_user_id (
-        in_user_id          logs.user_id%TYPE,
-        in_payload          contexts.payload%TYPE
+        in_user_id          sessions.user_id%TYPE,
+        in_contexts         sessions.contexts%TYPE,
+        in_message          logs.message%TYPE           := NULL
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
-        --
-        rec                 contexts%ROWTYPE;
-        old_sess_db         contexts.session_db%TYPE;
-        old_sess_apex       contexts.session_apex%TYPE;
     BEGIN
-        bug.log_module(in_user_id, LENGTH(in_payload));
+        bug.log_module(in_user_id, LENGTH(in_contexts), in_message);
         --
         ctx.init__();
 
@@ -71,35 +75,13 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             client_id   => ctx.get_client_id(in_user_id)
         );
 
-        -- prepare record
-        rec.app_id          := NVL(ctx.get_app_id(), 0);
-        rec.user_id         := in_user_id;
-        rec.session_db      := NVL(ctx.get_session_db(),    0);
-        rec.session_apex    := NVL(ctx.get_session_apex(),  0);
-        rec.updated_at      := SYSDATE;
-
-        -- load contexts
-        IF in_payload IS NOT NULL THEN
-            ctx.apply_payload(in_payload);
-            rec.payload := in_payload;
+        -- load resp. apply passed contexts
+        IF in_contexts IS NOT NULL THEN
+            ctx.apply_contexts(in_contexts);
         END IF;
 
         -- store new values
-        UPDATE contexts x
-        SET x.payload           = rec.payload,
-            x.updated_at        = rec.updated_at
-        WHERE x.app_id          = rec.app_id
-            AND x.user_id       = rec.user_id
-            AND x.session_db    = rec.session_db
-            AND x.session_apex  = rec.session_apex;
-        --
-        IF SQL%ROWCOUNT = 0 THEN
-            INSERT INTO contexts VALUES rec;
-            COMMIT;
-            --
-            bug.log_userenv();
-        END IF;
-        --
+        ctx.update_session();
         COMMIT;
     EXCEPTION
     WHEN OTHERS THEN
@@ -109,8 +91,16 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
 
+    FUNCTION get_session_id
+    RETURN sessions.session_id%TYPE AS
+    BEGIN
+        RETURN recent_session_id;
+    END;
+
+
+
     FUNCTION get_app_id
-    RETURN logs.app_id%TYPE AS
+    RETURN sessions.app_id%TYPE AS
     BEGIN
         RETURN NVL(TO_NUMBER(SYS_CONTEXT('APEX$SESSION', 'APP_ID')), 0);
     END;
@@ -118,7 +108,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     FUNCTION get_page_id
-    RETURN logs.page_id%TYPE AS
+    RETURN sessions.page_id%TYPE AS
     BEGIN
         $IF $$APEX_INSTALLED $THEN
             RETURN NV('APP_PAGE_ID');
@@ -130,19 +120,21 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     FUNCTION get_user_id
-    RETURN logs.user_id%TYPE AS
+    RETURN sessions.user_id%TYPE AS
     BEGIN
-        RETURN COALESCE (
-            SYS_CONTEXT(ctx.app_namespace, ctx.app_user_attr),
-            SYS_CONTEXT('APEX$SESSION', 'APP_USER'),
-            ctx.app_user
-        );
+        RETURN NVL(NULLIF(
+            COALESCE (
+                SYS_CONTEXT('APEX$SESSION', 'APP_USER'),            -- APEX first, because it is more reliable
+                SYS_CONTEXT(ctx.app_namespace, ctx.app_user_attr),
+                ctx.app_user
+            ),
+            bug.dml_tables_owner), bug.empty_user);        
     END;
 
 
 
     FUNCTION get_session_db
-    RETURN logs.session_db%TYPE AS
+    RETURN sessions.session_db%TYPE AS
     BEGIN
         IF recent_session_db IS NULL THEN
             SELECT TO_NUMBER(s.sid || '.' || s.serial#) INTO recent_session_db
@@ -159,7 +151,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     FUNCTION get_session_apex
-    RETURN logs.session_apex%TYPE AS
+    RETURN sessions.session_apex%TYPE AS
     BEGIN
         RETURN SYS_CONTEXT('APEX$SESSION', 'APP_SESSION');
     END;
@@ -167,7 +159,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     FUNCTION get_client_id (
-        in_user_id          contexts.user_id%TYPE := NULL
+        in_user_id          sessions.user_id%TYPE := NULL
     )
     RETURN VARCHAR2 AS      -- mimic APEX client_id
     BEGIN
@@ -288,19 +280,19 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
 
-    PROCEDURE apply_payload (
-        in_payload          contexts.payload%TYPE
+    PROCEDURE apply_contexts (
+        in_contexts         sessions.contexts%TYPE
     ) AS
-        payload_item        contexts.payload%TYPE;
-        payload_name        contexts.payload%TYPE;
-        payload_value       contexts.payload%TYPE;
+        payload_item        sessions.contexts%TYPE;
+        payload_name        sessions.contexts%TYPE;
+        payload_value       sessions.contexts%TYPE;
     BEGIN
-        IF in_payload IS NULL THEN
+        IF in_contexts IS NULL THEN
             RETURN;
         END IF;
         --
-        FOR i IN 1 .. REGEXP_COUNT(in_payload, '[' || ctx.splitter_rows || ']') + 1 LOOP
-            payload_item    := REGEXP_SUBSTR(in_payload, '[^' || ctx.splitter_rows || ']+', 1, i);
+        FOR i IN 1 .. REGEXP_COUNT(in_contexts, '[' || ctx.splitter_rows || ']') + 1 LOOP
+            payload_item    := REGEXP_SUBSTR(in_contexts, '[^' || ctx.splitter_rows || ']+', 1, i);
             payload_name    := RTRIM(SUBSTR(payload_item, 1, INSTR(payload_item, ctx.splitter_values) - 1));
             payload_value   := SUBSTR(payload_item, INSTR(payload_item, ctx.splitter_values) + 1);
             --
@@ -315,128 +307,102 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
 
-    PROCEDURE load_contexts (
-        in_user_id          contexts.user_id%TYPE       := NULL,
-        in_app_id           contexts.app_id%TYPE        := NULL,
-        in_session_db       contexts.session_db%TYPE    := NULL,
-        in_session_apex     contexts.session_apex%TYPE  := NULL
+    PROCEDURE load_session (
+        in_user_id          sessions.user_id%TYPE       := NULL,
+        in_app_id           sessions.app_id%TYPE        := NULL,
+        in_page_id          sessions.page_id%TYPE       := NULL,
+        in_session_db       sessions.session_db%TYPE    := NULL,
+        in_session_apex     sessions.session_apex%TYPE  := NULL,
+        in_created_at_min   sessions.created_at%TYPE    := NULL
     ) AS
-        rec                 contexts%ROWTYPE;
+        rec                 sessions%ROWTYPE;
     BEGIN
-        rec.app_id          := COALESCE(in_app_id,          ctx.get_app_id(),       0);
         rec.user_id         := COALESCE(in_user_id,         ctx.get_user_id());
+        rec.app_id          := COALESCE(in_app_id,          ctx.get_app_id(),       0);
+        rec.page_id         := COALESCE(in_page_id,         ctx.get_page_id(),      0);
         rec.session_db      := COALESCE(in_session_db,      ctx.get_session_db(),   0);
         rec.session_apex    := COALESCE(in_session_apex,    ctx.get_session_apex(), 0);
         --
-        bug.log_module(rec.app_id, rec.user_id, rec.session_db, rec.session_apex);
+        --bug.log_module(rec.user_id, rec.app_id, rec.page_id, rec.session_db, rec.session_apex);
 
-        -- find best session
-        BEGIN
-            -- try exact match first
-            SELECT x.payload INTO rec.payload
-            FROM contexts x
-            WHERE x.app_id          = rec.app_id
-                AND x.user_id       = rec.user_id
-                AND x.session_db    = rec.session_db
-                AND x.session_apex  = rec.session_apex;
-        EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-            -- try partial match and use latest session
-            SELECT MIN(x.payload) KEEP (DENSE_RANK FIRST
-                ORDER BY CASE
-                        WHEN x.session_apex = rec.session_apex  THEN 1
-                        WHEN x.session_db   = rec.session_db    THEN 2
-                        END NULLS LAST,
-                    x.updated_at DESC
-                )
-            INTO rec.payload
-            FROM contexts x
-            WHERE x.app_id          = rec.app_id
-                AND x.user_id       = rec.user_id;
-        END;
-        --
-        IF rec.payload IS NOT NULL THEN
-            ctx.apply_payload(rec.payload);
+        -- find best session, try exact match first
+        SELECT MIN(s.contexts) KEEP (DENSE_RANK FIRST ORDER BY s.session_id DESC)
+        INTO rec.contexts
+        FROM sessions s
+        WHERE s.user_id         = rec.user_id
+            AND s.app_id        = rec.app_id
+            AND s.page_id       = rec.page_id
+            AND s.session_db    = rec.session_db
+            AND s.session_apex  = rec.session_apex
+            AND s.created_at    >= NVL(in_created_at_min, TRUNC(SYSDATE));
+
+        -- try partial match, use latest session
+        IF rec.contexts IS NULL THEN
+            SELECT
+                MIN(s.contexts) KEEP (DENSE_RANK FIRST
+                    ORDER BY CASE
+                            WHEN s.session_apex = rec.session_apex  THEN 1
+                            WHEN s.session_db   = rec.session_db    THEN 2
+                            END NULLS LAST,
+                        s.session_id DESC
+                    )
+            INTO rec.contexts
+            FROM sessions s
+            WHERE s.user_id         = rec.user_id
+                AND s.app_id        = rec.app_id
+                AND s.created_at    >= NVL(in_created_at_min, TRUNC(SYSDATE));
         END IF;
+
+        -- prepare contexts
+        IF rec.contexts IS NOT NULL THEN
+            ctx.apply_contexts(rec.contexts);
+        END IF;
+
+        --
+        -- @TODO: prepare APEX items
+        --
+        NULL;
     END;
 
 
 
-    PROCEDURE save_contexts
+    PROCEDURE update_session
     AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
-        rec                 contexts%ROWTYPE;
+        rec                 sessions%ROWTYPE;
+        --
+        -- dont call BUG package from this module
+        --
     BEGIN
-        rec.app_id          := NVL(ctx.get_app_id(), 0);
+        rec.session_id      := session_id.NEXTVAL;
+        recent_session_id   := rec.session_id;
+        --
         rec.user_id         := ctx.get_user_id();
-
-        -- dont store contexts for generic user
-        IF rec.user_id = ctx.app_user THEN
-            bug.log_module(rec.app_id, rec.user_id);
-            --
-            RAISE NO_DATA_FOUND;
-        END IF;
-
+        rec.app_id          := NVL(ctx.get_app_id(),    0);
+        rec.page_id         := NVL(ctx.get_page_id(),   0);
         rec.session_db      := NVL(ctx.get_session_db(),    0);
         rec.session_apex    := NVL(ctx.get_session_apex(),  0);
-        rec.payload         := ctx.get_payload();
-        rec.updated_at      := SYSDATE;
+        rec.contexts        := ctx.get_contexts();
+        rec.created_at      := SYSTIMESTAMP;
         --
-        bug.log_module(rec.app_id, rec.user_id, rec.session_db, rec.session_apex);
+        --bug.log_module(rec.session_id, rec.user_id, rec.app_id, rec.page_id, rec.session_db, rec.session_apex);
 
         -- store new values
-        UPDATE contexts x
-        SET x.payload           = rec.payload,
-            x.updated_at        = rec.updated_at
-        WHERE x.app_id          = rec.app_id
-            AND x.user_id       = rec.user_id
-            AND x.session_db    = rec.session_db
-            AND x.session_apex  = rec.session_apex;
-        --
-        IF SQL%ROWCOUNT = 0 THEN
-            RAISE NO_DATA_FOUND;
-        END IF;
-        --
+        INSERT INTO sessions VALUES rec;
         COMMIT;
     EXCEPTION
     WHEN OTHERS THEN
         ROLLBACK;
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SAVE_CONTEXTS_FAILED', TRUE);
+        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SAVE_SESSION_FAILED', TRUE);
     END;
 
 
 
-    PROCEDURE save_contexts (
-        in_log_id           logs.log_id%TYPE
-    ) AS
-        PRAGMA AUTONOMOUS_TRANSACTION;
-    BEGIN
-        bug.log_module(in_log_id);
-
-        -- store new values
-        UPDATE logs e
-        SET e.contexts  = ctx.get_payload(),
-            e.user_id   = ctx.get_user_id()
-        WHERE e.log_id  = in_log_id;
-        --
-        IF SQL%ROWCOUNT = 0 THEN
-            RAISE NO_DATA_FOUND;
-        END IF;
-        --
-        COMMIT;
-    EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SAVE_CONTEXTS_FAILED', TRUE);
-    END;
-
-
-
-    FUNCTION get_payload
-    RETURN contexts.payload%TYPE
+    FUNCTION get_contexts
+    RETURN sessions.contexts%TYPE
     AS
-        out_payload     contexts.payload%TYPE;
+        out_payload     sessions.contexts%TYPE;
     BEGIN
         SELECT
             LISTAGG(s.attribute || ctx.splitter_values || s.value, ctx.splitter_rows)
