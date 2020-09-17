@@ -427,6 +427,26 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
 
+    PROCEDURE update_session (
+        in_log_id           logs.log_id%TYPE
+    ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+    BEGIN
+        ctx.update_session();
+        --
+        UPDATE logs e
+        SET e.session_id    = recent_session_id
+        WHERE e.log_id      = in_log_id;
+        --
+        COMMIT;
+    EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SAVE_SESSION_FAILED', TRUE);
+    END;
+
+
+
     FUNCTION get_contexts
     RETURN sessions.contexts%TYPE
     AS

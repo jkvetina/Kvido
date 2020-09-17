@@ -260,5 +260,15 @@ CREATE OR REPLACE PACKAGE ctx AS
     --
     PROCEDURE update_session;
 
+
+
+
+    --
+    -- Store current contexts and update logs table
+    --
+    PROCEDURE update_session (
+        in_log_id           logs.log_id%TYPE
+    );
+
 END;
 /

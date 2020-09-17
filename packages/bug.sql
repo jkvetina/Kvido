@@ -979,6 +979,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         --
         rec                 logs%ROWTYPE;
         map_index           logs.module_name%TYPE;
+        new_contexts        sessions.contexts%TYPE;
         --
         whitelisted         BOOLEAN := FALSE;   -- TRUE = log
         blacklisted         BOOLEAN := FALSE;   -- TRUE = dont log; whitelisted > blacklisted
@@ -998,10 +999,12 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         -- recover contexts for scheduler
         IF in_flag = bug.flag_scheduler AND in_parent_id IS NOT NULL THEN
             BEGIN
-                SELECT e.user_id, e.contexts
-                INTO rec.user_id, rec.contexts
+                SELECT e.user_id, s.contexts
+                INTO rec.user_id, new_contexts
                 FROM logs e
-                WHERE e.log_id = in_parent_id;
+                JOIN sessions s
+                    ON s.session_id = e.session_id
+                WHERE e.log_id      = in_parent_id;
             EXCEPTION
             WHEN NO_DATA_FOUND THEN
                 RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SCHEDULER_ROOT_MISSING ' || in_parent_id, TRUE);
@@ -1010,8 +1013,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             -- recover app context values from log and set user
             recent_log_id := rec.log_id;  -- to link CTX calls to proper branch
             ctx.set_user_id (
-                in_user_id  => rec.user_id,
-                in_payload  => rec.contexts
+                in_user_id      => rec.user_id,
+                in_contexts     => new_contexts
             );
         END IF;
 
