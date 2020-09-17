@@ -208,10 +208,35 @@ CREATE OR REPLACE PACKAGE ctx AS
 
 
     --
-    -- Parse/set payload as current contexts (available thru `SYS_CONTEXT`)
+    -- Prepare/get APEX global items
+    --
+    FUNCTION get_apex_globals
+    RETURN sessions.apex_globals%TYPE;
+
+
+
+    --
+    -- Prepare/get current APEX page items
+    --
+    FUNCTION get_apex_locals
+    RETURN sessions.apex_locals%TYPE;
+
+
+
+    --
+    -- Set contexts from payload (available thru `SYS_CONTEXT`)
     --
     PROCEDURE apply_contexts (
         in_contexts         sessions.contexts%TYPE
+    );
+
+
+
+    --
+    -- Parse/set APEX items
+    --
+    PROCEDURE apply_items (
+        in_items            sessions.apex_locals%TYPE
     );
 
 

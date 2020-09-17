@@ -307,6 +307,32 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
 
+    PROCEDURE apply_items (
+        in_items            sessions.apex_locals%TYPE
+    ) AS
+        payload_item        sessions.contexts%TYPE;
+        payload_name        sessions.contexts%TYPE;
+        payload_value       sessions.contexts%TYPE;
+    BEGIN
+        IF in_items IS NULL THEN
+            RETURN;
+        END IF;
+        --
+        $IF $$APEX_INSTALLED $THEN
+            FOR i IN 1 .. REGEXP_COUNT(in_items, '[' || ctx.splitter_rows || ']') + 1 LOOP
+                payload_item    := REGEXP_SUBSTR(in_items, '[^' || ctx.splitter_rows || ']+', 1, i);
+                payload_name    := RTRIM(SUBSTR(payload_item, 1, INSTR(payload_item, ctx.splitter_values) - 1));
+                payload_value   := SUBSTR(payload_item, INSTR(payload_item, ctx.splitter_values) + 1);
+                --
+                IF payload_name IS NOT NULL AND payload_value IS NOT NULL THEN
+                    APEX_UTIL.SET_SESSION_STATE(payload_name, payload_value);
+                END IF;
+            END LOOP;
+        $END    
+    END;
+
+
+
     PROCEDURE load_session (
         in_user_id          sessions.user_id%TYPE       := NULL,
         in_app_id           sessions.app_id%TYPE        := NULL,
@@ -384,6 +410,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         rec.session_db      := NVL(ctx.get_session_db(),    0);
         rec.session_apex    := NVL(ctx.get_session_apex(),  0);
         rec.contexts        := ctx.get_contexts();
+        rec.apex_globals    := ctx.get_apex_globals();
+        rec.apex_locals     := ctx.get_apex_locals();
         rec.created_at      := SYSTIMESTAMP;
         --
         --bug.log_module(rec.session_id, rec.user_id, rec.app_id, rec.page_id, rec.session_db, rec.session_apex);
@@ -415,6 +443,45 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             AND s.value         IS NOT NULL;
         --
         RETURN out_payload;
+    END;
+
+
+
+    FUNCTION get_apex_globals
+    RETURN sessions.apex_globals%TYPE
+    AS
+        out_items       sessions.apex_globals%TYPE;
+    BEGIN
+        $IF $$APEX_INSTALLED $THEN
+            SELECT
+                LISTAGG(t.item_name || ctx.splitter_values || APEX_UTIL.GET_SESSION_STATE(t.item_name), ctx.splitter_rows)
+                    WITHIN GROUP (ORDER BY s.attribute)
+            INTO out_items
+            FROM apex_application_items t
+            WHERE t.application_id = NV('APP_ID');
+        $END    
+        --
+        RETURN out_items;
+    END;
+
+
+
+    FUNCTION get_apex_locals
+    RETURN sessions.apex_locals%TYPE
+    AS
+        out_items       sessions.apex_locals%TYPE;
+    BEGIN
+        $IF $$APEX_INSTALLED $THEN
+            SELECT
+                LISTAGG(t.item_name || ctx.splitter_values || APEX_UTIL.GET_SESSION_STATE(t.item_name), ctx.splitter_rows)
+                    WITHIN GROUP (ORDER BY s.attribute)
+            INTO out_items
+            FROM apex_application_page_items t
+            WHERE t.application_id  = NV('APP_ID')
+                AND t.page_id       = NV('APP_PAGE_ID');
+        $END    
+        --
+        RETURN out_items;
     END;
 
 END;
