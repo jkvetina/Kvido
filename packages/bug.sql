@@ -912,7 +912,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             FROM logs e
             WHERE e.log_id = rec.log_parent;
             --
-            rec.scn             := DBMS_APPLICATION_INFO.SET_SESSION_LONGOPS_NOHINT;    -- rindex
+            rec.message         := DBMS_APPLICATION_INFO.SET_SESSION_LONGOPS_NOHINT;    -- rindex
             rec.log_parent      := rec.log_id;  -- create fresh child
             rec.log_id          := log_id.NEXTVAL;
             rec.flag            := bug.flag_longops;
@@ -928,7 +928,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
         -- update progress for system views
         DBMS_APPLICATION_INFO.SET_SESSION_LONGOPS (
-            rindex          => rec.scn,
+            rindex          => rec.message,
             slno            => slno,
             op_name         => rec.module_name,     -- 64 chars
             target_desc     => rec.action_name,     -- 32 chars
@@ -949,7 +949,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
         -- update progress in log
         UPDATE logs e
-        SET e.scn           = rec.scn,
+        SET e.message       = rec.message,
             e.arguments     = ROUND(in_progress * 100, 2) || '%',
             e.timer         = rec.timer
         WHERE e.log_id      = rec.log_id;
@@ -1016,7 +1016,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END IF;
 
         -- get user and update session info
-        rec.user_id         := NVL(NULLIF(NVL(rec.user_id, ctx.get_user_id()), bug.dml_tables_owner), bug.empty_user);
+        rec.user_id         := NVL(rec.user_id, ctx.get_user_id());
         rec.flag            := NVL(in_flag, '?');
         rec.module_line     := NVL(rec.module_line, 0);
         --
@@ -1070,19 +1070,18 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END IF;
 
         -- prepare record
-        rec.app_id          := NVL(ctx.get_app_id(), 0);  -- default to zero to match contexts table
-        rec.page_id         := ctx.get_page_id();
+        rec.app_id          := NVL(ctx.get_app_id(),    0);  -- default to zero to match sessions table
+        rec.page_id         := NVL(ctx.get_page_id(),   0);
         rec.action_name     := SUBSTR(COALESCE(rec.action_name, in_action_name, bug.empty_action), 1, bug.length_action);
         rec.arguments       := SUBSTR(in_arguments, 1, bug.length_arguments);
         rec.message         := SUBSTR(in_message,   1, bug.length_message);  -- may be overwritten later
-        rec.session_db      := ctx.get_session_db();
-        rec.session_apex    := ctx.get_session_apex();
-        rec.scn             := TIMESTAMP_TO_SCN(SYSDATE);
+        rec.session_id      := ctx.get_session_id();
         rec.created_at      := LOCALTIMESTAMP;
 
-        -- add context values
-        IF SQLCODE != 0 OR INSTR(bug.track_contexts, rec.flag) > 0 OR bug.track_contexts = '%' OR rec.flag = bug.flag_scheduler THEN
-            rec.contexts := SUBSTR(ctx.get_payload(), 1, bug.length_contexts);
+        -- fill missing session_id
+        IF rec.session_id IS NULL THEN
+            ctx.update_session();
+            rec.session_id  := ctx.get_session_id();
         END IF;
 
         -- add call stack
@@ -1588,10 +1587,15 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         -- purge all
         IF in_age < 0 THEN
             EXECUTE IMMEDIATE 'ALTER TABLE logs_lobs DISABLE CONSTRAINT fk_logs_lobs_logs';
+            EXECUTE IMMEDIATE 'TRUNCATE TABLE sessions';
             EXECUTE IMMEDIATE 'TRUNCATE TABLE logs_lobs';
             EXECUTE IMMEDIATE 'TRUNCATE TABLE ' || bug.table_name || ' CASCADE';
             EXECUTE IMMEDIATE 'ALTER TABLE logs_lobs ENABLE CONSTRAINT fk_logs_lobs_logs';
         END IF;
+
+        -- @TODO: sessions
+        --
+        NULL;
 
         -- delete old LOBs
         DELETE FROM logs_lobs l

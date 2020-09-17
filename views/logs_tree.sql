@@ -11,10 +11,7 @@ SELECT
     e.module_line                               AS line,
     e.arguments,
     e.message,
-    e.contexts,
-    e.session_db,
-    e.session_apex,
-    e.scn,
+    e.session_id,
     e.timer,
     e.created_at
 FROM logs e

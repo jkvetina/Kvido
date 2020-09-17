@@ -38,7 +38,6 @@ CREATE OR REPLACE PACKAGE bug AS
 
     -- append callstack for these flags; % for all
     track_callstack         CONSTANT VARCHAR2(30)       := flag_error || flag_warning || flag_module || flag_result || flag_context;
-    track_contexts          CONSTANT VARCHAR2(30)       := flag_error || flag_warning || flag_module || flag_result || flag_context;
 
     -- arguments separator
     splitter                CONSTANT CHAR               := '|';
