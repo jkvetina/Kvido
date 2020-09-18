@@ -72,6 +72,36 @@ CREATE OR REPLACE PACKAGE ctx AS
 
 
 
+    --
+    -- Load/get contexts from `sessions` table and set them as current
+    --
+    PROCEDURE load_session (
+        in_user_id          sessions.user_id%TYPE       := NULL,
+        in_app_id           sessions.app_id%TYPE        := NULL,
+        in_page_id          sessions.page_id%TYPE       := NULL,
+        in_session_db       sessions.session_db%TYPE    := NULL,
+        in_session_apex     sessions.session_apex%TYPE  := NULL,
+        in_created_at_min   sessions.created_at%TYPE    := NULL
+    );
+
+
+
+    --
+    -- Store current contexts and items to `sessions` table
+    --
+    PROCEDURE update_session;
+
+
+
+    --
+    -- Store current contexts and update logs table
+    --
+    PROCEDURE update_session (
+        in_log_id           logs.log_id%TYPE
+    );
+
+
+
 
 
     -- ### Basic functionality
@@ -237,37 +267,6 @@ CREATE OR REPLACE PACKAGE ctx AS
     --
     PROCEDURE apply_items (
         in_items            sessions.apex_locals%TYPE
-    );
-
-
-
-    --
-    -- Load/get contexts from `sessions` table and set them as current
-    --
-    PROCEDURE load_session (
-        in_user_id          sessions.user_id%TYPE       := NULL,
-        in_app_id           sessions.app_id%TYPE        := NULL,
-        in_page_id          sessions.page_id%TYPE       := NULL,
-        in_session_db       sessions.session_db%TYPE    := NULL,
-        in_session_apex     sessions.session_apex%TYPE  := NULL,
-        in_created_at_min   sessions.created_at%TYPE    := NULL
-    );
-
-
-
-    --
-    -- Store current contexts and items to `sessions` table
-    --
-    PROCEDURE update_session;
-
-
-
-
-    --
-    -- Store current contexts and update logs table
-    --
-    PROCEDURE update_session (
-        in_log_id           logs.log_id%TYPE
     );
 
 END;
