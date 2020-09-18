@@ -856,7 +856,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             in_parent_id    => bug.recent_log_id
         );
         --
-        ctx.save_contexts(log_id);              -- store current contexts and user_id for job
+        ctx.update_session(log_id);                 -- store current contexts and user_id for job
         --
         DBMS_SCHEDULER.CREATE_JOB (
             in_job_name,
