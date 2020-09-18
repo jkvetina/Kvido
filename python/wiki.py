@@ -32,7 +32,7 @@ print('=' * 80)
 print('CONNECTING TO ORACLE:', tns['host'], '\n')
 ora = Oracle(tns)
 
-ora.execute('BEGIN bug.log_module(); ctx.set_user_id(\'JKVETINA\', \'\'); END;')
+ora.execute('BEGIN bug.log_module(); ctx.set_user_id(\'JKVETINA\', in_contexts => \'\'); END;')
 data    = ora.fetch('SELECT bug.get_log_id() FROM DUAL')
 log_id  = data[0][0]
 
