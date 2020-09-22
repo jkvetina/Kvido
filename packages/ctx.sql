@@ -434,8 +434,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     PROCEDURE load_session (
-        in_user_id          sessions.user_id%TYPE       := NULL,
-        in_app_id           sessions.app_id%TYPE        := NULL,
+        in_user_id          sessions.user_id%TYPE,
+        in_app_id           sessions.app_id%TYPE,
         in_page_id          sessions.page_id%TYPE       := NULL,
         in_session_db       sessions.session_db%TYPE    := NULL,
         in_session_apex     sessions.session_apex%TYPE  := NULL,
@@ -443,51 +443,46 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     ) AS
         rec                 sessions%ROWTYPE;
     BEGIN
-        rec.user_id         := COALESCE(in_user_id,         ctx.get_user_id());
-        rec.app_id          := COALESCE(in_app_id,          ctx.get_app_id(),       0);
-        rec.page_id         := COALESCE(in_page_id,         ctx.get_page_id(),      0);
-        rec.session_db      := COALESCE(in_session_db,      ctx.get_session_db(),   0);
-        rec.session_apex    := COALESCE(in_session_apex,    ctx.get_session_apex(), 0);
-        --
-        --bug.log_module(rec.user_id, rec.app_id, rec.page_id, rec.session_db, rec.session_apex);
+        bug.log_module(in_user_id, in_app_id, in_page_id, in_session_db, in_session_apex, in_created_at_min);
 
-        -- find best session, try exact match first
-        SELECT MIN(s.contexts) KEEP (DENSE_RANK FIRST ORDER BY s.session_id DESC)
-        INTO rec.contexts
+        -- find best session
+        SELECT s.* INTO rec
         FROM sessions s
-        WHERE s.user_id         = rec.user_id
-            AND s.app_id        = rec.app_id
-            AND s.page_id       = rec.page_id
-            AND s.session_db    = rec.session_db
-            AND s.session_apex  = rec.session_apex
-            AND s.created_at    >= NVL(in_created_at_min, TRUNC(SYSDATE));
-
-        -- try partial match, use latest session
-        IF rec.contexts IS NULL THEN
-            SELECT
-                MIN(s.contexts) KEEP (DENSE_RANK FIRST
-                    ORDER BY CASE
-                            WHEN s.session_apex = rec.session_apex  THEN 1
-                            WHEN s.session_db   = rec.session_db    THEN 2
-                            END NULLS LAST,
-                        s.session_id DESC
-                    )
-            INTO rec.contexts
+        WHERE s.session_id = (
+            SELECT MIN(s.session_id) KEEP (DENSE_RANK FIRST
+                ORDER BY
+                    CASE s.session_apex WHEN in_session_apex    THEN 1 END NULLS LAST,
+                    CASE s.session_db   WHEN in_session_db      THEN 1 END NULLS LAST,
+                    CASE s.page_id      WHEN in_page_id         THEN 1 END NULLS LAST,
+                    s.session_id DESC
+                )
             FROM sessions s
-            WHERE s.user_id         = rec.user_id
-                AND s.app_id        = rec.app_id
-                AND s.created_at    >= NVL(in_created_at_min, TRUNC(SYSDATE));
-        END IF;
+            WHERE s.user_id         = in_user_id
+                AND s.app_id        = in_app_id
+                AND s.page_id       = NVL(in_page_id,       s.page_id)
+                AND s.session_db    = NVL(in_session_db,    s.session_db)
+                AND s.session_apex  = NVL(in_session_apex,  s.session_apex)
+                AND s.created_at    >= NVL(in_created_at_min, TRUNC(SYSDATE))
+        );
 
         -- prepare contexts
         IF rec.contexts IS NOT NULL THEN
             ctx.apply_contexts(rec.contexts);
         END IF;
 
-        --
-        -- @TODO: prepare APEX items
-        --
-        NULL;
+        -- prepare APEX items
+        $IF $$APEX_INSTALLED $THEN
+            IF COALESCE(in_page_id, rec.apex_globals) IS NOT NULL THEN
+                ctx.apply_items(rec.apex_globals);
+            END IF;
+            --
+            IF COALESCE(in_page_id, rec.apex_locals) IS NOT NULL THEN
+                ctx.apply_items(rec.apex_locals);
+            END IF;
+        $END
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'LOAD_SESSION_NOT_FOUND', TRUE);
     END;
 
 
@@ -498,23 +493,24 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         --
         rec                 sessions%ROWTYPE;
         --
-        -- dont call BUG package from this module
+        -- DONT CALL BUG PACKAGE FROM THIS MODULE
         --
     BEGIN
         rec.session_id      := session_id.NEXTVAL;
         recent_session_id   := rec.session_id;
         --
         rec.user_id         := ctx.get_user_id();
-        rec.app_id          := NVL(ctx.get_app_id(),    0);
-        rec.page_id         := NVL(ctx.get_page_id(),   0);
+        rec.app_id          := NVL(ctx.get_app_id(),        0);
+        rec.page_id         := NVL(ctx.get_page_id(),       0);
         rec.session_db      := NVL(ctx.get_session_db(),    0);
         rec.session_apex    := NVL(ctx.get_session_apex(),  0);
         rec.contexts        := ctx.get_contexts();
-        rec.apex_globals    := ctx.get_apex_globals();
-        rec.apex_locals     := ctx.get_apex_locals();
         rec.created_at      := SYSTIMESTAMP;
         --
-        --bug.log_module(rec.session_id, rec.user_id, rec.app_id, rec.page_id, rec.session_db, rec.session_apex);
+        IF rec.page_id > 0 THEN
+            rec.apex_globals    := ctx.get_apex_globals();
+            rec.apex_locals     := ctx.get_apex_locals();
+        END IF;
 
         -- store new values
         INSERT INTO sessions VALUES rec;
