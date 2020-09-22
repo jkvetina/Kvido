@@ -163,6 +163,116 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
 
+    PROCEDURE load_session (
+        in_user_id          sessions.user_id%TYPE,
+        in_app_id           sessions.app_id%TYPE,
+        in_page_id          sessions.page_id%TYPE       := NULL,
+        in_session_db       sessions.session_db%TYPE    := NULL,
+        in_session_apex     sessions.session_apex%TYPE  := NULL,
+        in_created_at_min   sessions.created_at%TYPE    := NULL
+    ) AS
+        rec                 sessions%ROWTYPE;
+    BEGIN
+        bug.log_module(in_user_id, in_app_id, in_page_id, in_session_db, in_session_apex, in_created_at_min);
+
+        -- find best session
+        SELECT s.* INTO rec
+        FROM sessions s
+        WHERE s.session_id = (
+            SELECT MIN(s.session_id) KEEP (DENSE_RANK FIRST
+                ORDER BY
+                    CASE s.session_apex WHEN in_session_apex    THEN 1 END NULLS LAST,
+                    CASE s.session_db   WHEN in_session_db      THEN 1 END NULLS LAST,
+                    CASE s.page_id      WHEN in_page_id         THEN 1 END NULLS LAST,
+                    s.session_id DESC
+                )
+            FROM sessions s
+            WHERE s.user_id         = in_user_id
+                AND s.app_id        = in_app_id
+                AND s.page_id       = NVL(in_page_id,       s.page_id)
+                AND s.session_db    = NVL(in_session_db,    s.session_db)
+                AND s.session_apex  = NVL(in_session_apex,  s.session_apex)
+                AND s.created_at    >= NVL(in_created_at_min, TRUNC(SYSDATE))
+        );
+
+        -- prepare contexts
+        IF rec.contexts IS NOT NULL THEN
+            ctx.apply_contexts(rec.contexts);
+        END IF;
+
+        -- prepare APEX items
+        $IF $$APEX_INSTALLED $THEN
+            IF COALESCE(in_page_id, rec.apex_globals) IS NOT NULL THEN
+                ctx.apply_items(rec.apex_globals);
+            END IF;
+            --
+            IF COALESCE(in_page_id, rec.apex_locals) IS NOT NULL THEN
+                ctx.apply_items(rec.apex_locals);
+            END IF;
+        $END
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'LOAD_SESSION_NOT_FOUND', TRUE);
+    END;
+
+
+
+    PROCEDURE update_session
+    AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+        --
+        rec                 sessions%ROWTYPE;
+        --
+        -- DONT CALL BUG PACKAGE FROM THIS MODULE
+        --
+    BEGIN
+        rec.session_id      := session_id.NEXTVAL;
+        recent_session_id   := rec.session_id;
+        --
+        rec.user_id         := ctx.get_user_id();
+        rec.app_id          := NVL(ctx.get_app_id(),        0);
+        rec.page_id         := NVL(ctx.get_page_id(),       0);
+        rec.session_db      := NVL(ctx.get_session_db(),    0);
+        rec.session_apex    := NVL(ctx.get_session_apex(),  0);
+        rec.contexts        := ctx.get_contexts();
+        rec.created_at      := SYSTIMESTAMP;
+        --
+        IF rec.page_id > 0 THEN
+            rec.apex_globals    := ctx.get_apex_globals();
+            rec.apex_locals     := ctx.get_apex_locals();
+        END IF;
+
+        -- store new values
+        INSERT INTO sessions VALUES rec;
+        COMMIT;
+    EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SAVE_SESSION_FAILED', TRUE);
+    END;
+
+
+
+    PROCEDURE update_session (
+        in_log_id           logs.log_id%TYPE
+    ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+    BEGIN
+        ctx.update_session();
+        --
+        UPDATE logs e
+        SET e.session_id    = recent_session_id
+        WHERE e.log_id      = in_log_id;
+        --
+        COMMIT;
+    EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SAVE_SESSION_FAILED', TRUE);
+    END;
+
+
+
     FUNCTION get_app_id
     RETURN sessions.app_id%TYPE AS
     BEGIN
@@ -429,116 +539,6 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
                 END IF;
             END LOOP;
         $END    
-    END;
-
-
-
-    PROCEDURE load_session (
-        in_user_id          sessions.user_id%TYPE,
-        in_app_id           sessions.app_id%TYPE,
-        in_page_id          sessions.page_id%TYPE       := NULL,
-        in_session_db       sessions.session_db%TYPE    := NULL,
-        in_session_apex     sessions.session_apex%TYPE  := NULL,
-        in_created_at_min   sessions.created_at%TYPE    := NULL
-    ) AS
-        rec                 sessions%ROWTYPE;
-    BEGIN
-        bug.log_module(in_user_id, in_app_id, in_page_id, in_session_db, in_session_apex, in_created_at_min);
-
-        -- find best session
-        SELECT s.* INTO rec
-        FROM sessions s
-        WHERE s.session_id = (
-            SELECT MIN(s.session_id) KEEP (DENSE_RANK FIRST
-                ORDER BY
-                    CASE s.session_apex WHEN in_session_apex    THEN 1 END NULLS LAST,
-                    CASE s.session_db   WHEN in_session_db      THEN 1 END NULLS LAST,
-                    CASE s.page_id      WHEN in_page_id         THEN 1 END NULLS LAST,
-                    s.session_id DESC
-                )
-            FROM sessions s
-            WHERE s.user_id         = in_user_id
-                AND s.app_id        = in_app_id
-                AND s.page_id       = NVL(in_page_id,       s.page_id)
-                AND s.session_db    = NVL(in_session_db,    s.session_db)
-                AND s.session_apex  = NVL(in_session_apex,  s.session_apex)
-                AND s.created_at    >= NVL(in_created_at_min, TRUNC(SYSDATE))
-        );
-
-        -- prepare contexts
-        IF rec.contexts IS NOT NULL THEN
-            ctx.apply_contexts(rec.contexts);
-        END IF;
-
-        -- prepare APEX items
-        $IF $$APEX_INSTALLED $THEN
-            IF COALESCE(in_page_id, rec.apex_globals) IS NOT NULL THEN
-                ctx.apply_items(rec.apex_globals);
-            END IF;
-            --
-            IF COALESCE(in_page_id, rec.apex_locals) IS NOT NULL THEN
-                ctx.apply_items(rec.apex_locals);
-            END IF;
-        $END
-    EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'LOAD_SESSION_NOT_FOUND', TRUE);
-    END;
-
-
-
-    PROCEDURE update_session
-    AS
-        PRAGMA AUTONOMOUS_TRANSACTION;
-        --
-        rec                 sessions%ROWTYPE;
-        --
-        -- DONT CALL BUG PACKAGE FROM THIS MODULE
-        --
-    BEGIN
-        rec.session_id      := session_id.NEXTVAL;
-        recent_session_id   := rec.session_id;
-        --
-        rec.user_id         := ctx.get_user_id();
-        rec.app_id          := NVL(ctx.get_app_id(),        0);
-        rec.page_id         := NVL(ctx.get_page_id(),       0);
-        rec.session_db      := NVL(ctx.get_session_db(),    0);
-        rec.session_apex    := NVL(ctx.get_session_apex(),  0);
-        rec.contexts        := ctx.get_contexts();
-        rec.created_at      := SYSTIMESTAMP;
-        --
-        IF rec.page_id > 0 THEN
-            rec.apex_globals    := ctx.get_apex_globals();
-            rec.apex_locals     := ctx.get_apex_locals();
-        END IF;
-
-        -- store new values
-        INSERT INTO sessions VALUES rec;
-        COMMIT;
-    EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SAVE_SESSION_FAILED', TRUE);
-    END;
-
-
-
-    PROCEDURE update_session (
-        in_log_id           logs.log_id%TYPE
-    ) AS
-        PRAGMA AUTONOMOUS_TRANSACTION;
-    BEGIN
-        ctx.update_session();
-        --
-        UPDATE logs e
-        SET e.session_id    = recent_session_id
-        WHERE e.log_id      = in_log_id;
-        --
-        COMMIT;
-    EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SAVE_SESSION_FAILED', TRUE);
     END;
 
 
