@@ -353,12 +353,28 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
     PROCEDURE apply_contexts (
-        in_contexts         sessions.contexts%TYPE
+        in_contexts         sessions.contexts%TYPE,
+        in_append           BOOLEAN                     := FALSE
     ) AS
         payload_item        sessions.contexts%TYPE;
         payload_name        sessions.contexts%TYPE;
         payload_value       sessions.contexts%TYPE;
     BEGIN
+        IF NOT in_append THEN
+            -- clear contexts
+            FOR c IN (
+                SELECT s.attribute
+                FROM session_context s
+                WHERE s.namespace       = ctx.app_namespace
+                    AND s.attribute     != ctx.app_user_attr            -- user_id has dedicated column
+                    AND s.value         IS NOT NULL
+            ) LOOP
+                ctx.set_context (
+                    in_name     => c.attribute
+                );
+            END LOOP;
+        END IF;
+        --
         IF in_contexts IS NULL THEN
             RETURN;
         END IF;

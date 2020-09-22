@@ -274,7 +274,8 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Set contexts from payload (available thru `SYS_CONTEXT`)
     --
     PROCEDURE apply_contexts (
-        in_contexts         sessions.contexts%TYPE
+        in_contexts         sessions.contexts%TYPE,
+        in_append           BOOLEAN                     := FALSE
     );
 
 
