@@ -93,8 +93,8 @@ CREATE OR REPLACE PACKAGE ctx AS
     -- Load/get contexts from `sessions` table and set them as current
     --
     PROCEDURE load_session (
-        in_user_id          sessions.user_id%TYPE       := NULL,
-        in_app_id           sessions.app_id%TYPE        := NULL,
+        in_user_id          sessions.user_id%TYPE,
+        in_app_id           sessions.app_id%TYPE,
         in_page_id          sessions.page_id%TYPE       := NULL,
         in_session_db       sessions.session_db%TYPE    := NULL,
         in_session_apex     sessions.session_apex%TYPE  := NULL,
