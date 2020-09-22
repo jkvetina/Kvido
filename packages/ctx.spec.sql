@@ -121,7 +121,70 @@ CREATE OR REPLACE PACKAGE ctx AS
 
 
 
-    -- ### Basic functionality
+    -- ### Getters for `bug` package
+    --
+
+    --
+    -- Returns current user id (APEX, SYS_CONTEXT, DB...)
+    --
+    FUNCTION get_user_id
+    RETURN sessions.user_id%TYPE;
+
+
+
+    --
+    -- Returns APEX application id
+    --
+    FUNCTION get_app_id
+    RETURN sessions.app_id%TYPE;
+
+
+
+    --
+    -- Returns APEX page id
+    --
+    FUNCTION get_page_id
+    RETURN sessions.page_id%TYPE;
+
+
+
+    --
+    -- Returns database session id
+    --
+    FUNCTION get_session_db
+    RETURN sessions.session_db%TYPE;
+
+
+
+    --
+    -- Returns APEX session id
+    --
+    FUNCTION get_session_apex
+    RETURN sessions.session_apex%TYPE;
+
+
+
+    --
+    -- Returns recent `session_id` from `sessions` table
+    --
+    FUNCTION get_session_id
+    RETURN sessions.session_id%TYPE;
+
+
+
+    --
+    -- Returns client_id for `DBMS_SESSION`
+    --
+    FUNCTION get_client_id (
+        in_user_id          sessions.user_id%TYPE := NULL
+    )
+    RETURN VARCHAR2;
+
+
+
+
+
+    -- ### Context functionality
     --
 
     --
@@ -175,69 +238,6 @@ CREATE OR REPLACE PACKAGE ctx AS
         in_name     VARCHAR2,
         in_value    DATE
     );
-
-
-
-
-
-    -- ### Getters for `bug` package
-    --
-
-    --
-    -- Returns current user id (APEX user, CONTEXT user, DB user..., whatever fits your needs)
-    --
-    FUNCTION get_user_id
-    RETURN sessions.user_id%TYPE;
-
-
-
-    --
-    -- Returns APEX application id
-    --
-    FUNCTION get_app_id
-    RETURN sessions.app_id%TYPE;
-
-
-
-    --
-    -- Returns APEX page id
-    --
-    FUNCTION get_page_id
-    RETURN sessions.page_id%TYPE;
-
-
-
-    --
-    -- Returns database session id
-    --
-    FUNCTION get_session_db
-    RETURN sessions.session_db%TYPE;
-
-
-
-    --
-    -- Returns APEX session id
-    --
-    FUNCTION get_session_apex
-    RETURN sessions.session_apex%TYPE;
-
-
-
-    --
-    -- Returns recent session_id
-    --
-    FUNCTION get_session_id
-    RETURN sessions.session_id%TYPE;
-
-
-
-    --
-    -- Returns client_id for `DBMS_SESSION`
-    --
-    FUNCTION get_client_id (
-        in_user_id          sessions.user_id%TYPE := NULL
-    )
-    RETURN VARCHAR2;
 
 
 
