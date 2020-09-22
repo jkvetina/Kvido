@@ -5,11 +5,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
 
-    PROCEDURE init__
-    ACCESSIBLE BY (
-        PACKAGE ctx,
-        PACKAGE ctx_ut
-    ) AS
+    PROCEDURE clear_session AS
     BEGIN
         DBMS_SESSION.CLEAR_ALL_CONTEXT(ctx.app_namespace);
         DBMS_SESSION.CLEAR_IDENTIFIER();
@@ -24,44 +20,11 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
 
 
-    PROCEDURE set_user_id (
-        in_user_id          sessions.user_id%TYPE       := NULL,
-        in_message          logs.message%TYPE           := NULL
+    PROCEDURE clear_session (
+        in_user_id          sessions.user_id%TYPE
     ) AS
     BEGIN
-        ctx.init__();
-
-        -- load sessions from previous session
-        IF in_user_id IS NOT NULL THEN
-            ctx.load_session (
-                in_user_id          => in_user_id,
-                in_app_id           => ctx.get_app_id(),
-                in_page_id          => ctx.get_page_id(),
-                in_session_db       => ctx.get_session_db(),
-                in_session_apex     => ctx.get_session_apex(),
-                in_created_at_min   => NULL
-            );
-            --
-            ctx.set_user_id (
-                in_user_id  => in_user_id,
-                in_contexts  => ctx.get_contexts(),
-                in_message  => in_message
-            );
-        END IF;
-    END;
-
-
-
-    PROCEDURE set_user_id (
-        in_user_id          sessions.user_id%TYPE,
-        in_contexts         sessions.contexts%TYPE,
-        in_message          logs.message%TYPE           := NULL
-    ) AS
-        PRAGMA AUTONOMOUS_TRANSACTION;
-    BEGIN
-        bug.log_module(in_user_id, LENGTH(in_contexts), in_message);
-        --
-        ctx.init__();
+        ctx.clear_session();
 
         -- set session things
         DBMS_SESSION.SET_IDENTIFIER(in_user_id);                -- USERENV.CLIENT_IDENTIFIER
@@ -74,6 +37,50 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             username    => in_user_id,
             client_id   => ctx.get_client_id(in_user_id)
         );
+    END;
+
+
+
+    PROCEDURE set_session (
+        in_user_id          sessions.user_id%TYPE,
+        in_message          logs.message%TYPE           := NULL
+    ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+    BEGIN
+        ctx.clear_session(in_user_id);
+
+        -- load previous session
+        ctx.load_session (
+            in_user_id          => in_user_id,
+            in_app_id           => ctx.get_app_id(),
+            in_page_id          => ctx.get_page_id(),
+            in_session_db       => ctx.get_session_db(),
+            in_session_apex     => ctx.get_session_apex(),
+            in_created_at_min   => NULL
+        );
+
+        -- store new values
+        ctx.update_session();
+        --
+        bug.log_module(in_user_id, in_message);
+        --
+        COMMIT;
+    EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_SESSION_FAILED', TRUE);
+    END;
+
+
+
+    PROCEDURE set_session (
+        in_user_id          sessions.user_id%TYPE,
+        in_contexts         sessions.contexts%TYPE,
+        in_message          logs.message%TYPE           := NULL
+    ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+    BEGIN
+        ctx.clear_session(in_user_id);
 
         -- load resp. apply passed contexts
         IF in_contexts IS NOT NULL THEN
@@ -82,19 +89,76 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
         -- store new values
         ctx.update_session();
+        --
+        bug.log_module(in_user_id, LENGTH(in_contexts), in_message);
+        --
         COMMIT;
     EXCEPTION
     WHEN OTHERS THEN
         ROLLBACK;
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_USER_ID_FAILED', TRUE);
+        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_SESSION_FAILED', TRUE);
     END;
 
 
 
-    FUNCTION get_session_id
-    RETURN sessions.session_id%TYPE AS
+    PROCEDURE set_session (
+        in_user_id          sessions.user_id%TYPE,
+        in_app_id           sessions.app_id%TYPE,
+        in_page_id          sessions.user_id%TYPE,
+        in_message          logs.message%TYPE           := NULL
+    ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
     BEGIN
-        RETURN recent_session_id;
+        ctx.clear_session(in_user_id);
+
+        $IF $$APEX_INSTALLED $THEN
+            -- find and setup workspace
+            FOR a IN (
+                SELECT a.workspace
+                FROM apex_applications a
+                WHERE a.application_id  = in_app_id
+                    AND ROWNUM          = 1
+            ) LOOP
+                APEX_UTIL.SET_WORKSPACE (
+                    p_workspace => a.workspace
+                );
+                APEX_UTIL.SET_SECURITY_GROUP_ID (
+                    p_security_group_id => APEX_UTIL.FIND_SECURITY_GROUP_ID(p_workspace => a.workspace)
+                );
+                APEX_UTIL.SET_USERNAME (
+                    p_userid    => APEX_UTIL.GET_USER_ID(in_user_id),
+                    p_username  => in_user_id
+                );
+            END LOOP;
+
+            -- create APEX session
+            APEX_SESSION.CREATE_SESSION (
+                p_app_id    => in_app_id,
+                p_page_id   => in_page_id,
+                p_username  => in_user_id
+            );
+        $END
+
+        -- load previous session
+        ctx.load_session (
+            in_user_id          => in_user_id,
+            in_app_id           => in_app_id,
+            in_page_id          => in_page_id,
+            in_session_db       => NULL,
+            in_session_apex     => NULL,
+            in_created_at_min   => NULL
+        );
+
+        -- store new values
+        ctx.update_session();
+        --
+        bug.log_module(in_user_id, in_app_id, in_page_id, in_message);
+        --
+        COMMIT;
+    EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_SESSION_FAILED', TRUE);
     END;
 
 
@@ -154,6 +218,14 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     RETURN sessions.session_apex%TYPE AS
     BEGIN
         RETURN SYS_CONTEXT('APEX$SESSION', 'APP_SESSION');
+    END;
+
+
+
+    FUNCTION get_session_id
+    RETURN sessions.session_id%TYPE AS
+    BEGIN
+        RETURN recent_session_id;
     END;
 
 

@@ -43,10 +43,15 @@ CREATE OR REPLACE PACKAGE ctx AS
     --
     -- Initialize session
     --
-    PROCEDURE init__
-    ACCESSIBLE BY (
-        PACKAGE ctx,
-        PACKAGE ctx_ut
+    PROCEDURE clear_session;
+
+
+
+    --
+    -- Initialize session and keep resp. set user_id
+    --
+    PROCEDURE clear_session (
+        in_user_id          sessions.user_id%TYPE
     );
 
 
@@ -54,9 +59,9 @@ CREATE OR REPLACE PACKAGE ctx AS
     --
     -- Set user_id and contexts from previous session
     --
-    PROCEDURE set_user_id (
-        in_user_id          sessions.user_id%TYPE   := NULL,
-        in_message          logs.message%TYPE       := NULL
+    PROCEDURE set_session (
+        in_user_id          sessions.user_id%TYPE,
+        in_message          logs.message%TYPE           := NULL
     );
 
 
@@ -64,10 +69,22 @@ CREATE OR REPLACE PACKAGE ctx AS
     --
     -- Set user_id and apply contexts from `session` table
     --
-    PROCEDURE set_user_id (
+    PROCEDURE set_session (
         in_user_id          sessions.user_id%TYPE,
         in_contexts         sessions.contexts%TYPE,
-        in_message          logs.message%TYPE       := NULL
+        in_message          logs.message%TYPE           := NULL
+    );
+
+
+
+    --
+    -- Set user_id and mimic requested APEX page with items
+    --
+    PROCEDURE set_session (
+        in_user_id          sessions.user_id%TYPE,
+        in_app_id           sessions.app_id%TYPE,
+        in_page_id          sessions.user_id%TYPE,
+        in_message          logs.message%TYPE           := NULL
     );
 
 
@@ -191,14 +208,6 @@ CREATE OR REPLACE PACKAGE ctx AS
 
 
     --
-    -- Returns recent session_id
-    --
-    FUNCTION get_session_id
-    RETURN sessions.session_id%TYPE;
-
-
-
-    --
     -- Returns database session id
     --
     FUNCTION get_session_db
@@ -211,6 +220,14 @@ CREATE OR REPLACE PACKAGE ctx AS
     --
     FUNCTION get_session_apex
     RETURN sessions.session_apex%TYPE;
+
+
+
+    --
+    -- Returns recent session_id
+    --
+    FUNCTION get_session_id
+    RETURN sessions.session_id%TYPE;
 
 
 
