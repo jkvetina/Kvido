@@ -166,7 +166,11 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     FUNCTION get_app_id
     RETURN sessions.app_id%TYPE AS
     BEGIN
-        RETURN NVL(TO_NUMBER(SYS_CONTEXT('APEX$SESSION', 'APP_ID')), 0);
+        $IF $$APEX_INSTALLED $THEN
+            RETURN NVL(APEX_APPLICATION.G_FLOW_ID, 0);
+        $ELSE
+            RETURN 0;
+        $END    
     END;
 
 
@@ -175,7 +179,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     RETURN sessions.page_id%TYPE AS
     BEGIN
         $IF $$APEX_INSTALLED $THEN
-            RETURN NV('APP_PAGE_ID');
+            RETURN APEX_APPLICATION.G_FLOW_STEP_ID;
         $ELSE
             RETURN NULL;
         $END    
@@ -187,8 +191,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     RETURN sessions.user_id%TYPE AS
     BEGIN
         RETURN NVL(NULLIF(
-            COALESCE (
-                SYS_CONTEXT('APEX$SESSION', 'APP_USER'),            -- APEX first, because it is more reliable
+            COALESCE (                                              -- APEX first, because it is more reliable
+                SYS_CONTEXT('APEX$SESSION', 'APP_USER'),            -- APEX_APPLICATION.G_USER
                 SYS_CONTEXT(ctx.app_namespace, ctx.app_user_attr),
                 ctx.app_user
             ),
@@ -306,6 +310,10 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         in_value    VARCHAR2        := NULL
     ) AS
     BEGIN
+        IF SYS_CONTEXT(ctx.app_namespace, ctx.app_user_attr) IS NULL THEN
+            RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_CTX_USER_ID', TRUE);
+        END IF;
+        --
         IF in_name LIKE '%\_\_' ESCAPE '\' OR in_name IS NULL THEN
             RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_CTX_FORBIDDEN', TRUE);
         END IF;
@@ -339,6 +347,10 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     ) AS
         str_value   VARCHAR2(30);
     BEGIN
+        IF SYS_CONTEXT(ctx.app_namespace, ctx.app_user_attr) IS NULL THEN
+            RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_CTX_DATE_USER_ID', TRUE);
+        END IF;
+        --
         str_value := TO_CHAR(in_value, ctx.format_date_time);
         --
         ctx.set_context (
@@ -566,7 +578,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
                     WITHIN GROUP (ORDER BY s.attribute)
             INTO out_items
             FROM apex_application_items t
-            WHERE t.application_id = NV('APP_ID');
+            WHERE t.application_id = ctx.get_app_id();
         $END    
         --
         RETURN out_items;
@@ -585,8 +597,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
                     WITHIN GROUP (ORDER BY s.attribute)
             INTO out_items
             FROM apex_application_page_items t
-            WHERE t.application_id  = NV('APP_ID')
-                AND t.page_id       = NV('APP_PAGE_ID');
+            WHERE t.application_id  = ctx.get_app_id()
+                AND t.page_id       = ctx.get_page_id();
         $END    
         --
         RETURN out_items;
