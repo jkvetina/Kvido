@@ -4,24 +4,29 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
         in_name VARCHAR2
     ) AS
     BEGIN
-        DBMS_OUTPUT.PUT_LINE('| ID | Column name                    | Data type        | NN  | PK  | Comment |');
-        DBMS_OUTPUT.PUT_LINE('| -: | :----------------------------- | :--------------- | :-: | :-: | :------ |');
-        --
         FOR c IN (
             SELECT
-                '| ' || LPAD(c.column_id, 2) || ' | ' || RPAD(c.column_name, 30) || ' | ' ||
-                RPAD(DECODE(c.data_type,
+                c.column_id,
+                c.column_name,
+                DECODE(c.data_type,
                     'NUMBER(38)',   'INTEGER',
                     'TIMESTAMP(6)', 'TIMESTAMP',
                     'BFILE',        'BINARY FILE LOB',
                     data_type
-                ), 16) || ' | ' || DECODE(c.nullable, 'N', 'Y', 'N') || ' | ' ||
-                --CASE WHEN c.data_default IS NULL THEN 'N' ELSE 'Y' END  AS dv,
-                NVL(k.pk, 'N') || ' | ' ||
-                --NVL(k.uq, 'N')                                          AS uq,
-                --NVL(k.fk, 'N')                                          AS fk,
-                --CASE WHEN h.checks > 0 THEN 'Y' ELSE 'N' END            AS ch,
-                m.comments || ' |' AS text
+                ) AS data_type,
+                CASE WHEN c.nullable IS NOT NULL THEN 'Y' END AS nn,
+                CASE WHEN c.data_default IS NOT NULL THEN 'Y' END AS dv,
+                k.pk,
+                k.uq,
+                k.fk,
+                CASE WHEN h.checks > 0 THEN 'Y' END AS ch,
+                m.comments,
+                --
+                COUNT(k.pk) OVER() AS sum_pk,
+                COUNT(k.uq) OVER() AS sum_uq,
+                COUNT(k.fk) OVER() AS sum_fk,
+                --
+                ROW_NUMBER() OVER (ORDER BY c.column_id) AS row_num
             FROM (
                 SELECT c.table_name, c.column_name, c.column_id, c.nullable, c.data_default,
                     c.data_type ||
@@ -41,9 +46,9 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
             ) c
             LEFT JOIN (
                 SELECT table_name, column_name,
-                    DECODE(MIN(constraint_type), 'P', 'Y', 'N') AS pk,
-                    DECODE(MAX(constraint_type), 'U', 'Y', 'N') AS uq,
-                    DECODE(INSTR(MIN(constraint_type) || MAX(constraint_type), 'R'), 0, 'N', 'Y') AS fk
+                    DECODE(MIN(constraint_type), 'P', 'Y', '') AS pk,
+                    DECODE(MAX(constraint_type), 'U', 'Y', '') AS uq,
+                    DECODE(INSTR(MIN(constraint_type) || MAX(constraint_type), 'R'), 0, '', 'Y') AS fk
                 FROM (
                     SELECT c.table_name, c.column_name, c.column_id, n.constraint_type
                     FROM user_tab_columns c
@@ -82,7 +87,31 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
             WHERE c.table_name      = UPPER(in_name)
             ORDER BY c.table_name, c.column_id
         ) LOOP
-            DBMS_OUTPUT.PUT_LINE(c.text);
+            IF c.row_num = 1 THEN
+                DBMS_OUTPUT.PUT_LINE (
+                    '| ID | Column name                    | Data type        | NN  | ' ||
+                    CASE WHEN c.sum_pk > 0 THEN 'PK  | ' END ||
+                    CASE WHEN c.sum_uq > 0 THEN 'UQ  | ' END ||
+                    CASE WHEN c.sum_fk > 0 THEN 'FK  | ' END || 'Comment |'
+                );
+                DBMS_OUTPUT.PUT_LINE (
+                    '| -: | :----------------------------- | :--------------- | :-: | ' ||
+                    CASE WHEN c.sum_pk > 0 THEN ':-: | ' END ||
+                    CASE WHEN c.sum_uq > 0 THEN ':-: | ' END ||
+                    CASE WHEN c.sum_fk > 0 THEN ':-: | ' END || ':------ |'
+                );
+            END IF;
+            --
+            DBMS_OUTPUT.PUT_LINE (
+                '| ' || LPAD(c.column_id, 2) ||
+                ' | ' || RPAD('`' || LOWER(c.column_name) || '`', 32) ||
+                ' | ' || RPAD(c.data_type, 16) ||
+                ' | ' || c.nn ||
+                CASE WHEN c.sum_pk > 0 THEN ' | ' || c.pk END ||
+                CASE WHEN c.sum_uq > 0 THEN ' | ' || c.uq END ||
+                CASE WHEN c.sum_fk > 0 THEN ' | ' || c.fk END ||
+                ' | ' || c.comments || ' |'
+            );
         END LOOP;
     END;
 
