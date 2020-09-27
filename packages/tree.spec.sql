@@ -1,8 +1,8 @@
 CREATE OR REPLACE PACKAGE tree AS
 
     /**
-     * This package is part of the BUG project under MIT licence.
-     * https://github.com/jkvetina/BUG/
+     * This package is part of the Lumberjack project under MIT licence.
+     * https://github.com/jkvetina/Lumberjack/
      *
      * Copyright (c) Jan Kvetina, 2020
      */
