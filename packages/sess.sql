@@ -227,7 +227,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         --
         rec                 sessions%ROWTYPE;
         --
-        -- DONT CALL BUG PACKAGE FROM THIS MODULE
+        -- DONT CALL TREE PACKAGE FROM THIS MODULE
         --
     BEGIN
         rec.session_id      := session_id.NEXTVAL;

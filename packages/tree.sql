@@ -1216,8 +1216,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                         DBMS_OUTPUT.PUT_LINE('  > START_PROFILER ' || curr_profiler_id);
                     $END
                     --
-                    out_log_id := bug.log__ (                   -- be aware that this may cause infinite loop
-                    out_log_id := tree.log__ (                   -- be aware that this may cause infinite loop
+                    out_log_id := tree.log__ (                  -- be aware that this may cause infinite loop
                         in_action_name  => 'START_PROFILER',    -- used in logs_profiler view
                         in_flag         => tree.flag_profiler,
                         in_arguments    => curr_profiler_id,

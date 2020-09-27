@@ -115,7 +115,7 @@ CREATE OR REPLACE PACKAGE sess AS
 
 
 
-    -- ### Getters for `bug` package
+    -- ### Getters for `tree` package
     --
 
     --
