@@ -40,7 +40,7 @@ COMMENT ON COLUMN logs.log_parent       IS 'Parent log record; dont use FK to av
 COMMENT ON COLUMN logs.user_id          IS 'User ID';
 COMMENT ON COLUMN logs.app_id           IS 'APEX Application ID';
 COMMENT ON COLUMN logs.page_id          IS 'APEX Application PAGE ID';
-COMMENT ON COLUMN logs.flag             IS 'Type of error listed in `bug` package specification; FK missing for performance reasons';
+COMMENT ON COLUMN logs.flag             IS 'Type of error listed in `tree` package specification; FK missing for performance reasons';
 --
 COMMENT ON COLUMN logs.action_name      IS 'Action name to distinguish position in module or use it as warning/error names';
 COMMENT ON COLUMN logs.module_name      IS 'Module name (procedure or function name)';
