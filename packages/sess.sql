@@ -60,7 +60,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         );
 
         -- store new values
-        sess.update_session();
+        sess.update_session(in_src => 'C1');
         --
         tree.log_module(in_user_id, in_message);
         --
@@ -88,7 +88,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         END IF;
 
         -- store new values
-        sess.update_session();
+        sess.update_session(in_src => 'C2');
         --
         tree.log_module(in_user_id, LENGTH(in_contexts), in_message);
         --
@@ -150,7 +150,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         );
 
         -- store new values
-        sess.update_session();
+        sess.update_session(in_src => 'C3');
         --
         tree.log_module(in_user_id, in_app_id, in_page_id, in_message);
         --
@@ -212,12 +212,16 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         $END
     EXCEPTION
     WHEN NO_DATA_FOUND THEN
-        RAISE_APPLICATION_ERROR(tree.app_exception_code, 'LOAD_SESSION_NOT_FOUND', TRUE);
+        tree.log_error('NO_DATA_FOUND');
+        --RAISE_APPLICATION_ERROR(tree.app_exception_code, 'LOAD_SESSION_NOT_FOUND', TRUE);
     END;
 
 
 
-    PROCEDURE update_session
+    PROCEDURE update_session (
+        in_log_id           logs.log_id%TYPE        := NULL,
+        in_src              sessions.src%TYPE       := NULL
+    )
     AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
@@ -235,6 +239,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         rec.session_db      := NVL(sess.get_session_db(),    0);
         rec.session_apex    := NVL(sess.get_session_apex(),  0);
         rec.contexts        := sess.get_contexts();
+        rec.src             := in_src;
         rec.created_at      := SYSTIMESTAMP;
         --
         IF rec.page_id > 0 THEN
@@ -244,25 +249,12 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
         -- store new values
         INSERT INTO sessions VALUES rec;
-        COMMIT;
-    EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        RAISE_APPLICATION_ERROR(tree.app_exception_code, 'SAVE_SESSION_FAILED', TRUE);
-    END;
-
-
-
-    PROCEDURE update_session (
-        in_log_id           logs.log_id%TYPE
-    ) AS
-        PRAGMA AUTONOMOUS_TRANSACTION;
-    BEGIN
-        sess.update_session();
         --
-        UPDATE logs e
-        SET e.session_id    = recent_session_id
-        WHERE e.log_id      = in_log_id;
+        IF in_log_id IS NOT NULL THEN
+            UPDATE logs e
+            SET e.session_id    = recent_session_id
+            WHERE e.log_id      = in_log_id;
+        END IF;
         --
         COMMIT;
     EXCEPTION
@@ -314,6 +306,9 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     FUNCTION get_session_db
     RETURN sessions.session_db%TYPE AS
     BEGIN
+        --
+        -- @TODO: explore DBMS_SESSION.UNIQUE_SESSION_ID
+        --
         IF recent_session_db IS NULL THEN
             SELECT TO_NUMBER(s.sid || '.' || s.serial#) INTO recent_session_db
             FROM v$session s
@@ -357,6 +352,9 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
     FUNCTION get_context (
+        --
+        -- @TODO: get_item, _number, _date
+        --
         in_name     VARCHAR2,
         in_format   VARCHAR2    := NULL,
         in_raise    VARCHAR2    := 'Y'  -- boolean for SQL

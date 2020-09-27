@@ -104,17 +104,11 @@ CREATE OR REPLACE PACKAGE sess AS
 
 
     --
-    -- Store current contexts and items to `sessions` table
-    --
-    PROCEDURE update_session;
-
-
-
-    --
-    -- Store current contexts and update logs table
+    -- Store current contexts and items to `sessions` and update `logs` table
     --
     PROCEDURE update_session (
-        in_log_id           logs.log_id%TYPE
+        in_log_id           logs.log_id%TYPE        := NULL,
+        in_src              sessions.src%TYPE       := NULL
     );
 
 

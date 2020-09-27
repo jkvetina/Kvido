@@ -857,7 +857,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             in_parent_id    => tree.recent_log_id
         );
         --
-        sess.update_session(log_id);                 -- store current contexts and user_id for job
+        sess.update_session(in_log_id => log_id);               -- store current contexts and user_id for job
         --
         DBMS_SCHEDULER.CREATE_JOB (
             in_job_name,
@@ -1081,12 +1081,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         rec.message         := SUBSTR(in_message,   1, tree.length_message);  -- may be overwritten later
         rec.session_id      := sess.get_session_id();
         rec.created_at      := LOCALTIMESTAMP;
-
-        -- fill missing session_id --> this also screws SESS.set_session
-        --IF rec.session_id IS NULL THEN
-        --    sess.update_session();
-        --    rec.session_id  := sess.get_session_id();
-        --END IF;
 
         -- add call stack
         IF SQLCODE != 0 OR INSTR(tree.track_callstack, rec.flag) > 0 OR tree.track_callstack = '%' OR in_parent_id IS NOT NULL THEN

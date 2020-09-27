@@ -12,6 +12,8 @@ CREATE TABLE sessions (
     --
     session_db          NUMBER          NOT NULL,
     session_apex        NUMBER          NOT NULL,
+    --
+    src                 VARCHAR2(2),
     created_at          TIMESTAMP       NOT NULL,
     --
     CONSTRAINT pk_sessions PRIMARY KEY (session_id),
@@ -26,7 +28,7 @@ INTERVAL (NUMTODSINTERVAL(1, 'DAY')) (
     PARTITION P00 VALUES LESS THAN (TIMESTAMP '2020-01-01 00:00:00')
 );
 --
-ALTER TABLE sessions DISABLE CONSTRAINT fk_sessions_users;
+--ALTER TABLE sessions DISABLE CONSTRAINT fk_sessions_users;
 --
 COMMENT ON TABLE  sessions                  IS 'Context storage';
 --
@@ -41,5 +43,7 @@ COMMENT ON COLUMN sessions.apex_locals      IS 'APEX local items';
 --
 COMMENT ON COLUMN sessions.session_db       IS 'Database session ID';
 COMMENT ON COLUMN sessions.session_apex     IS 'APEX session ID';
+--
+COMMENT ON COLUMN sessions.src              IS 'Caller to identify source of creation';
 COMMENT ON COLUMN sessions.created_at       IS 'Timestamp of creation';
 
