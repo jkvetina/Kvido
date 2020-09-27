@@ -8,7 +8,7 @@ from oracle_wrapper import Oracle
 #
 # cd ~/Documents/JOB/DPP_UAT/python; source DPP/bin/activate
 # cd ~/Documents/PROJECTS/GITHUB/BUG/python
-# python wiki.py "../../BUG.wiki/*.md"
+# python wiki.py "../../tree.wiki/*.md"
 #
 
 target  = sys.argv[1]
@@ -32,8 +32,8 @@ print('=' * 80)
 print('CONNECTING TO ORACLE:', tns['host'], '\n')
 ora = Oracle(tns)
 
-ora.execute('BEGIN ctx.set_session(\'JKVETINA\', in_contexts => \'\'); bug.log_module(\'WIKI\'); END;')
-data    = ora.fetch('SELECT bug.get_log_id() FROM DUAL')
+ora.execute('BEGIN sess.set_session(\'JKVETINA\', in_contexts => \'\'); tree.log_module(\'WIKI\'); END;')
+data    = ora.fetch('SELECT tree.get_log_id() FROM DUAL')
 log_id  = data[0][0]
 
 
@@ -60,7 +60,7 @@ UNION ALL
 SELECT DISTINCT LOWER('PACKAGES-' || object_name || '.' || procedure_name) || '.md'
 FROM user_procedures
 WHERE object_name IN (
-        'CTX', 'BUG'
+        'SESS', 'TREE'
     )
     AND procedure_name IS NOT NULL
 ORDER BY 1
@@ -80,7 +80,7 @@ data = ora.fetch_assoc("""
 SELECT DISTINCT LOWER('PACKAGES-' || object_name) || '.md' AS file_name, object_name
 FROM user_objects
 WHERE object_name IN (
-        'CTX', 'BUG'
+        'SESS', 'TREE'
     )
 ORDER BY 1
 """)
@@ -194,7 +194,7 @@ for file in sorted(files):
 
 
 
-ora.execute('BEGIN bug.update_timer(bug.get_root_id({})); END;'.format(log_id))
+ora.execute('BEGIN tree.update_timer(tree.get_root_id({})); END;'.format(log_id))
 
 print()
 

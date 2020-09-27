@@ -454,7 +454,7 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
     END;
 
 BEGIN
-    DBMS_SNAPSHOT.REFRESH(bug.view_logs_modules);
+    DBMS_SNAPSHOT.REFRESH(tree.view_logs_modules);
 END;
 /
 
