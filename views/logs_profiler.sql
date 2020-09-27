@@ -7,9 +7,9 @@ WITH x AS (
         SELECT e.action_name, e.flag, e.arguments
         FROM logs e
         CONNECT BY PRIOR e.log_id   = e.log_parent
-        START WITH e.log_id         = bug.get_tree_id()
+        START WITH e.log_id         = tree.get_tree_id()
     ) e
-    WHERE e.flag = 'P'  -- bug.flag_profiler
+    WHERE e.flag = 'P'  -- tree.flag_profiler
 )
 SELECT
     s.name,

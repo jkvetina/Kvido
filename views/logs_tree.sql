@@ -16,5 +16,5 @@ SELECT
     e.created_at
 FROM logs e
 CONNECT BY e.log_parent = PRIOR e.log_id
-START WITH e.log_id     = bug.get_tree_id()
+START WITH e.log_id     = tree.get_tree_id()
 ORDER SIBLINGS BY e.log_id;
