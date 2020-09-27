@@ -1,23 +1,23 @@
-CREATE OR REPLACE PROCEDURE bug_process_dml_errors (
+CREATE OR REPLACE PROCEDURE process_dml_errors (
     in_table_like   VARCHAR2 := '%'
 ) AS
     --
-    -- keep this procedure separated from BUG package
-    -- because DEBUG_LOG_DML_ERRORS view can be invalidated too often
+    -- keep this procedure separated from TREE package
+    -- because LOGS_DML_ERRORS view can be invalidated too often
     --
 BEGIN
-    bug.log_module(in_table_like);
+    tree.log_module(in_table_like);
     --
     FOR c IN (
         SELECT
             d.log_id, d.table_name, d.table_rowid, d.action,
-            bug.dml_tables_owner || '.' || d.table_name || bug.dml_tables_postfix AS error_table
+            tree.dml_tables_owner || '.' || d.table_name || tree.dml_tables_postfix AS error_table
         FROM logs_dml_errors d
         JOIN logs e
             ON e.log_id     = d.log_id
         WHERE d.table_name  LIKE NVL(UPPER(in_table_like), '%')
     ) LOOP
-        bug.process_dml_error (
+        tree.process_dml_error (
             in_log_id           => c.log_id,
             in_error_table      => c.error_table,
             in_table_name       => c.table_name,

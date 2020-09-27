@@ -1,4 +1,4 @@
-CREATE OR REPLACE PACKAGE BODY ctx AS
+CREATE OR REPLACE PACKAGE BODY sess AS
 
     recent_session_db       sessions.session_db%TYPE;      -- to save resources
     recent_session_id       sessions.session_id%TYPE;
@@ -7,7 +7,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
     PROCEDURE clear_session AS
     BEGIN
-        DBMS_SESSION.CLEAR_ALL_CONTEXT(ctx.app_namespace);
+        DBMS_SESSION.CLEAR_ALL_CONTEXT(sess.app_namespace);
         DBMS_SESSION.CLEAR_IDENTIFIER();
         --
         DBMS_APPLICATION_INFO.SET_MODULE (
@@ -24,18 +24,18 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         in_user_id          sessions.user_id%TYPE
     ) AS
     BEGIN
-        ctx.clear_session();
+        sess.clear_session();
 
         -- set session things
         DBMS_SESSION.SET_IDENTIFIER(in_user_id);                -- USERENV.CLIENT_IDENTIFIER
         DBMS_APPLICATION_INFO.SET_CLIENT_INFO(in_user_id);      -- CLIENT_INFO, v$
         --
         DBMS_SESSION.SET_CONTEXT (
-            namespace   => ctx.app_namespace,
-            attribute   => ctx.app_user_attr,
+            namespace   => sess.app_namespace,
+            attribute   => sess.app_user_attr,
             value       => in_user_id,
             username    => in_user_id,
-            client_id   => ctx.get_client_id(in_user_id)
+            client_id   => sess.get_client_id(in_user_id)
         );
     END;
 
@@ -47,28 +47,28 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
     BEGIN
-        ctx.clear_session(in_user_id);
+        sess.clear_session(in_user_id);
 
         -- load previous session
-        ctx.load_session (
+        sess.load_session (
             in_user_id          => in_user_id,
-            in_app_id           => ctx.get_app_id(),
-            in_page_id          => ctx.get_page_id(),
-            in_session_db       => ctx.get_session_db(),
-            in_session_apex     => ctx.get_session_apex(),
+            in_app_id           => sess.get_app_id(),
+            in_page_id          => sess.get_page_id(),
+            in_session_db       => sess.get_session_db(),
+            in_session_apex     => sess.get_session_apex(),
             in_created_at_min   => NULL
         );
 
         -- store new values
-        ctx.update_session();
+        sess.update_session();
         --
-        bug.log_module(in_user_id, in_message);
+        tree.log_module(in_user_id, in_message);
         --
         COMMIT;
     EXCEPTION
     WHEN OTHERS THEN
         ROLLBACK;
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_SESSION_FAILED', TRUE);
+        RAISE_APPLICATION_ERROR(tree.app_exception_code, 'SET_SESSION_FAILED', TRUE);
     END;
 
 
@@ -80,23 +80,23 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
     BEGIN
-        ctx.clear_session(in_user_id);
+        sess.clear_session(in_user_id);
 
         -- load resp. apply passed contexts
         IF in_contexts IS NOT NULL THEN
-            ctx.apply_contexts(in_contexts);
+            sess.apply_contexts(in_contexts);
         END IF;
 
         -- store new values
-        ctx.update_session();
+        sess.update_session();
         --
-        bug.log_module(in_user_id, LENGTH(in_contexts), in_message);
+        tree.log_module(in_user_id, LENGTH(in_contexts), in_message);
         --
         COMMIT;
     EXCEPTION
     WHEN OTHERS THEN
         ROLLBACK;
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_SESSION_FAILED', TRUE);
+        RAISE_APPLICATION_ERROR(tree.app_exception_code, 'SET_SESSION_FAILED', TRUE);
     END;
 
 
@@ -109,7 +109,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
     BEGIN
-        ctx.clear_session(in_user_id);
+        sess.clear_session(in_user_id);
 
         $IF $$APEX_INSTALLED $THEN
             -- find and setup workspace
@@ -140,7 +140,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         $END
 
         -- load previous session
-        ctx.load_session (
+        sess.load_session (
             in_user_id          => in_user_id,
             in_app_id           => in_app_id,
             in_page_id          => in_page_id,
@@ -150,15 +150,15 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         );
 
         -- store new values
-        ctx.update_session();
+        sess.update_session();
         --
-        bug.log_module(in_user_id, in_app_id, in_page_id, in_message);
+        tree.log_module(in_user_id, in_app_id, in_page_id, in_message);
         --
         COMMIT;
     EXCEPTION
     WHEN OTHERS THEN
         ROLLBACK;
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_SESSION_FAILED', TRUE);
+        RAISE_APPLICATION_ERROR(tree.app_exception_code, 'SET_SESSION_FAILED', TRUE);
     END;
 
 
@@ -173,7 +173,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     ) AS
         rec                 sessions%ROWTYPE;
     BEGIN
-        bug.log_module(in_user_id, in_app_id, in_page_id, in_session_db, in_session_apex, in_created_at_min);
+        tree.log_module(in_user_id, in_app_id, in_page_id, in_session_db, in_session_apex, in_created_at_min);
 
         -- find best session
         SELECT s.* INTO rec
@@ -197,22 +197,22 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
 
         -- prepare contexts
         IF rec.contexts IS NOT NULL THEN
-            ctx.apply_contexts(rec.contexts);
+            sess.apply_contexts(rec.contexts);
         END IF;
 
         -- prepare APEX items
         $IF $$APEX_INSTALLED $THEN
             IF COALESCE(in_page_id, rec.apex_globals) IS NOT NULL THEN
-                ctx.apply_items(rec.apex_globals);
+                sess.apply_items(rec.apex_globals);
             END IF;
             --
             IF COALESCE(in_page_id, rec.apex_locals) IS NOT NULL THEN
-                ctx.apply_items(rec.apex_locals);
+                sess.apply_items(rec.apex_locals);
             END IF;
         $END
     EXCEPTION
     WHEN NO_DATA_FOUND THEN
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'LOAD_SESSION_NOT_FOUND', TRUE);
+        RAISE_APPLICATION_ERROR(tree.app_exception_code, 'LOAD_SESSION_NOT_FOUND', TRUE);
     END;
 
 
@@ -229,17 +229,17 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         rec.session_id      := session_id.NEXTVAL;
         recent_session_id   := rec.session_id;
         --
-        rec.user_id         := ctx.get_user_id();
-        rec.app_id          := NVL(ctx.get_app_id(),        0);
-        rec.page_id         := NVL(ctx.get_page_id(),       0);
-        rec.session_db      := NVL(ctx.get_session_db(),    0);
-        rec.session_apex    := NVL(ctx.get_session_apex(),  0);
-        rec.contexts        := ctx.get_contexts();
+        rec.user_id         := sess.get_user_id();
+        rec.app_id          := NVL(sess.get_app_id(),        0);
+        rec.page_id         := NVL(sess.get_page_id(),       0);
+        rec.session_db      := NVL(sess.get_session_db(),    0);
+        rec.session_apex    := NVL(sess.get_session_apex(),  0);
+        rec.contexts        := sess.get_contexts();
         rec.created_at      := SYSTIMESTAMP;
         --
         IF rec.page_id > 0 THEN
-            rec.apex_globals    := ctx.get_apex_globals();
-            rec.apex_locals     := ctx.get_apex_locals();
+            rec.apex_globals    := sess.get_apex_globals();
+            rec.apex_locals     := sess.get_apex_locals();
         END IF;
 
         -- store new values
@@ -248,7 +248,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     EXCEPTION
     WHEN OTHERS THEN
         ROLLBACK;
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SAVE_SESSION_FAILED', TRUE);
+        RAISE_APPLICATION_ERROR(tree.app_exception_code, 'SAVE_SESSION_FAILED', TRUE);
     END;
 
 
@@ -258,7 +258,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
     BEGIN
-        ctx.update_session();
+        sess.update_session();
         --
         UPDATE logs e
         SET e.session_id    = recent_session_id
@@ -268,7 +268,7 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     EXCEPTION
     WHEN OTHERS THEN
         ROLLBACK;
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SAVE_SESSION_FAILED', TRUE);
+        RAISE_APPLICATION_ERROR(tree.app_exception_code, 'SAVE_SESSION_FAILED', TRUE);
     END;
 
 
@@ -303,10 +303,10 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         RETURN NVL(NULLIF(
             COALESCE (                                              -- APEX first, because it is more reliable
                 SYS_CONTEXT('APEX$SESSION', 'APP_USER'),            -- APEX_APPLICATION.G_USER
-                SYS_CONTEXT(ctx.app_namespace, ctx.app_user_attr),
-                ctx.app_user
+                SYS_CONTEXT(sess.app_namespace, sess.app_user_attr),
+                sess.app_user
             ),
-            bug.dml_tables_owner), bug.empty_user);        
+            tree.dml_tables_owner), tree.empty_user);        
     END;
 
 
@@ -350,8 +350,8 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     RETURN VARCHAR2 AS      -- mimic APEX client_id
     BEGIN
         RETURN
-            NVL(in_user_id, ctx.get_user_id()) || ':' ||
-            NVL(ctx.get_session_apex(), SYS_CONTEXT('USERENV', 'SESSIONID'));
+            NVL(in_user_id, sess.get_user_id()) || ':' ||
+            NVL(sess.get_session_apex(), SYS_CONTEXT('USERENV', 'SESSIONID'));
     END;
 
 
@@ -364,14 +364,14 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     RETURN VARCHAR2 AS
     BEGIN
         IF in_format IS NOT NULL THEN
-            RETURN TO_CHAR(ctx.get_context_date(UPPER(in_name)), in_format);
+            RETURN TO_CHAR(sess.get_context_date(UPPER(in_name)), in_format);
         END IF;
         --
-        RETURN SYS_CONTEXT(ctx.app_namespace, UPPER(in_name));
+        RETURN SYS_CONTEXT(sess.app_namespace, UPPER(in_name));
     EXCEPTION
     WHEN OTHERS THEN
         IF in_raise = 'Y' THEN
-            RAISE_APPLICATION_ERROR(bug.app_exception_code, 'GET_CONTEXT_FAILED', TRUE);
+            RAISE_APPLICATION_ERROR(tree.app_exception_code, 'GET_CONTEXT_FAILED', TRUE);
         END IF;
         --
         RETURN NULL;
@@ -385,11 +385,11 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     )
     RETURN NUMBER AS
     BEGIN
-        RETURN TO_NUMBER(SYS_CONTEXT(ctx.app_namespace, UPPER(in_name)));
+        RETURN TO_NUMBER(SYS_CONTEXT(sess.app_namespace, UPPER(in_name)));
     EXCEPTION
     WHEN OTHERS THEN
         IF in_raise = 'Y' THEN
-            RAISE_APPLICATION_ERROR(bug.app_exception_code, 'GET_CONTEXT_FAILED', TRUE);
+            RAISE_APPLICATION_ERROR(tree.app_exception_code, 'GET_CONTEXT_FAILED', TRUE);
         END IF;
         --
         RETURN NULL;
@@ -403,11 +403,11 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     )
     RETURN DATE AS
     BEGIN
-        RETURN TO_DATE(SYS_CONTEXT(ctx.app_namespace, UPPER(in_name)), ctx.format_date_time);
+        RETURN TO_DATE(SYS_CONTEXT(sess.app_namespace, UPPER(in_name)), sess.format_date_time);
     EXCEPTION
     WHEN OTHERS THEN
         IF in_raise = 'Y' THEN
-            RAISE_APPLICATION_ERROR(bug.app_exception_code, 'GET_CONTEXT_FAILED', TRUE);
+            RAISE_APPLICATION_ERROR(tree.app_exception_code, 'GET_CONTEXT_FAILED', TRUE);
         END IF;
         --
         RETURN NULL;
@@ -420,33 +420,33 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         in_value    VARCHAR2        := NULL
     ) AS
     BEGIN
-        IF SYS_CONTEXT(ctx.app_namespace, ctx.app_user_attr) IS NULL THEN
-            RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_CTX_USER_ID', TRUE);
+        IF SYS_CONTEXT(sess.app_namespace, sess.app_user_attr) IS NULL THEN
+            RAISE_APPLICATION_ERROR(tree.app_exception_code, 'SET_CTX_USER_ID', TRUE);
         END IF;
         --
         IF in_name LIKE '%\_\_' ESCAPE '\' OR in_name IS NULL THEN
-            RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_CTX_FORBIDDEN', TRUE);
+            RAISE_APPLICATION_ERROR(tree.app_exception_code, 'SET_CTX_FORBIDDEN', TRUE);
         END IF;
         --
         IF in_value IS NULL THEN
             DBMS_SESSION.CLEAR_CONTEXT (
-                namespace           => ctx.app_namespace,
-                --client_identifier   => ctx.get_client_id(),
+                namespace           => sess.app_namespace,
+                --client_identifier   => sess.get_client_id(),
                 attribute           => UPPER(in_name)
             );
             RETURN;
         END IF;
         --
         DBMS_SESSION.SET_CONTEXT (
-            namespace    => ctx.app_namespace,
+            namespace    => sess.app_namespace,
             attribute    => UPPER(in_name),
             value        => in_value,
-            username     => ctx.get_user_id(),
-            client_id    => ctx.get_client_id()
+            username     => sess.get_user_id(),
+            client_id    => sess.get_client_id()
         );
     EXCEPTION
     WHEN OTHERS THEN
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_CTX_FAILED', TRUE);
+        RAISE_APPLICATION_ERROR(tree.app_exception_code, 'SET_CTX_FAILED', TRUE);
     END;
 
 
@@ -457,19 +457,19 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     ) AS
         str_value   VARCHAR2(30);
     BEGIN
-        IF SYS_CONTEXT(ctx.app_namespace, ctx.app_user_attr) IS NULL THEN
-            RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_CTX_DATE_USER_ID', TRUE);
+        IF SYS_CONTEXT(sess.app_namespace, sess.app_user_attr) IS NULL THEN
+            RAISE_APPLICATION_ERROR(tree.app_exception_code, 'SET_CTX_DATE_USER_ID', TRUE);
         END IF;
         --
-        str_value := TO_CHAR(in_value, ctx.format_date_time);
+        str_value := TO_CHAR(in_value, sess.format_date_time);
         --
-        ctx.set_context (
+        sess.set_context (
             in_name     => in_name,
             in_value    => str_value
         );
     EXCEPTION
     WHEN OTHERS THEN
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SET_CTX_DATE_FAILED', TRUE);
+        RAISE_APPLICATION_ERROR(tree.app_exception_code, 'SET_CTX_DATE_FAILED', TRUE);
     END;
 
 
@@ -487,11 +487,11 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             FOR c IN (
                 SELECT s.attribute
                 FROM session_context s
-                WHERE s.namespace       = ctx.app_namespace
-                    AND s.attribute     != ctx.app_user_attr            -- user_id has dedicated column
+                WHERE s.namespace       = sess.app_namespace
+                    AND s.attribute     != sess.app_user_attr            -- user_id has dedicated column
                     AND s.value         IS NOT NULL
             ) LOOP
-                ctx.set_context (
+                sess.set_context (
                     in_name     => c.attribute
                 );
             END LOOP;
@@ -501,13 +501,13 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
             RETURN;
         END IF;
         --
-        FOR i IN 1 .. REGEXP_COUNT(in_contexts, '[' || ctx.splitter_rows || ']') + 1 LOOP
-            payload_item    := REGEXP_SUBSTR(in_contexts, '[^' || ctx.splitter_rows || ']+', 1, i);
-            payload_name    := RTRIM(SUBSTR(payload_item, 1, INSTR(payload_item, ctx.splitter_values) - 1));
-            payload_value   := SUBSTR(payload_item, INSTR(payload_item, ctx.splitter_values) + 1);
+        FOR i IN 1 .. REGEXP_COUNT(in_contexts, '[' || sess.splitter_rows || ']') + 1 LOOP
+            payload_item    := REGEXP_SUBSTR(in_contexts, '[^' || sess.splitter_rows || ']+', 1, i);
+            payload_name    := RTRIM(SUBSTR(payload_item, 1, INSTR(payload_item, sess.splitter_values) - 1));
+            payload_value   := SUBSTR(payload_item, INSTR(payload_item, sess.splitter_values) + 1);
             --
             IF payload_name IS NOT NULL THEN
-                ctx.set_context (
+                sess.set_context (
                     in_name     => payload_name,
                     in_value    => payload_value
                 );
@@ -529,10 +529,10 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         END IF;
         --
         $IF $$APEX_INSTALLED $THEN
-            FOR i IN 1 .. REGEXP_COUNT(in_items, '[' || ctx.splitter_rows || ']') + 1 LOOP
-                payload_item    := REGEXP_SUBSTR(in_items, '[^' || ctx.splitter_rows || ']+', 1, i);
-                payload_name    := RTRIM(SUBSTR(payload_item, 1, INSTR(payload_item, ctx.splitter_values) - 1));
-                payload_value   := SUBSTR(payload_item, INSTR(payload_item, ctx.splitter_values) + 1);
+            FOR i IN 1 .. REGEXP_COUNT(in_items, '[' || sess.splitter_rows || ']') + 1 LOOP
+                payload_item    := REGEXP_SUBSTR(in_items, '[^' || sess.splitter_rows || ']+', 1, i);
+                payload_name    := RTRIM(SUBSTR(payload_item, 1, INSTR(payload_item, sess.splitter_values) - 1));
+                payload_value   := SUBSTR(payload_item, INSTR(payload_item, sess.splitter_values) + 1);
                 --
                 IF payload_name IS NOT NULL AND payload_value IS NOT NULL THEN
                     APEX_UTIL.SET_SESSION_STATE(payload_name, payload_value);
@@ -549,12 +549,12 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
         out_payload     sessions.contexts%TYPE;
     BEGIN
         SELECT
-            LISTAGG(s.attribute || ctx.splitter_values || s.value, ctx.splitter_rows)
+            LISTAGG(s.attribute || sess.splitter_values || s.value, sess.splitter_rows)
                 WITHIN GROUP (ORDER BY s.attribute)
         INTO out_payload
         FROM session_context s
-        WHERE s.namespace       = ctx.app_namespace
-            AND s.attribute     != ctx.app_user_attr            -- user_id has dedicated column
+        WHERE s.namespace       = sess.app_namespace
+            AND s.attribute     != sess.app_user_attr            -- user_id has dedicated column
             AND s.attribute     NOT LIKE '%\_\_' ESCAPE '\'     -- ignore private contexts
             AND s.value         IS NOT NULL;
         --
@@ -570,11 +570,11 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     BEGIN
         $IF $$APEX_INSTALLED $THEN
             SELECT
-                LISTAGG(t.item_name || ctx.splitter_values || APEX_UTIL.GET_SESSION_STATE(t.item_name), ctx.splitter_rows)
+                LISTAGG(t.item_name || sess.splitter_values || APEX_UTIL.GET_SESSION_STATE(t.item_name), sess.splitter_rows)
                     WITHIN GROUP (ORDER BY s.attribute)
             INTO out_items
             FROM apex_application_items t
-            WHERE t.application_id = ctx.get_app_id();
+            WHERE t.application_id = sess.get_app_id();
         $END    
         --
         RETURN out_items;
@@ -589,12 +589,12 @@ CREATE OR REPLACE PACKAGE BODY ctx AS
     BEGIN
         $IF $$APEX_INSTALLED $THEN
             SELECT
-                LISTAGG(t.item_name || ctx.splitter_values || APEX_UTIL.GET_SESSION_STATE(t.item_name), ctx.splitter_rows)
+                LISTAGG(t.item_name || sess.splitter_values || APEX_UTIL.GET_SESSION_STATE(t.item_name), sess.splitter_rows)
                     WITHIN GROUP (ORDER BY s.attribute)
             INTO out_items
             FROM apex_application_page_items t
-            WHERE t.application_id  = ctx.get_app_id()
-                AND t.page_id       = ctx.get_page_id();
+            WHERE t.application_id  = sess.get_app_id()
+                AND t.page_id       = sess.get_page_id();
         $END    
         --
         RETURN out_items;

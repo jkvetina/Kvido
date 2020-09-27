@@ -1,4 +1,4 @@
-CREATE OR REPLACE PACKAGE BODY bug AS
+CREATE OR REPLACE PACKAGE BODY tree AS
 
     recent_log_id           logs.log_id%TYPE;    -- last log_id in session (any flag)
     recent_error_id         logs.log_id%TYPE;    -- last real log_id in session (with E flag)
@@ -12,10 +12,11 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     map_modules             arr_map_module_to_id;
     map_actions             arr_map_module_to_id;
 
-    -- module_name LIKE to switch flag_module to flag_context
-    trigger_ctx             CONSTANT logs.module_name%TYPE      := 'CTX.%';
+    -- module_name LIKE to switch flag_module to flag_session
+    trigger_sess            CONSTANT logs.module_name%TYPE      := 'SESS.%';
 
-    internal_log_fn         CONSTANT logs.module_name%TYPE      := 'BUG.LOG__';
+    internal_log_fn         CONSTANT logs.module_name%TYPE      := 'TREE.LOG__';
+    internal_update_timer   CONSTANT logs.module_name%TYPE      := 'TREE.UPDATE_TIMER';
 
     -- arrays to specify adhoc requests
     TYPE arr_log_setup      IS VARRAY(100) OF logs_setup%ROWTYPE;
@@ -60,7 +61,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         out_stack := REGEXP_REPLACE(out_stack, '\s+DBMS_SYS_SQL.EXECUTE(.*)', '');
         out_stack := REGEXP_REPLACE(out_stack, '\s+UT(\.|_[A-Z0-9_]*\.)[A-Z0-9_]+ [[]\d+[]]', '');   -- ut/plsql
         --
-        RETURN SUBSTR(out_stack, 1, bug.length_message);
+        RETURN SUBSTR(out_stack, 1, tree.length_message);
     END;
 
 
@@ -86,7 +87,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             END;
         END LOOP;
         --
-        RETURN SUBSTR(out_stack, 1, bug.length_message);
+        RETURN SUBSTR(out_stack, 1, tree.length_message);
     END;
 
 
@@ -154,14 +155,14 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     RETURN logs.arguments%TYPE AS
     BEGIN
         RETURN SUBSTR(RTRIM(
-            in_arg1 || bug.splitter ||
-            in_arg2 || bug.splitter ||
-            in_arg3 || bug.splitter ||
-            in_arg4 || bug.splitter ||
-            in_arg5 || bug.splitter ||
-            in_arg6 || bug.splitter ||
-            in_arg7 || bug.splitter ||
-            in_arg8, bug.splitter), 1, bug.length_arguments);
+            in_arg1 || tree.splitter ||
+            in_arg2 || tree.splitter ||
+            in_arg3 || tree.splitter ||
+            in_arg4 || tree.splitter ||
+            in_arg5 || tree.splitter ||
+            in_arg6 || tree.splitter ||
+            in_arg7 || tree.splitter ||
+            in_arg8, tree.splitter), 1, tree.length_arguments);
     END;
 
 
@@ -190,7 +191,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             END IF;
             --
             RETURN module_name ||
-                CASE WHEN in_attach_line THEN bug.splitter || UTL_CALL_STACK.UNIT_LINE(i) END;
+                CASE WHEN in_attach_line THEN tree.splitter || UTL_CALL_STACK.UNIT_LINE(i) END;
         END LOOP;
         --
         RETURN NULL;
@@ -207,8 +208,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         out_parent_id       OUT logs.log_parent%TYPE
     )
     ACCESSIBLE BY (
-        PACKAGE bug,
-        PACKAGE bug_ut
+        PACKAGE tree,
+        PACKAGE tree_ut
     ) AS
         curr_module     logs.module_name%TYPE;
         curr_index      logs.module_name%TYPE;
@@ -238,9 +239,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 NULL;
             END;
 
-            -- map CTX called thru schedulers
+            -- map SESS called thru schedulers
             IF UTL_CALL_STACK.DYNAMIC_DEPTH >= i + 1 AND in_parent_id IS NULL THEN
-                IF (out_module_name LIKE trigger_ctx AND next_module = internal_log_fn) THEN
+                IF (out_module_name LIKE trigger_sess AND next_module = internal_log_fn) THEN
                     out_module_line := 0;
                     out_parent_id   := NVL(recent_log_id, in_log_id);
                     --
@@ -249,18 +250,18 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             END IF;
 
             -- create child
-            IF in_flag IN (bug.flag_action) THEN
+            IF in_flag IN (tree.flag_action) THEN
                 map_actions(curr_index) := in_log_id;
                 --
-            ELSIF in_flag IN (bug.flag_module, bug.flag_scheduler) THEN
+            ELSIF in_flag IN (tree.flag_module, tree.flag_scheduler) THEN
                 map_modules(curr_index) := in_log_id;
                 
                 -- find previous module (on another depth)
                 parent_index := (UTL_CALL_STACK.DYNAMIC_DEPTH - i - 1) || '|' || next_module;
             END IF;
 
-            -- fix bug.update_timer, it must updates M flags and not A flags
-            IF in_log_id IS NULL AND prev_module = 'BUG.UPDATE_TIMER' THEN
+            -- fix tree.update_timer, it must updates M flags and not A flags
+            IF in_log_id IS NULL AND prev_module = tree.internal_update_timer THEN
                 -- recover log_id only from map_modules
                 IF out_parent_id IS NULL AND map_modules.EXISTS(parent_index) THEN
                     out_parent_id := NULLIF(map_modules(parent_index), in_log_id);
@@ -314,10 +315,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     )
     RETURN logs.log_id%TYPE AS
     BEGIN
-        RETURN bug.log__ (
-            in_action_name  => bug.empty_action,
-            in_flag         => bug.flag_module,
-            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+        RETURN tree.log__ (
+            in_action_name  => tree.empty_action,
+            in_flag         => tree.flag_module,
+            in_arguments    => tree.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -335,10 +336,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         out_log_id      logs.log_id%TYPE;
     BEGIN
-        out_log_id := bug.log__ (
-            in_action_name  => bug.empty_action,
-            in_flag         => bug.flag_module,
-            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+        out_log_id := tree.log__ (
+            in_action_name  => tree.empty_action,
+            in_flag         => tree.flag_module,
+            in_arguments    => tree.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -357,10 +358,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     )
     RETURN logs.log_id%TYPE AS
     BEGIN
-        RETURN bug.log__ (
+        RETURN tree.log__ (
             in_action_name  => in_action,
-            in_flag         => bug.flag_action,
-            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+            in_flag         => tree.flag_action,
+            in_arguments    => tree.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -379,10 +380,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         out_log_id      logs.log_id%TYPE;
     BEGIN
-        out_log_id := bug.log__ (
+        out_log_id := tree.log__ (
             in_action_name  => in_action,
-            in_flag         => bug.flag_action,
-            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+            in_flag         => tree.flag_action,
+            in_arguments    => tree.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -400,10 +401,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     )
     RETURN logs.log_id%TYPE AS
     BEGIN
-        RETURN bug.log__ (
-            in_action_name  => bug.empty_action,
-            in_flag         => bug.flag_debug,
-            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+        RETURN tree.log__ (
+            in_action_name  => tree.empty_action,
+            in_flag         => tree.flag_debug,
+            in_arguments    => tree.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -421,10 +422,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         out_log_id      logs.log_id%TYPE;
     BEGIN
-        out_log_id := bug.log__ (
-            in_action_name  => bug.empty_action,
-            in_flag         => bug.flag_debug,
-            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+        out_log_id := tree.log__ (
+            in_action_name  => tree.empty_action,
+            in_flag         => tree.flag_debug,
+            in_arguments    => tree.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -442,10 +443,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     )
     RETURN logs.log_id%TYPE AS
     BEGIN
-        RETURN bug.log__ (
-            in_action_name  => bug.empty_action,
-            in_flag         => bug.flag_result,
-            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+        RETURN tree.log__ (
+            in_action_name  => tree.empty_action,
+            in_flag         => tree.flag_result,
+            in_arguments    => tree.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -463,10 +464,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         out_log_id      logs.log_id%TYPE;
     BEGIN
-        out_log_id := bug.log__ (
-            in_action_name  => bug.empty_action,
-            in_flag         => bug.flag_result,
-            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+        out_log_id := tree.log__ (
+            in_action_name  => tree.empty_action,
+            in_flag         => tree.flag_result,
+            in_arguments    => tree.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -485,10 +486,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     )
     RETURN logs.log_id%TYPE AS
     BEGIN
-        RETURN bug.log__ (
+        RETURN tree.log__ (
             in_action_name  => in_action,
-            in_flag         => bug.flag_warning,
-            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+            in_flag         => tree.flag_warning,
+            in_arguments    => tree.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -507,10 +508,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         out_log_id      logs.log_id%TYPE;
     BEGIN
-        out_log_id := bug.log__ (
+        out_log_id := tree.log__ (
             in_action_name  => in_action,
-            in_flag         => bug.flag_warning,
-            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+            in_flag         => tree.flag_warning,
+            in_arguments    => tree.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -529,10 +530,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     )
     RETURN logs.log_id%TYPE AS
     BEGIN
-        RETURN bug.log__ (
+        RETURN tree.log__ (
             in_action_name  => in_action,
-            in_flag         => bug.flag_error,
-            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+            in_flag         => tree.flag_error,
+            in_arguments    => tree.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -551,10 +552,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         out_log_id      logs.log_id%TYPE;
     BEGIN
-        out_log_id := bug.log__ (
+        out_log_id := tree.log__ (
             in_action_name  => in_action,
-            in_flag         => bug.flag_error,
-            in_arguments    => bug.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+            in_flag         => tree.flag_error,
+            in_arguments    => tree.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
         );
     END;
 
@@ -574,8 +575,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         log_id          logs.log_id%TYPE;
         action_name     logs.action_name%TYPE;
     BEGIN
-        action_name     := COALESCE(in_action, bug.get_caller_name(), 'UNEXPECTED_ERROR');
-        log_id          := bug.log_error (
+        action_name     := COALESCE(in_action, tree.get_caller_name(), 'UNEXPECTED_ERROR');
+        log_id          := tree.log_error (
             in_action   => action_name,
             in_arg1     => in_arg1,
             in_arg2     => in_arg2,
@@ -587,11 +588,11 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             in_arg8     => in_arg8
         );
         --
-        --RAISE bug.app_exception;
+        --RAISE tree.app_exception;
         -- we could raise this^, but without custom message
         -- so we append same code but with message to current err_stack
         -- and we can intercept this code in calls above
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, action_name || bug.splitter || log_id, TRUE);
+        RAISE_APPLICATION_ERROR(tree.app_exception_code, action_name || tree.splitter || log_id, TRUE);
     END;
 
 
@@ -605,20 +606,20 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     BEGIN
         FOR c IN (
             SELECT
-                x.namespace || bug.splitter_package ||
-                x.attribute || bug.splitter_values || x.value AS key_value_pair
+                x.namespace || tree.splitter_package ||
+                x.attribute || tree.splitter_values || x.value AS key_value_pair
             FROM session_context x
             WHERE x.namespace   LIKE in_namespace
                 AND x.attribute LIKE in_filter
             ORDER BY x.namespace, x.attribute
         ) LOOP
-            payload := payload || c.key_value_pair || bug.splitter_rows;
+            payload := payload || c.key_value_pair || tree.splitter_rows;
         END LOOP;
         --
-        out_log_id := bug.log__ (
+        out_log_id := tree.log__ (
             in_action_name  => 'LOG_CONTEXT',
-            in_flag         => bug.flag_info,
-            in_arguments    => bug.get_arguments(in_namespace, in_filter),
+            in_flag         => tree.flag_info,
+            in_arguments    => tree.get_arguments(in_namespace, in_filter),
             in_message      => payload
         );
     END;
@@ -632,18 +633,18 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         payload             VARCHAR2(32767);
     BEGIN
         FOR c IN (
-            SELECT n.parameter || bug.splitter_values || n.value AS key_value_pair
+            SELECT n.parameter || tree.splitter_values || n.value AS key_value_pair
             FROM nls_session_parameters n
             WHERE n.parameter LIKE in_filter
             ORDER BY n.parameter
         ) LOOP
-            payload := payload || c.key_value_pair || bug.splitter_rows;
+            payload := payload || c.key_value_pair || tree.splitter_rows;
         END LOOP;
         --
-        out_log_id := bug.log__ (
+        out_log_id := tree.log__ (
             in_action_name  => 'LOG_NLS',
-            in_flag         => bug.flag_info,
-            in_arguments    => bug.get_arguments(in_filter),
+            in_flag         => tree.flag_info,
+            in_arguments    => tree.get_arguments(in_filter),
             in_message      => payload
         );
     END;
@@ -674,7 +675,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                     'BG_JOB_ID,FG_JOB_ID' AS attributes
                 FROM DUAL
             )
-            SELECT c.name || bug.splitter_values || c.value AS key_value_pair
+            SELECT c.name || tree.splitter_values || c.value AS key_value_pair
             FROM (
                 SELECT
                     REGEXP_SUBSTR(t.attributes, '[^,]+', 1, LEVEL)                            AS name,
@@ -685,13 +686,13 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             WHERE c.name LIKE in_filter
             ORDER BY c.name
         ) LOOP
-            payload := payload || c.key_value_pair || bug.splitter_rows;
+            payload := payload || c.key_value_pair || tree.splitter_rows;
         END LOOP;
         --
-        out_log_id := bug.log__ (
+        out_log_id := tree.log__ (
             in_action_name  => 'LOG_USERENV',
-            in_flag         => bug.flag_info,
-            in_arguments    => bug.get_arguments(in_filter),
+            in_flag         => tree.flag_info,
+            in_arguments    => tree.get_arguments(in_filter),
             in_message      => payload
         );
     END;
@@ -725,17 +726,17 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             ORDER BY c.name
         ) LOOP
             BEGIN
-                payload := payload || c.name || bug.splitter_values || OWA_UTIL.GET_CGI_ENV(c.name) || bug.splitter_rows;
+                payload := payload || c.name || tree.splitter_values || OWA_UTIL.GET_CGI_ENV(c.name) || tree.splitter_rows;
             EXCEPTION
             WHEN VALUE_ERROR THEN
                 NULL;
             END;
         END LOOP;
         --
-        out_log_id := bug.log__ (
+        out_log_id := tree.log__ (
             in_action_name  => 'LOG_CGI',
-            in_flag         => bug.flag_info,
-            in_arguments    => bug.get_arguments(in_filter),
+            in_flag         => tree.flag_info,
+            in_arguments    => tree.get_arguments(in_filter),
             in_message      => payload
         );
     END;
@@ -760,13 +761,13 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                     AND i.item_name     LIKE in_filter
                 ORDER BY i.item_name
             ) LOOP
-                payload := payload || c.name || bug.splitter_values || c.value || bug.splitter_rows;
+                payload := payload || c.name || tree.splitter_values || c.value || tree.splitter_rows;
             END LOOP;
             --
-            out_log_id := bug.log__ (
+            out_log_id := tree.log__ (
                 in_action_name  => 'LOG_APEX_ITEMS',
-                in_flag         => bug.flag_info,
-                in_arguments    => bug.get_arguments(in_page_id, in_filter),
+                in_flag         => tree.flag_info,
+                in_arguments    => tree.get_arguments(in_page_id, in_filter),
                 in_message      => payload
             );
         $ELSE
@@ -792,13 +793,13 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                     AND i.item_name     LIKE in_filter
                 ORDER BY i.item_name
             ) LOOP
-                payload := payload || c.name || bug.splitter_values || c.value || bug.splitter_rows;
+                payload := payload || c.name || tree.splitter_values || c.value || tree.splitter_rows;
             END LOOP;
             --
-            out_log_id := bug.log__ (
+            out_log_id := tree.log__ (
                 in_action_name  => 'LOG_APEX_GLOBALS',
-                in_flag         => bug.flag_info,
-                in_arguments    => bug.get_arguments(in_filter),
+                in_flag         => tree.flag_info,
+                in_arguments    => tree.get_arguments(in_filter),
                 in_message      => payload
             );
         $ELSE
@@ -813,9 +814,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     )
     RETURN logs.log_id%TYPE AS
     BEGIN
-        RETURN bug.log__ (
+        RETURN tree.log__ (
             in_action_name  => 'LOG_SCHEDULER',
-            in_flag         => bug.flag_scheduler,
+            in_flag         => tree.flag_scheduler,
             in_arguments    => in_log_id,
             in_parent_id    => in_log_id
         );
@@ -828,9 +829,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         out_log_id          logs.log_id%TYPE;
     BEGIN
-        out_log_id := bug.log__ (
+        out_log_id := tree.log__ (
             in_action_name  => 'LOG_SCHEDULER',
-            in_flag         => bug.flag_scheduler,
+            in_flag         => tree.flag_scheduler,
             in_arguments    => in_log_id,
             in_parent_id    => in_log_id
         );
@@ -848,26 +849,26 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         --
         log_id          logs.log_id%TYPE;
     BEGIN
-        log_id := bug.log__ (
+        log_id := tree.log__ (
             in_action_name  => 'START_SCHEDULER',
-            in_flag         => bug.flag_module,
-            in_arguments    => bug.get_arguments(in_job_name, in_comments, in_priority),
+            in_flag         => tree.flag_module,
+            in_arguments    => tree.get_arguments(in_job_name, in_comments, in_priority),
             in_message      => in_statement,
-            in_parent_id    => bug.recent_log_id
+            in_parent_id    => tree.recent_log_id
         );
         --
-        ctx.update_session(log_id);                 -- store current contexts and user_id for job
+        sess.update_session(log_id);                 -- store current contexts and user_id for job
         --
         DBMS_SCHEDULER.CREATE_JOB (
             in_job_name,
             job_type        => 'PLSQL_BLOCK',
             job_action      => 'BEGIN' || CHR(10) ||
-                               '    bug.log_scheduler(' || log_id || ');' || CHR(10) ||
+                               '    tree.log_scheduler(' || log_id || ');' || CHR(10) ||
                                '    ' || in_statement || CHR(10) ||
-                               '    bug.update_timer();' || CHR(10) ||
+                               '    tree.update_timer();' || CHR(10) ||
                                'EXCEPTION' || CHR(10) ||
                                'WHEN OTHERS THEN' || CHR(10) ||
-                               '    bug.raise_error();' || CHR(10) ||
+                               '    tree.raise_error();' || CHR(10) ||
                                'END;',
             start_date      => SYSDATE,
             enabled         => FALSE,
@@ -882,11 +883,11 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         DBMS_SCHEDULER.ENABLE(in_job_name);
         COMMIT;
         --
-        bug.update_timer(log_id);
+        tree.update_timer(log_id);
     EXCEPTION
     WHEN OTHERS THEN
         ROLLBACK;
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'START_SCHEDULER_FAILED');
+        RAISE_APPLICATION_ERROR(tree.app_exception_code, 'START_SCHEDULER_FAILED');
     END;
 
 
@@ -899,7 +900,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         slno                BINARY_INTEGER;
         rec                 logs%ROWTYPE;
     BEGIN
-        bug.get_caller__ (
+        tree.get_caller__ (
             out_module_name     => rec.module_name,
             out_module_line     => rec.module_line,
             out_parent_id       => rec.log_parent
@@ -915,7 +916,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             rec.message         := DBMS_APPLICATION_INFO.SET_SESSION_LONGOPS_NOHINT;    -- rindex
             rec.log_parent      := rec.log_id;  -- create fresh child
             rec.log_id          := log_id.NEXTVAL;
-            rec.flag            := bug.flag_longops;
+            rec.flag            := tree.flag_longops;
             --
             INSERT INTO logs
             VALUES rec;
@@ -923,7 +924,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             SELECT e.* INTO rec
             FROM logs e
             WHERE e.log_parent  = rec.log_parent
-                AND e.flag      = bug.flag_longops;
+                AND e.flag      = tree.flag_longops;
         END IF;
 
         -- update progress for system views
@@ -972,8 +973,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     )
     RETURN logs.log_id%TYPE
     ACCESSIBLE BY (
-        PACKAGE bug,
-        PACKAGE bug_ut
+        PACKAGE tree,
+        PACKAGE tree_ut
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
@@ -987,7 +988,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         -- get caller info and parent id
         rec.log_id := log_id.NEXTVAL;
         --
-        bug.get_caller__ (
+        tree.get_caller__ (
             in_log_id           => rec.log_id,
             in_parent_id        => in_parent_id,
             in_flag             => in_flag,
@@ -997,7 +998,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         );
 
         -- recover contexts for scheduler
-        IF in_flag = bug.flag_scheduler AND in_parent_id IS NOT NULL THEN
+        IF in_flag = tree.flag_scheduler AND in_parent_id IS NOT NULL THEN
             BEGIN
                 SELECT e.user_id, s.contexts
                 INTO rec.user_id, new_contexts
@@ -1007,34 +1008,34 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 WHERE e.log_id      = in_parent_id;
             EXCEPTION
             WHEN NO_DATA_FOUND THEN
-                RAISE_APPLICATION_ERROR(bug.app_exception_code, 'SCHEDULER_ROOT_MISSING ' || in_parent_id, TRUE);
+                RAISE_APPLICATION_ERROR(tree.app_exception_code, 'SCHEDULER_ROOT_MISSING ' || in_parent_id, TRUE);
             END;
 
             -- recover app context values from log and set user
-            recent_log_id := rec.log_id;  -- to link CTX calls to proper branch
-            ctx.set_user_id (
+            recent_log_id := rec.log_id;  -- to link SESS calls to proper branch
+            sess.set_session (
                 in_user_id      => rec.user_id,
                 in_contexts     => new_contexts
             );
         END IF;
 
         -- get user and update session info
-        rec.user_id         := NVL(rec.user_id, ctx.get_user_id());
+        rec.user_id         := NVL(rec.user_id, sess.get_user_id());
         rec.flag            := NVL(in_flag, '?');
         rec.module_line     := NVL(rec.module_line, 0);
         --
-        bug.set_session (
+        tree.set_session (
             in_module_name  => rec.module_name,
-            in_action_name  => NVL(in_action_name, rec.module_name || bug.splitter || rec.module_line)
+            in_action_name  => NVL(in_action_name, rec.module_name || tree.splitter || rec.module_line)
         );
 
-        -- override flag for CTX package calls
-        IF rec.module_name LIKE trigger_ctx AND rec.flag = bug.flag_module THEN
-            rec.flag := bug.flag_context;
+        -- override flag for SESS package calls
+        IF rec.module_name LIKE trigger_sess AND rec.flag = tree.flag_module THEN
+            rec.flag := tree.flag_session;
         END IF;
 
         -- force log errors
-        IF SQLCODE != 0 OR rec.flag IN (bug.flag_error, bug.flag_warning) THEN
+        IF SQLCODE != 0 OR rec.flag IN (tree.flag_error, tree.flag_warning) THEN
             whitelisted := TRUE;
         END IF;
 
@@ -1073,29 +1074,29 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END IF;
 
         -- prepare record
-        rec.app_id          := NVL(ctx.get_app_id(),    0);  -- default to zero to match sessions table
-        rec.page_id         := NVL(ctx.get_page_id(),   0);
-        rec.action_name     := SUBSTR(COALESCE(rec.action_name, in_action_name, bug.empty_action), 1, bug.length_action);
-        rec.arguments       := SUBSTR(in_arguments, 1, bug.length_arguments);
-        rec.message         := SUBSTR(in_message,   1, bug.length_message);  -- may be overwritten later
-        rec.session_id      := ctx.get_session_id();
+        rec.app_id          := NVL(sess.get_app_id(),    0);  -- default to zero to match sessions table
+        rec.page_id         := NVL(sess.get_page_id(),   0);
+        rec.action_name     := SUBSTR(COALESCE(rec.action_name, in_action_name, tree.empty_action), 1, tree.length_action);
+        rec.arguments       := SUBSTR(in_arguments, 1, tree.length_arguments);
+        rec.message         := SUBSTR(in_message,   1, tree.length_message);  -- may be overwritten later
+        rec.session_id      := sess.get_session_id();
         rec.created_at      := LOCALTIMESTAMP;
 
-        -- fill missing session_id
-        IF rec.session_id IS NULL THEN
-            ctx.update_session();
-            rec.session_id  := ctx.get_session_id();
-        END IF;
+        -- fill missing session_id --> this also screws SESS.set_session
+        --IF rec.session_id IS NULL THEN
+        --    sess.update_session();
+        --    rec.session_id  := sess.get_session_id();
+        --END IF;
 
         -- add call stack
-        IF SQLCODE != 0 OR INSTR(bug.track_callstack, rec.flag) > 0 OR bug.track_callstack = '%' OR in_parent_id IS NOT NULL THEN
-            rec.message := SUBSTR(rec.message || bug.get_call_stack(), 1, bug.length_message);
+        IF SQLCODE != 0 OR INSTR(tree.track_callstack, rec.flag) > 0 OR tree.track_callstack = '%' OR in_parent_id IS NOT NULL THEN
+            rec.message := SUBSTR(rec.message || tree.get_call_stack(), 1, tree.length_message);
         END IF;
 
         -- add error stack if available
         IF SQLCODE != 0 THEN
-            rec.action_name := NVL(NULLIF(rec.action_name, bug.empty_action), 'UNKNOWN_ERROR');
-            rec.message     := SUBSTR(rec.message || bug.get_error_stack(), 1, bug.length_message);
+            rec.action_name := NVL(NULLIF(rec.action_name, tree.empty_action), 'UNKNOWN_ERROR');
+            rec.message     := SUBSTR(rec.message || tree.get_error_stack(), 1, tree.length_message);
         END IF;
 
         -- finally store record in table
@@ -1103,7 +1104,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         COMMIT;
         --
         recent_log_id := rec.log_id;
-        IF SQLCODE != 0 OR rec.flag = bug.flag_error THEN
+        IF SQLCODE != 0 OR rec.flag = tree.flag_error THEN
             recent_error_id := rec.log_id;  -- save last error for easy access
         END IF;
 
@@ -1112,14 +1113,14 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             DBMS_OUTPUT.PUT_LINE(
                 rec.log_id || ' ^' || NVL(rec.log_parent, 0) || ' [' || rec.flag || ']: ' ||
                 --RPAD(' ', (rec.module_depth - 1) * 2, ' ') ||
-                rec.module_name || ' [' || rec.module_line || '] ' || NULLIF(rec.action_name, bug.empty_action) ||
+                rec.module_name || ' [' || rec.module_line || '] ' || NULLIF(rec.action_name, tree.empty_action) ||
                 RTRIM(': ' || SUBSTR(in_arguments, 1, 40), ': ')
             );
         $END
 
         $IF $$PROFILER_INSTALLED $THEN
-            IF rec.flag != bug.flag_profiler AND rows_profiler.COUNT > 0 AND curr_profiler_id IS NULL THEN
-                bug.start_profilers(rec);
+            IF rec.flag != tree.flag_profiler AND rows_profiler.COUNT > 0 AND curr_profiler_id IS NULL THEN
+                tree.start_profilers(rec);
             END IF;
         $END
         --
@@ -1133,7 +1134,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         DBMS_OUTPUT.PUT_LINE('-- ^');
         --
         COMMIT;
-        RAISE_APPLICATION_ERROR(bug.app_exception_code, 'LOG_FAILED', TRUE);
+        RAISE_APPLICATION_ERROR(tree.app_exception_code, 'LOG_FAILED', TRUE);
     END;
 
 
@@ -1145,7 +1146,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         rec                 logs_lobs%ROWTYPE;
     BEGIN
-        bug.log_module(in_log_id, in_lob_name);
+        tree.log_module(in_log_id, in_lob_name);
         --
         rec.log_id          := log_id.NEXTVAL;
         rec.log_parent      := NVL(in_log_id, recent_log_id);
@@ -1165,7 +1166,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         rec                 logs_lobs%ROWTYPE;
     BEGIN
-        bug.log_module(in_log_id, in_lob_name);
+        tree.log_module(in_log_id, in_lob_name);
         --
         rec.log_id          := log_id.NEXTVAL;
         rec.log_parent      := NVL(in_log_id, recent_log_id);
@@ -1185,7 +1186,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     ) AS
         rec                 logs_lobs%ROWTYPE;
     BEGIN
-        bug.log_module(in_log_id, in_lob_name);
+        tree.log_module(in_log_id, in_lob_name);
         --
         rec.log_id          := log_id.NEXTVAL;
         rec.log_parent      := NVL(in_log_id, recent_log_id);
@@ -1204,7 +1205,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         out_log_id          logs.log_id%TYPE;
     BEGIN
         -- avoid infinite loop
-        IF (rec.flag = bug.flag_profiler OR rows_profiler.COUNT = 0 OR curr_profiler_id IS NOT NULL) THEN
+        IF (rec.flag = tree.flag_profiler OR rows_profiler.COUNT = 0 OR curr_profiler_id IS NOT NULL) THEN
+            DBMS_OUTPUT.PUT_LINE('  > EXIT_PROFILER');
             RETURN;
         END IF;
         --
@@ -1221,8 +1223,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                     $END
                     --
                     out_log_id := bug.log__ (                   -- be aware that this may cause infinite loop
+                    out_log_id := tree.log__ (                   -- be aware that this may cause infinite loop
                         in_action_name  => 'START_PROFILER',    -- used in logs_profiler view
-                        in_flag         => bug.flag_profiler,
+                        in_flag         => tree.flag_profiler,
                         in_arguments    => curr_profiler_id,
                         in_parent_id    => rec.log_id
                     );
@@ -1270,7 +1273,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         rec                 logs%ROWTYPE;
     BEGIN
         IF in_log_id IS NULL THEN
-            bug.get_caller__ (
+            tree.get_caller__ (
                 in_parent_id        => in_log_id,
                 out_module_name     => rec.module_name,
                 out_module_line     => rec.module_line,
@@ -1280,8 +1283,8 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
         -- when updating timer for same module which initiated start_profilers
         $IF $$PROFILER_INSTALLED $THEN
-            IF rec.flag != bug.flag_profiler AND rows_profiler.COUNT > 0 AND curr_profiler_id IS NOT NULL THEN
-                bug.stop_profilers(NVL(in_log_id, rec.log_parent));
+            IF rec.flag != tree.flag_profiler AND rows_profiler.COUNT > 0 AND curr_profiler_id IS NOT NULL THEN
+                tree.stop_profilers(NVL(in_log_id, rec.log_parent));
             END IF;
         $END
 
@@ -1318,7 +1321,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
     BEGIN
         -- prepare cursor for XML conversion and extraction
         OPEN in_cursor FOR
-            'SELECT * FROM ' || bug.dml_tables_owner || '.' || in_table_name || bug.dml_tables_postfix ||
+            'SELECT * FROM ' || tree.dml_tables_owner || '.' || in_table_name || tree.dml_tables_postfix ||
             ' WHERE ora_err_tag$ = ' || in_log_id;
 
         -- build query the way you can run it again manually or run just inner select to view passed values
@@ -1412,9 +1415,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         payload             logs_lobs.payload_clob%TYPE;
         error_id            logs_lobs.log_id%TYPE;
     BEGIN
-        bug.log_module(in_log_id, in_error_table, in_table_name, in_table_rowid, in_action);
+        tree.log_module(in_log_id, in_error_table, in_table_name, in_table_rowid, in_action);
         --
-        payload := bug.get_dml_query (
+        payload := tree.get_dml_query (
             in_log_id       => in_log_id,
             in_table_name   => in_table_name,
             in_table_rowid  => in_table_rowid,
@@ -1425,9 +1428,9 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         FROM logs e
         WHERE e.created_at      >= TRUNC(SYSDATE)
             AND e.log_parent    = in_log_id
-            AND e.flag          = bug.flag_error;
+            AND e.flag          = tree.flag_error;
         --
-        bug.attach_clob (
+        tree.attach_clob (
             in_payload      => payload,
             in_lob_name     => 'DML_ERROR',
             in_log_id       => NVL(error_id, in_log_id)
@@ -1446,22 +1449,22 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         in_table_like       logs.module_name%TYPE
     ) AS
     BEGIN
-        bug.log_module(in_table_like);
+        tree.log_module(in_table_like);
         --
         FOR c IN (
             SELECT t.owner, t.table_name
             FROM all_tables t
-            WHERE t.owner           = bug.dml_tables_owner
-                AND t.table_name    LIKE UPPER(in_table_like) || bug.dml_tables_postfix
+            WHERE t.owner           = tree.dml_tables_owner
+                AND t.table_name    LIKE UPPER(in_table_like) || tree.dml_tables_postfix
         ) LOOP
-            bug.log_debug(c.table_name, c.owner);
+            tree.log_debug(c.table_name, c.owner);
             --
             EXECUTE IMMEDIATE
                 'DROP TABLE ' || c.owner || '.' || c.table_name || ' PURGE';
         END LOOP;
 
         -- refresh view
-        bug.create_dml_errors_view();
+        tree.create_dml_errors_view();
     END;
 
 
@@ -1470,39 +1473,39 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         in_table_like       logs.module_name%TYPE
     ) AS
     BEGIN
-        bug.log_module(in_table_like);
+        tree.log_module(in_table_like);
         -- process existing data first
-        bug_process_dml_errors(in_table_like);  -- it calls bug.process_dml_error
+        process_dml_errors(in_table_like);  -- it calls tree.process_dml_error
 
         -- drop existing tables
-        bug.drop_dml_tables(in_table_like);
+        tree.drop_dml_tables(in_table_like);
 
         -- create DML log tables for all tables
         FOR c IN (
             SELECT
                 t.table_name                            AS data_table,
-                t.table_name || bug.dml_tables_postfix  AS error_table
+                t.table_name || tree.dml_tables_postfix  AS error_table
             FROM user_tables t
             WHERE t.table_name LIKE UPPER(in_table_like)
         ) LOOP
-            bug.log_debug(c.data_table, c.error_table);
+            tree.log_debug(c.data_table, c.error_table);
             --
             DBMS_ERRLOG.CREATE_ERROR_LOG (
                 dml_table_name          => USER || '.' || c.data_table,
-                err_log_table_owner     => bug.dml_tables_owner,
+                err_log_table_owner     => tree.dml_tables_owner,
                 err_log_table_name      => c.error_table,
                 skip_unsupported        => TRUE
             );
             --
-            IF bug.dml_tables_owner != USER THEN
+            IF tree.dml_tables_owner != USER THEN
                 EXECUTE IMMEDIATE
-                    'GRANT ALL ON ' || bug.dml_tables_owner || '.' || c.error_table ||
+                    'GRANT ALL ON ' || tree.dml_tables_owner || '.' || c.error_table ||
                     ' TO ' || USER;
             END IF;
         END LOOP;
 
         -- refresh view
-        bug.create_dml_errors_view();
+        tree.create_dml_errors_view();
     END;
 
 
@@ -1519,7 +1522,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         FOR c IN (
             SELECT table_name, column_name, comments
             FROM user_col_comments
-            WHERE table_name = bug.view_dml_errors
+            WHERE table_name = tree.view_dml_errors
         ) LOOP
             comments(comments.count) :=
                 'COMMENT ON COLUMN ' || c.table_name || '.' || c.column_name ||
@@ -1528,7 +1531,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
 
         -- create header with correct data types
         q_block :=
-            'CREATE OR REPLACE VIEW ' || bug.view_dml_errors || ' (' ||
+            'CREATE OR REPLACE VIEW ' || tree.view_dml_errors || ' (' ||
             '    log_id, action, table_name, table_rowid, dml_rowid, err_message' || CHR(10) ||
             ') AS' || CHR(10) ||
             'SELECT 0, ''-'', ''-'', ''UROWID'', ROWID, ''-''' || CHR(10) ||
@@ -1544,10 +1547,10 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         -- append all existing tables
         FOR c IN (
             SELECT
-                RTRIM(t.table_name, bug.dml_tables_postfix) AS data_table,
+                RTRIM(t.table_name, tree.dml_tables_postfix) AS data_table,
                 t.owner || '.' || t.table_name              AS error_table
             FROM all_tables t
-            WHERE t.owner           = bug.dml_tables_owner
+            WHERE t.owner           = tree.dml_tables_owner
                 AND t.table_name    LIKE '%' || dml_tables_postfix
             ORDER BY 1
         ) LOOP
@@ -1573,7 +1576,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         END LOOP;
     EXCEPTION
     WHEN OTHERS THEN
-        bug.raise_error();
+        tree.raise_error();
     END;
 
 
@@ -1585,14 +1588,14 @@ CREATE OR REPLACE PACKAGE BODY bug AS
         count_before    PLS_INTEGER;
         count_after     PLS_INTEGER;
     BEGIN
-        bug.log_module(in_age);
+        tree.log_module(in_age);
 
         -- purge all
         IF in_age < 0 THEN
             EXECUTE IMMEDIATE 'ALTER TABLE logs_lobs DISABLE CONSTRAINT fk_logs_lobs_logs';
             EXECUTE IMMEDIATE 'TRUNCATE TABLE sessions';
             EXECUTE IMMEDIATE 'TRUNCATE TABLE logs_lobs';
-            EXECUTE IMMEDIATE 'TRUNCATE TABLE ' || bug.table_name || ' CASCADE';
+            EXECUTE IMMEDIATE 'TRUNCATE TABLE ' || tree.table_name || ' CASCADE';
             EXECUTE IMMEDIATE 'ALTER TABLE logs_lobs ENABLE CONSTRAINT fk_logs_lobs_logs';
         END IF;
 
@@ -1607,22 +1610,22 @@ CREATE OR REPLACE PACKAGE BODY bug AS
             FROM logs e
             JOIN logs_lobs l
                 ON l.log_parent = e.log_id
-            WHERE e.created_at < TRUNC(SYSDATE) - NVL(in_age, bug.table_rows_max_age)
+            WHERE e.created_at < TRUNC(SYSDATE) - NVL(in_age, tree.table_rows_max_age)
         );
         --
         DELETE FROM logs e
-        WHERE e.created_at < TRUNC(SYSDATE) - NVL(in_age, bug.table_rows_max_age);
+        WHERE e.created_at < TRUNC(SYSDATE) - NVL(in_age, tree.table_rows_max_age);
 
         -- purge whole partitions
         FOR c IN (
             SELECT table_name, partition_name, high_value, partition_position
             FROM user_tab_partitions p
-            WHERE p.table_name = bug.table_name
+            WHERE p.table_name = tree.table_name
                 AND p.partition_position > 1
                 AND p.partition_position < (
-                    SELECT MAX(partition_position) - NVL(in_age, bug.table_rows_max_age)
+                    SELECT MAX(partition_position) - NVL(in_age, tree.table_rows_max_age)
                     FROM user_tab_partitions
-                    WHERE table_name = bug.table_name
+                    WHERE table_name = tree.table_name
                 )
         ) LOOP
             partition_date := SUBSTR(REPLACE(SUBSTR(c.high_value, 1, 100), 'TIMESTAMP'' '), 1, 10);
@@ -1639,7 +1642,7 @@ CREATE OR REPLACE PACKAGE BODY bug AS
                 'SELECT COUNT(*) FROM ' || c.table_name INTO count_after;
             --
             IF in_age >= 0 THEN
-                bug.log_result(c.partition_name, partition_date, count_before - count_after);
+                tree.log_result(c.partition_name, partition_date, count_before - count_after);
             END IF;
         END LOOP;
 
@@ -1660,14 +1663,14 @@ BEGIN
     SELECT t.*
     BULK COLLECT INTO rows_whitelist
     FROM logs_setup t
-    WHERE (t.app_id     = ctx.get_app_id() OR t.app_id IS NULL)
+    WHERE (t.app_id     = sess.get_app_id() OR t.app_id IS NULL)
         AND t.track     = 'Y'
         AND ROWNUM      <= rows_limit;
     --
     SELECT t.*
     BULK COLLECT INTO rows_blacklist
     FROM logs_setup t
-    WHERE (t.app_id     = ctx.get_app_id() OR t.app_id IS NULL)
+    WHERE (t.app_id     = sess.get_app_id() OR t.app_id IS NULL)
         AND t.track     = 'N'
         AND ROWNUM      <= rows_limit;
 
@@ -1675,7 +1678,7 @@ BEGIN
     SELECT t.*
     BULK COLLECT INTO rows_profiler
     FROM logs_setup t
-    WHERE (t.app_id     = ctx.get_app_id() OR t.app_id IS NULL)
+    WHERE (t.app_id     = sess.get_app_id() OR t.app_id IS NULL)
         AND t.track     = 'Y'
         AND t.profiler  = 'Y'
         AND ROWNUM      <= rows_limit;

@@ -1,5 +1,5 @@
 DECLARE
-    in_job_name CONSTANT VARCHAR2(30) := 'BUG_PROCESS_DML';
+    in_job_name CONSTANT VARCHAR2(30) := 'PROCESS_DML_ERRORS_';
 BEGIN
     BEGIN
         DBMS_SCHEDULER.DROP_JOB(in_job_name, TRUE);  -- force
@@ -11,7 +11,7 @@ BEGIN
     DBMS_SCHEDULER.CREATE_JOB (
         job_name            => in_job_name,
         job_type            => 'STORED_PROCEDURE',
-        job_action          => 'bug_process_dml_errors',    -- procedure, not package
+        job_action          => 'process_dml_errors',    -- procedure, not package
         start_date          => SYSDATE,
         repeat_interval     => 'FREQ=MINUTELY;INTERVAL=5;',
         enabled             => FALSE,
@@ -25,7 +25,7 @@ END;
 /
 
 BEGIN
-    DBMS_SCHEDULER.RUN_JOB('BUG_PROCESS_DML');
+    DBMS_SCHEDULER.RUN_JOB('PROCESS_DML_ERRORS_');
     COMMIT;
 END;
 /

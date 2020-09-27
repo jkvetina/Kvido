@@ -1,4 +1,4 @@
-CREATE OR REPLACE PACKAGE ctx AS
+CREATE OR REPLACE PACKAGE sess AS
 
     /**
      * This package is part of the BUG project under MIT licence.

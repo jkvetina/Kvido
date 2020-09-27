@@ -1,4 +1,4 @@
-CREATE OR REPLACE PACKAGE bug AS
+CREATE OR REPLACE PACKAGE tree AS
 
     /**
      * This package is part of the BUG project under MIT licence.
@@ -27,7 +27,7 @@ CREATE OR REPLACE PACKAGE bug AS
     flag_error              CONSTANT logs.flag%TYPE     := 'E';     -- error
     flag_longops            CONSTANT logs.flag%TYPE     := 'L';     -- longops row
     flag_scheduler          CONSTANT logs.flag%TYPE     := 'S';     -- scheduler run planned
-    flag_context            CONSTANT logs.flag%TYPE     := 'X';     -- CTX package calls (so you can ignore them)
+    flag_session            CONSTANT logs.flag%TYPE     := 'X';     -- SESS package calls (so you can ignore them)
     flag_profiler           CONSTANT logs.flag%TYPE     := 'P';     -- profiler initiated
 
     -- specify maximum length for trim
@@ -37,7 +37,7 @@ CREATE OR REPLACE PACKAGE bug AS
     length_contexts         CONSTANT PLS_INTEGER        := 1000;    -- logs.contexts%TYPE
 
     -- append callstack for these flags; % for all
-    track_callstack         CONSTANT VARCHAR2(30)       := flag_error || flag_warning || flag_module || flag_result || flag_context;
+    track_callstack         CONSTANT VARCHAR2(30)       := flag_error || flag_warning || flag_module || flag_result || flag_session;
 
     -- arguments separator
     splitter                CONSTANT CHAR               := '|';
@@ -612,8 +612,8 @@ CREATE OR REPLACE PACKAGE bug AS
         out_parent_id       OUT logs.log_parent%TYPE
     )
     ACCESSIBLE BY (
-        PACKAGE bug,
-        PACKAGE bug_ut
+        PACKAGE tree,
+        PACKAGE tree_ut
     );
 
 
@@ -678,8 +678,8 @@ CREATE OR REPLACE PACKAGE bug AS
     )
     RETURN logs.log_id%TYPE
     ACCESSIBLE BY (
-        PACKAGE bug,
-        PACKAGE bug_ut
+        PACKAGE tree,
+        PACKAGE tree_ut
     );
 
 
