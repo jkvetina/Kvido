@@ -187,12 +187,12 @@ CREATE OR REPLACE PACKAGE BODY sess AS
                     s.session_id DESC
                 )
             FROM sessions s
-            WHERE s.user_id         = in_user_id
-                AND s.app_id        = in_app_id
-                AND s.page_id       = NVL(in_page_id,       s.page_id)
-                AND s.session_db    = NVL(in_session_db,    s.session_db)
-                AND s.session_apex  = NVL(in_session_apex,  s.session_apex)
-                AND s.created_at    >= NVL(in_created_at_min, TRUNC(SYSDATE))
+            WHERE s.user_id         = NVL(in_user_id,           sess.get_user_id())
+                AND s.app_id        = NVL(in_app_id,            sess.get_app_id())
+                AND s.page_id       = NVL(in_page_id,           s.page_id)
+                AND s.session_db    = NVL(in_session_db,        s.session_db)
+                AND s.session_apex  = NVL(in_session_apex,      s.session_apex)
+                AND s.created_at    >= NVL(in_created_at_min,   TRUNC(SYSDATE))
         );
 
         -- prepare contexts
