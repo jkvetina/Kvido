@@ -32,7 +32,7 @@ print('=' * 80)
 print('CONNECTING TO ORACLE:', tns['host'], '\n')
 ora = Oracle(tns)
 
-ora.execute('BEGIN sess.set_session(\'JKVETINA\', in_contexts => \'\'); tree.log_module(\'WIKI\'); END;')
+ora.execute('BEGIN sess.create_session(\'JKVETINA\', in_contexts => \'\'); tree.log_module(\'WIKI\'); END;')
 data    = ora.fetch('SELECT tree.get_log_id() FROM DUAL')
 log_id  = data[0][0]
 
