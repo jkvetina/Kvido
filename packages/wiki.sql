@@ -3,7 +3,17 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
     PROCEDURE desc_table (
         in_name VARCHAR2
     ) AS
+        is_view VARCHAR2(1);
     BEGIN
+        BEGIN
+            SELECT 'Y' INTO is_view
+            FROM user_views v
+            WHERE v.view_name = in_name;
+        EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            NULL;
+        END;
+        --
         FOR c IN (
             SELECT
                 c.column_id,
@@ -89,13 +99,15 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
         ) LOOP
             IF c.row_num = 1 THEN
                 DBMS_OUTPUT.PUT_LINE (
-                    '| ID | Column name                    | Data type        | NN  | ' ||
+                    '| ID | Column name                    | Data type        | ' ||
+                    CASE WHEN is_view IS NULL THEN 'NN  | ' END ||
                     CASE WHEN c.sum_pk > 0 THEN 'PK  | ' END ||
                     CASE WHEN c.sum_uq > 0 THEN 'UQ  | ' END ||
                     CASE WHEN c.sum_fk > 0 THEN 'FK  | ' END || 'Comment |'
                 );
                 DBMS_OUTPUT.PUT_LINE (
-                    '| -: | :----------------------------- | :--------------- | :-: | ' ||
+                    '| -: | :----------------------------- | :--------------- | ' ||
+                    CASE WHEN is_view IS NULL THEN ':-: | ' END ||
                     CASE WHEN c.sum_pk > 0 THEN ':-: | ' END ||
                     CASE WHEN c.sum_uq > 0 THEN ':-: | ' END ||
                     CASE WHEN c.sum_fk > 0 THEN ':-: | ' END || ':------ |'
@@ -106,7 +118,7 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
                 '| ' || LPAD(c.column_id, 2) ||
                 ' | ' || RPAD('`' || LOWER(c.column_name) || '`', 32) ||
                 ' | ' || RPAD(c.data_type, 16) ||
-                ' | ' || c.nn ||
+                CASE WHEN is_view IS NULL THEN ' | ' || c.nn END ||
                 CASE WHEN c.sum_pk > 0 THEN ' | ' || c.pk END ||
                 CASE WHEN c.sum_uq > 0 THEN ' | ' || c.uq END ||
                 CASE WHEN c.sum_fk > 0 THEN ' | ' || c.fk END ||
