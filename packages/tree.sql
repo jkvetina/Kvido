@@ -1013,7 +1013,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
             -- recover app context values from log and set user
             recent_log_id := rec.log_id;  -- to link SESS calls to proper branch
-            sess.set_session (
+            sess.create_session (
                 in_user_id      => rec.user_id,
                 in_contexts     => new_contexts
             );

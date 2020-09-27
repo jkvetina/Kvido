@@ -5,7 +5,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
 
-    PROCEDURE clear_session AS
+    PROCEDURE init_session AS
     BEGIN
         DBMS_SESSION.CLEAR_ALL_CONTEXT(sess.app_namespace);
         DBMS_SESSION.CLEAR_IDENTIFIER();
@@ -20,11 +20,11 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
 
-    PROCEDURE clear_session (
+    PROCEDURE init_session (
         in_user_id          sessions.user_id%TYPE
     ) AS
     BEGIN
-        sess.clear_session();
+        sess.init_session();
 
         -- set session things
         DBMS_SESSION.SET_IDENTIFIER(in_user_id);                -- USERENV.CLIENT_IDENTIFIER
@@ -41,13 +41,13 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
 
-    PROCEDURE set_session (
+    PROCEDURE create_session (
         in_user_id          sessions.user_id%TYPE,
         in_message          logs.message%TYPE           := NULL
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
     BEGIN
-        sess.clear_session(in_user_id);
+        sess.init_session(in_user_id);
 
         -- load previous session
         sess.load_session (
@@ -73,14 +73,14 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
 
-    PROCEDURE set_session (
+    PROCEDURE create_session (
         in_user_id          sessions.user_id%TYPE,
         in_contexts         sessions.contexts%TYPE,
         in_message          logs.message%TYPE           := NULL
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
     BEGIN
-        sess.clear_session(in_user_id);
+        sess.init_session(in_user_id);
 
         -- load resp. apply passed contexts
         IF in_contexts IS NOT NULL THEN
@@ -101,7 +101,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
 
-    PROCEDURE set_session (
+    PROCEDURE create_session (
         in_user_id          sessions.user_id%TYPE,
         in_app_id           sessions.app_id%TYPE,
         in_page_id          sessions.user_id%TYPE,
@@ -109,7 +109,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
     BEGIN
-        sess.clear_session(in_user_id);
+        sess.init_session(in_user_id);
 
         $IF $$APEX_INSTALLED $THEN
             -- find and setup workspace

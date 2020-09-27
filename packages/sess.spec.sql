@@ -43,14 +43,14 @@ CREATE OR REPLACE PACKAGE sess AS
     --
     -- Initialize session
     --
-    PROCEDURE clear_session;
+    PROCEDURE init_session;
 
 
 
     --
     -- Initialize session and keep resp. set user_id
     --
-    PROCEDURE clear_session (
+    PROCEDURE init_session (
         in_user_id          sessions.user_id%TYPE
     );
 
@@ -59,7 +59,7 @@ CREATE OR REPLACE PACKAGE sess AS
     --
     -- Set user_id and contexts from previous session
     --
-    PROCEDURE set_session (
+    PROCEDURE create_session (
         in_user_id          sessions.user_id%TYPE,
         in_message          logs.message%TYPE           := NULL
     );
@@ -69,7 +69,7 @@ CREATE OR REPLACE PACKAGE sess AS
     --
     -- Set user_id and apply contexts from `session` table
     --
-    PROCEDURE set_session (
+    PROCEDURE create_session (
         in_user_id          sessions.user_id%TYPE,
         in_contexts         sessions.contexts%TYPE,
         in_message          logs.message%TYPE           := NULL
@@ -80,7 +80,7 @@ CREATE OR REPLACE PACKAGE sess AS
     --
     -- Set user_id and mimic requested APEX page with items
     --
-    PROCEDURE set_session (
+    PROCEDURE create_session (
         in_user_id          sessions.user_id%TYPE,
         in_app_id           sessions.app_id%TYPE,
         in_page_id          sessions.user_id%TYPE,
