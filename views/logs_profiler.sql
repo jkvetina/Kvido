@@ -54,6 +54,9 @@ WHERE p.runid           = x.profiler_id
 COMMENT ON COLUMN logs_profiler.name           IS 'Object name';
 COMMENT ON COLUMN logs_profiler.type           IS 'Object type';
 COMMENT ON COLUMN logs_profiler.line           IS 'Line in source code';
+COMMENT ON COLUMN logs_profiler.module_name    IS 'Module name';
+COMMENT ON COLUMN logs_profiler.module_type    IS 'Module type (function/procedure)';
+COMMENT ON COLUMN logs_profiler.overload       IS 'Overload ID';
 COMMENT ON COLUMN logs_profiler.total_calls    IS 'Number of occurences/calls';
 COMMENT ON COLUMN logs_profiler.total_time     IS 'Time spent on module';
 COMMENT ON COLUMN logs_profiler.max_time       IS 'Time spent on one iteration';
