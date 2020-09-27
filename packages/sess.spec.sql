@@ -2,7 +2,7 @@ CREATE OR REPLACE PACKAGE sess AS
 
     /**
      * This package is part of the Lumberjack project under MIT licence.
-     * https://github.com/jkvetina/Lumberjack/
+     * https://github.com/jkvetina/#lumberjack
      *
      * Copyright (c) Jan Kvetina, 2020
      */

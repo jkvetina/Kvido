@@ -14,8 +14,8 @@ CREATE OR REPLACE PROCEDURE recompile (
     invalids            PLS_INTEGER;
 BEGIN
     /**
-     * This procedure is part of the BUG project under MIT licence.
-     * https://github.com/jkvetina/BUG/
+     * This procedure is part of the Lumberjack project under MIT licence.
+     * https://github.com/jkvetina/#lumberjack
      *
      * Copyright (c) Jan Kvetina, 2020
      */
