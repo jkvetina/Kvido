@@ -11,7 +11,7 @@ BEGIN
     DBMS_SCHEDULER.CREATE_JOB (
         job_name            => in_job_name,
         job_type            => 'STORED_PROCEDURE',
-        job_action          => 'tree.purge_old_logs',
+        job_action          => 'tree.purge_old',
         start_date          => SYSDATE,
         repeat_interval     => 'FREQ=DAILY; BYHOUR=2; BYMINUTE=0',  -- 02:00
         enabled             => FALSE,
