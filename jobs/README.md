@@ -1,5 +1,5 @@
 ## Documentation
 
-- [`bug_process_dml`](../../../wiki/jobs-bug_process_dml)
-- [`bug_purge_old`](../../../wiki/jobs-bug_purge_old)
+- [`process_dml_errors_`](../../../wiki/jobs-process_dml_errors_)
+- [`purge_old_logs`](../../../wiki/jobs-purge_old_logs)
 
