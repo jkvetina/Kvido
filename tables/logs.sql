@@ -48,6 +48,7 @@ COMMENT ON COLUMN logs.module_line      IS 'Line in the module';
 --
 COMMENT ON COLUMN logs.arguments        IS 'Arguments passed to module';
 COMMENT ON COLUMN logs.message          IS 'Formatted call stack, error stack or query with DML error';
+COMMENT ON COLUMN logs.session_id       IS 'Session id from `sessions` table';
 --
 COMMENT ON COLUMN logs.timer            IS 'Timer for current row in seconds';
 COMMENT ON COLUMN logs.created_at       IS 'Timestamp of creation';
