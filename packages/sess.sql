@@ -310,7 +310,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         -- @TODO: explore DBMS_SESSION.UNIQUE_SESSION_ID
         --
         IF recent_session_db IS NULL THEN
-            SELECT TO_NUMBER(s.sid || '.' || s.serial#) INTO recent_session_db
+            SELECT TO_NUMBER(s.sid || '.' || s.serial#, '9999D999999', 'NLS_NUMERIC_CHARACTERS=''. ''') INTO recent_session_db
             FROM v$session s
             WHERE s.audsid = SYS_CONTEXT('USERENV', 'SESSIONID');
         END IF;
