@@ -569,7 +569,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         $IF $$APEX_INSTALLED $THEN
             SELECT
                 LISTAGG(t.item_name || sess.splitter_values || APEX_UTIL.GET_SESSION_STATE(t.item_name), sess.splitter_rows)
-                    WITHIN GROUP (ORDER BY s.attribute)
+                    WITHIN GROUP (ORDER BY t.item_name)
             INTO out_items
             FROM apex_application_items t
             WHERE t.application_id = sess.get_app_id();
@@ -588,7 +588,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         $IF $$APEX_INSTALLED $THEN
             SELECT
                 LISTAGG(t.item_name || sess.splitter_values || APEX_UTIL.GET_SESSION_STATE(t.item_name), sess.splitter_rows)
-                    WITHIN GROUP (ORDER BY s.attribute)
+                    WITHIN GROUP (ORDER BY t.item_name)
             INTO out_items
             FROM apex_application_page_items t
             WHERE t.application_id  = sess.get_app_id()
