@@ -578,7 +578,8 @@ CREATE OR REPLACE PACKAGE BODY sess AS
                     WITHIN GROUP (ORDER BY t.item_name)
             INTO out_items
             FROM apex_application_items t
-            WHERE t.application_id = sess.get_app_id();
+            WHERE t.application_id = sess.get_app_id()
+                AND APEX_UTIL.GET_SESSION_STATE(t.item_name) IS NOT NULL;
         $END    
         --
         RETURN out_items;
@@ -598,7 +599,8 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             INTO out_items
             FROM apex_application_page_items t
             WHERE t.application_id  = sess.get_app_id()
-                AND t.page_id       = sess.get_page_id();
+                AND t.page_id       = sess.get_page_id()
+                AND APEX_UTIL.GET_SESSION_STATE(t.item_name) IS NOT NULL;
         $END    
         --
         RETURN out_items;
