@@ -1,34 +1,59 @@
 CREATE OR REPLACE VIEW logs_profiler_sum AS
+WITH p AS (
+    SELECT
+        p.name                  AS package_name,
+        p.module_name,
+        p.module_type,
+        p.overload,
+        SUM(p.total_occur)      AS total_occur,
+        SUM(p.total_time)       AS total_time
+    FROM logs_profiler p
+    WHERE p.total_time > 0
+    GROUP BY p.name, p.module_name, p.module_type, p.overload
+),
+t AS (
+    SELECT
+        MAX(CASE e.action_name   WHEN 'STOP_PROFILER'   THEN e.created_at END)
+        - MIN(CASE e.action_name WHEN 'START_PROFILER'  THEN e.created_at END) AS timer
+    FROM (
+        SELECT e.action_name, e.flag, e.arguments, e.created_at
+        FROM logs e
+        CONNECT BY PRIOR e.log_id   = e.log_parent
+        START WITH e.log_id         = tree.get_tree_id()
+    ) e
+    WHERE e.flag = 'P'--tree.flag_profiler
+)
 SELECT
     p.package_name,
     p.module_name,
     p.module_type,
     p.overload,
-    p.total_calls,
+    p.total_occur,
     p.total_time,
+    t.timer * (p.total_time / SUM(p.total_time) OVER())     AS module_time,
     ROUND(p.total_time / SUM(p.total_time) OVER() * 100, 2) AS module_perc
-FROM (
-    SELECT
-        p.name                  AS package_name,
-        NVL(m.module_name, '-') AS module_name,
-        m.module_type,
-        m.overload,
-        SUM(p.total_calls)      AS total_calls,
-        SUM(p.total_time)       AS total_time
-    FROM logs_profiler p
-    LEFT JOIN logs_modules m
-        ON m.package_name   = p.name
-        AND p.line          BETWEEN m.body_start AND m.body_end
-    WHERE p.total_time      > 0
-    GROUP BY p.name, m.module_name, m.module_type, m.overload
-) p
-ORDER BY total_time DESC, p.package_name, p.module_name, p.overload;
+FROM p
+CROSS JOIN t
+UNION ALL
+SELECT
+    NULL                AS package_name,
+    NULL                AS module_name,
+    NULL                AS module_type,
+    NULL                AS overload,
+    SUM(p.total_occur)  AS total_occur,
+    SUM(p.total_time)   AS total_time,
+    MAX(t.timer)        AS module_time,
+    100                 AS module_perc
+FROM p
+CROSS JOIN t
+ORDER BY total_time DESC NULLS FIRST, package_name, module_name, overload;
 --
 COMMENT ON COLUMN logs_profiler_sum.package_name   IS 'Package name';
 COMMENT ON COLUMN logs_profiler_sum.module_name    IS 'Module name';
 COMMENT ON COLUMN logs_profiler_sum.module_type    IS 'Module type (function/procedure)';
 COMMENT ON COLUMN logs_profiler_sum.overload       IS 'Overload ID';
-COMMENT ON COLUMN logs_profiler_sum.total_calls    IS 'Number of occurences/calls';
-COMMENT ON COLUMN logs_profiler_sum.total_time     IS 'Time spent on module';
+COMMENT ON COLUMN logs_profiler_sum.total_occur    IS 'Number of occurences (called lines)';
+COMMENT ON COLUMN logs_profiler_sum.total_time     IS 'CPU time spent on module';
+COMMENT ON COLUMN logs_profiler_sum.module_time    IS 'Real time spent on module';
 COMMENT ON COLUMN logs_profiler_sum.module_perc    IS 'Percentage of total time spent on module';
 
