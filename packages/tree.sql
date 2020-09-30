@@ -1114,7 +1114,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
         $IF $$PROFILER_INSTALLED $THEN
             IF rec.flag != tree.flag_profiler AND rows_profiler.COUNT > 0 AND curr_profiler_id IS NULL THEN
-                tree.start_profilers(rec);
+                tree.start_profiler(rec);
             END IF;
         $END
         --
@@ -1193,7 +1193,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
 
 
-    PROCEDURE start_profilers (
+    PROCEDURE start_profiler (
         rec                 logs%ROWTYPE
     ) AS
         out_log_id          logs.log_id%TYPE;
@@ -1234,22 +1234,55 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
 
 
-    PROCEDURE stop_profilers (
-        in_log_id           logs.log_id%TYPE        := NULL
+    PROCEDURE start_profiler (
+        in_log_id           logs.log_id%TYPE
     ) AS
+        out_log_id          logs.log_id%TYPE;
     BEGIN
         $IF $$PROFILER_INSTALLED $THEN
-            IF (in_log_id IN (curr_profiler_id, parent_profiler_id) OR in_log_id IS NULL) THEN
-                $IF $$OUTPUT_ENABLED $THEN
-                    DBMS_OUTPUT.PUT_LINE('  > STOP_PROFILER');
-                $END
-                BEGIN
-                    DBMS_PROFILER.STOP_PROFILER;
-                EXCEPTION
-                WHEN OTHERS THEN
-                    NULL;
-                END;
-            END IF;
+            DBMS_PROFILER.START_PROFILER(in_log_id, run_number => curr_profiler_id);
+            $IF $$OUTPUT_ENABLED $THEN
+                DBMS_OUTPUT.PUT_LINE('  > START_PROFILER ' || curr_profiler_id);
+            $END
+            --
+            out_log_id := tree.log__ (                  -- be aware that this may cause infinite loop
+                in_action_name  => 'START_PROFILER',    -- used in logs_profiler view
+                in_flag         => tree.flag_profiler,
+                in_arguments    => curr_profiler_id,
+                in_parent_id    => in_log_id
+            );
+            --
+            curr_profiler_id    := out_log_id;          -- store current and parent log_id so we can stop profiler later
+            parent_profiler_id  := in_log_id;
+        $ELSE
+            NULL;
+        $END
+    END;
+
+
+
+    PROCEDURE stop_profiler (
+        in_log_id           logs.log_id%TYPE        := NULL
+    ) AS
+        out_log_id          logs.log_id%TYPE;
+    BEGIN
+        $IF $$PROFILER_INSTALLED $THEN
+            $IF $$OUTPUT_ENABLED $THEN
+                DBMS_OUTPUT.PUT_LINE('  > STOP_PROFILER');
+            $END
+            BEGIN
+                DBMS_PROFILER.STOP_PROFILER;
+            EXCEPTION
+            WHEN OTHERS THEN
+                NULL;
+            END;
+            --
+            out_log_id := tree.log__ (                  -- be aware that this may cause infinite loop
+                in_action_name  => 'STOP_PROFILER',
+                in_flag         => tree.flag_profiler,
+                in_arguments    => tree.get_arguments(curr_profiler_id, parent_profiler_id),
+                in_parent_id    => in_log_id
+            );
         $END
         --
         curr_profiler_id    := NULL;
@@ -1274,10 +1307,17 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             );
         END IF;
 
-        -- when updating timer for same module which initiated start_profilers
+        -- when updating timer for same module which initiated start_profiler
         $IF $$PROFILER_INSTALLED $THEN
-            IF rec.flag != tree.flag_profiler AND rows_profiler.COUNT > 0 AND curr_profiler_id IS NOT NULL THEN
-                tree.stop_profilers(NVL(in_log_id, rec.log_parent));
+            IF rec.flag != tree.flag_profiler
+                AND rows_profiler.COUNT > 0
+                AND curr_profiler_id IS NOT NULL
+                AND (
+                    in_log_id           IN (curr_profiler_id, parent_profiler_id)
+                    OR rec.log_parent   IN (curr_profiler_id, parent_profiler_id)
+                )
+            THEN
+                tree.stop_profiler(NVL(in_log_id, rec.log_parent));
             END IF;
         $END
 

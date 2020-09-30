@@ -566,18 +566,27 @@ CREATE OR REPLACE PACKAGE tree AS
     --
 
     --
-    -- Start profilers
+    -- Start profiler (based on trigger in `logs_setup` table)
     --
-    PROCEDURE start_profilers (
+    PROCEDURE start_profiler (
         rec                 logs%ROWTYPE
     );
 
 
 
     --
-    -- Stop running profilers
+    -- Start profiler manually
     --
-    PROCEDURE stop_profilers (
+    PROCEDURE start_profiler (
+        in_log_id           logs.log_id%TYPE
+    );
+
+
+
+    --
+    -- Stop running profiler
+    --
+    PROCEDURE stop_profiler (
         in_log_id           logs.log_id%TYPE := NULL
     );
 
