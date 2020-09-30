@@ -1,16 +1,4 @@
 CREATE OR REPLACE VIEW logs_profiler AS
-WITH x AS (
-    SELECT
-        MAX(CASE e.action_name WHEN 'START_PROFILER' THEN TO_NUMBER(e.arguments) END) AS profiler_id,
-        MAX(CASE e.action_name WHEN 'START_COVERAGE' THEN TO_NUMBER(e.arguments) END) AS coverage_id
-    FROM (
-        SELECT e.action_name, e.flag, e.arguments
-        FROM logs e
-        CONNECT BY PRIOR e.log_id   = e.log_parent
-        START WITH e.log_id         = tree.get_tree_id()
-    ) e
-    WHERE e.flag = 'P'  -- tree.flag_profiler
-)
 SELECT
     s.name,
     s.type,
@@ -24,9 +12,9 @@ SELECT
     b.block,
     b.col,
     b.covered,
-    s.text              AS source_line,
-    x.profiler_id,
-    x.coverage_id
+    s.text                  AS source_line,
+    tree.get_profiler_id()  AS profiler_id,
+    tree.get_coverage_id()  AS coverage_id
 FROM plsql_profiler_units p
 JOIN plsql_profiler_data d
     ON p.runid          = d.runid
@@ -35,7 +23,6 @@ JOIN user_source s
     ON s.name           = p.unit_name
     AND s.type          = p.unit_type
     AND s.line          = d.line#
-CROSS JOIN x
 LEFT JOIN logs_modules m
     ON m.package_name   = s.name
     AND s.type          = 'PACKAGE BODY'
@@ -43,12 +30,12 @@ LEFT JOIN logs_modules m
 LEFT JOIN dbmspcc_units c
     ON  c.name          = s.name
     AND c.type          = s.type
-    AND c.run_id        = x.coverage_id
+    AND c.run_id        = tree.get_coverage_id()
 LEFT JOIN dbmspcc_blocks b
     ON  b.run_id        = c.run_id
     AND b.object_id     = c.object_id
     AND b.line          = s.line
-WHERE p.runid           = x.profiler_id
+WHERE p.runid           = tree.get_profiler_id()
     AND p.unit_owner    = USER;
 --
 COMMENT ON COLUMN logs_profiler.name           IS 'Object name';

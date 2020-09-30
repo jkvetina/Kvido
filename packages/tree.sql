@@ -3,6 +3,8 @@ CREATE OR REPLACE PACKAGE BODY tree AS
     recent_log_id           logs.log_id%TYPE;    -- last log_id in session (any flag)
     recent_error_id         logs.log_id%TYPE;    -- last real log_id in session (with E flag)
     recent_tree_id          logs.log_id%TYPE;    -- selected log_id for LOGS_TREE view
+    recent_profiler_id      logs.log_id%TYPE;    -- selected log_id for LOGS_PROFILER view
+    recent_coverage_id      logs.log_id%TYPE;    -- selected log_id for LOGS_PROFILER view
 
     -- array to hold recent log_id; array[depth + module] = log_id
     TYPE arr_map_module_to_id IS
@@ -138,6 +140,65 @@ CREATE OR REPLACE PACKAGE BODY tree AS
     ) AS
     BEGIN
         recent_tree_id := in_log_id;
+    END;
+
+
+
+    FUNCTION get_profiler_id
+    RETURN logs.log_id%TYPE AS
+    BEGIN
+        RETURN recent_profiler_id;
+    END;
+
+
+
+    PROCEDURE set_profiler_id (
+        in_log_id       logs.log_id%TYPE        := NULL
+    ) AS
+        log_id          logs.log_id%TYPE;
+    BEGIN
+        IF in_log_id IS NULL THEN
+            SELECT MAX(TO_NUMBER(e.arguments)) INTO log_id
+            FROM (
+                SELECT e.action_name, e.flag, e.arguments
+                FROM logs e
+                CONNECT BY PRIOR e.log_id   = e.log_parent
+                START WITH e.log_id         = tree.get_tree_id()
+            ) e
+            WHERE e.flag            = tree.flag_profiler
+                AND e.action_name   = 'START_PROFILER';
+        END IF;
+        --
+        recent_profiler_id := NVL(log_id, in_log_id);
+    END;
+
+
+
+    FUNCTION get_coverage_id
+    RETURN logs.log_id%TYPE AS
+    BEGIN
+        RETURN recent_coverage_id;
+    END;
+
+
+
+    PROCEDURE set_coverage_id (
+        in_log_id       logs.log_id%TYPE        := NULL
+    ) AS
+        log_id          logs.log_id%TYPE;
+    BEGIN
+        IF in_log_id IS NULL THEN
+            SELECT MAX(CASE e.action_name WHEN 'START_COVERAGE' THEN TO_NUMBER(e.arguments) END) INTO log_id
+            FROM (
+                SELECT e.action_name, e.flag, e.arguments
+                FROM logs e
+                CONNECT BY PRIOR e.log_id   = e.log_parent
+                START WITH e.log_id         = tree.get_tree_id()
+            ) e
+            WHERE e.flag = tree.flag_profiler;
+        END IF;
+        --
+        recent_coverage_id := NVL(log_id, in_log_id);
     END;
 
 

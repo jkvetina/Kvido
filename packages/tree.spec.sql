@@ -560,6 +560,40 @@ CREATE OR REPLACE PACKAGE tree AS
 
 
 
+    --
+    -- Returns `log_id` used by `LOGS_PROFILER` view
+    --
+    FUNCTION get_profiler_id
+    RETURN logs.log_id%TYPE;
+
+
+
+    --
+    -- Set `log_id` for `LOGS_PROFILER` view
+    --
+    PROCEDURE set_profiler_id (
+        in_log_id       logs.log_id%TYPE        := NULL
+    );
+
+
+
+    --
+    -- Returns `log_id` used by `LOGS_PROFILER` view
+    --
+    FUNCTION get_coverage_id
+    RETURN logs.log_id%TYPE;
+
+
+
+    --
+    -- Set `log_id` for `LOGS_PROFILER` view
+    --
+    PROCEDURE set_coverage_id (
+        in_log_id       logs.log_id%TYPE        := NULL
+    );
+
+
+
 
 
     -- ### Working with `DBMS_PROFILER`
