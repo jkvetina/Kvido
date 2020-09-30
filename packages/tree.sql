@@ -188,14 +188,15 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         log_id          logs.log_id%TYPE;
     BEGIN
         IF in_log_id IS NULL THEN
-            SELECT MAX(CASE e.action_name WHEN 'START_COVERAGE' THEN TO_NUMBER(e.arguments) END) INTO log_id
+            SELECT MAX(TO_NUMBER(e.arguments)) INTO log_id
             FROM (
                 SELECT e.action_name, e.flag, e.arguments
                 FROM logs e
                 CONNECT BY PRIOR e.log_id   = e.log_parent
                 START WITH e.log_id         = tree.get_tree_id()
             ) e
-            WHERE e.flag = tree.flag_profiler;
+            WHERE e.flag            = tree.flag_profiler
+                AND e.action_name   = 'START_COVERAGE';
         END IF;
         --
         recent_coverage_id := NVL(log_id, in_log_id);
