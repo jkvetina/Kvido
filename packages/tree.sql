@@ -1138,17 +1138,19 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         in_lob_name         logs_lobs.lob_name%TYPE     := NULL,
         in_log_id           logs_lobs.log_id%TYPE       := NULL
     ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+        --
         rec                 logs_lobs%ROWTYPE;
     BEGIN
-        tree.log_module(in_log_id, in_lob_name);
+        rec.log_parent      := NVL(in_log_id, tree.log_module(in_log_id, in_lob_name));
         --
         rec.log_id          := log_id.NEXTVAL;
-        rec.log_parent      := NVL(in_log_id, recent_log_id);
         rec.payload_clob    := in_payload;
         rec.lob_name        := in_lob_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.payload_clob);
         --
         INSERT INTO logs_lobs VALUES rec;
+        COMMIT;
     END;
 
 
@@ -1158,17 +1160,19 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         in_lob_name         logs_lobs.lob_name%TYPE     := NULL,
         in_log_id           logs_lobs.log_id%TYPE       := NULL
     ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+        --
         rec                 logs_lobs%ROWTYPE;
     BEGIN
-        tree.log_module(in_log_id, in_lob_name);
+        rec.log_parent      := NVL(in_log_id, tree.log_module(in_log_id, in_lob_name));
         --
         rec.log_id          := log_id.NEXTVAL;
-        rec.log_parent      := NVL(in_log_id, recent_log_id);
         rec.payload_clob    := in_payload.GETCLOBVAL();
         rec.lob_name        := in_lob_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.payload_clob);
         --
         INSERT INTO logs_lobs VALUES rec;
+        COMMIT;
     END;
 
 
@@ -1178,17 +1182,19 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         in_lob_name         logs_lobs.lob_name%TYPE     := NULL,
         in_log_id           logs_lobs.log_id%TYPE       := NULL
     ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+        --
         rec                 logs_lobs%ROWTYPE;
     BEGIN
-        tree.log_module(in_log_id, in_lob_name);
+        rec.log_parent      := NVL(in_log_id, tree.log_module(in_log_id, in_lob_name));
         --
         rec.log_id          := log_id.NEXTVAL;
-        rec.log_parent      := NVL(in_log_id, recent_log_id);
         rec.payload_blob    := in_payload;
         rec.lob_name        := in_lob_name;
         rec.lob_length      := DBMS_LOB.GETLENGTH(rec.payload_blob);
         --
         INSERT INTO logs_lobs VALUES rec;
+        COMMIT;
     END;
 
 
