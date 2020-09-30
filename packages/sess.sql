@@ -46,23 +46,30 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         in_message          logs.message%TYPE           := NULL
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
+        --
+        rec sessions%ROWTYPE;
     BEGIN
         sess.init_session(in_user_id);
 
         -- load previous session
+        rec.app_id          := sess.get_app_id();
+        rec.page_id         := sess.get_page_id();
+        rec.session_db      := sess.get_session_db();
+        rec.session_apex    := sess.get_session_apex();
+        --
         sess.load_session (
             in_user_id          => in_user_id,
-            in_app_id           => sess.get_app_id(),
-            in_page_id          => sess.get_page_id(),
-            in_session_db       => sess.get_session_db(),
-            in_session_apex     => sess.get_session_apex(),
+            in_app_id           => rec.app_id,
+            in_page_id          => rec.page_id,
+            in_session_db       => rec.session_db,
+            in_session_apex     => rec.session_apex,
             in_created_at_min   => NULL
         );
 
         -- store new values
         sess.update_session(in_src => 'C1');
         --
-        tree.log_module(in_user_id, in_message);
+        tree.log_module(in_user_id, in_message, rec.app_id, rec.page_id, rec.session_db, rec.session_apex);
         --
         COMMIT;
     EXCEPTION
@@ -90,7 +97,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         -- store new values
         sess.update_session(in_src => 'C2');
         --
-        tree.log_module(in_user_id, LENGTH(in_contexts), in_message);
+        tree.log_module(in_user_id, in_message, LENGTH(in_contexts));
         --
         COMMIT;
     EXCEPTION
@@ -152,7 +159,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         -- store new values
         sess.update_session(in_src => 'C3');
         --
-        tree.log_module(in_user_id, in_app_id, in_page_id, in_message);
+        tree.log_module(in_user_id, in_message, in_app_id, in_page_id);
         --
         COMMIT;
     EXCEPTION
@@ -173,8 +180,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     ) AS
         rec                 sessions%ROWTYPE;
     BEGIN
-        tree.log_module(in_user_id, in_app_id, in_page_id, in_session_db, in_session_apex, in_created_at_min);
-
         -- find best session
         SELECT s.* INTO rec
         FROM sessions s
@@ -212,7 +217,8 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         $END
     EXCEPTION
     WHEN NO_DATA_FOUND THEN
-        tree.log_error('NO_DATA_FOUND');
+        NULL;
+        --tree.log_error('NO_DATA_FOUND');
         --RAISE_APPLICATION_ERROR(tree.app_exception_code, 'LOAD_SESSION_NOT_FOUND', TRUE);
     END;
 
