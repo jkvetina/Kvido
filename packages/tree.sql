@@ -62,6 +62,10 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         out_stack := REGEXP_REPLACE(out_stack, '\s+DBMS_SQL.EXECUTE [[]\d+[]]\s+> BLOCK [[]\d+[]]', '');
         out_stack := REGEXP_REPLACE(out_stack, '\s+DBMS_SYS_SQL.EXECUTE(.*)', '');
         out_stack := REGEXP_REPLACE(out_stack, '\s+UT(\.|_[A-Z0-9_]*\.)[A-Z0-9_]+ [[]\d+[]]', '');   -- ut/plsql
+
+        -- cleanup APEX stack
+        out_stack := REGEXP_REPLACE(out_stack, '\s+WWV_FLOW([^\s]*)\s[[]\d*[]]', '');
+        out_stack := REGEXP_REPLACE(out_stack, '\s+WWV_DBMS_SQL_APEX_([^\s]*)\s[[]\d*[]]', '');
         --
         RETURN SUBSTR(out_stack, 1, tree.length_message);
     END;
@@ -317,7 +321,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                 --
             ELSIF in_flag IN (tree.flag_module, tree.flag_scheduler) THEN
                 map_modules(curr_index) := in_log_id;
-                
+
                 -- find previous module (on another depth)
                 parent_index := (UTL_CALL_STACK.DYNAMIC_DEPTH - i - 1) || '|' || next_module;
             END IF;
@@ -1542,7 +1546,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             'DELETE FROM ' || in_error_table ||
             ' WHERE ora_err_tag$ = ' || in_log_id;
     END;
-    
+
 
 
 
