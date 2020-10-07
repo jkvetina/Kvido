@@ -52,20 +52,13 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         FOR i IN REVERSE 2 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP  -- 2 = ignore this function
             out_module := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i));
             CONTINUE WHEN
-                (out_module = internal_log_fn AND i <= 2)   -- skip target function
-                OR UTL_CALL_STACK.UNIT_LINE(i) IS NULL;     -- skip DML queries
+                UTL_CALL_STACK.OWNER(i) != USER                                 -- different user (APEX)
+                OR UTL_CALL_STACK.UNIT_LINE(i) IS NULL                          -- skip DML queries
+                OR REGEXP_LIKE(out_module, 'UT(\.|_[A-Z0-9_]*\.)[A-Z0-9_]+')    -- skip unit tests
+                OR (out_module = internal_log_fn AND i <= 2);                   -- skip target function
             --
             out_stack := out_stack || out_module || ' [' || UTL_CALL_STACK.UNIT_LINE(i) || ']' || CHR(10);
         END LOOP;
-
-        -- cleanup useless info
-        out_stack := REGEXP_REPLACE(out_stack, '\s+DBMS_SQL.EXECUTE [[]\d+[]]\s+> BLOCK [[]\d+[]]', '');
-        out_stack := REGEXP_REPLACE(out_stack, '\s+DBMS_SYS_SQL.EXECUTE(.*)', '');
-        out_stack := REGEXP_REPLACE(out_stack, '\s+UT(\.|_[A-Z0-9_]*\.)[A-Z0-9_]+ [[]\d+[]]', '');   -- ut/plsql
-
-        -- cleanup APEX stack
-        out_stack := REGEXP_REPLACE(out_stack, '\s+WWV_FLOW([^\s]*)\s[[]\d*[]]', '');
-        out_stack := REGEXP_REPLACE(out_stack, '\s+WWV_DBMS_SQL_APEX_([^\s]*)\s[[]\d*[]]', '');
         --
         RETURN SUBSTR(out_stack, 1, tree.length_message);
     END;
