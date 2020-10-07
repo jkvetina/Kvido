@@ -1,4 +1,9 @@
---DROP TABLE users PURGE;
+/*
+DROP TABLE sessions     PURGE;
+DROP TABLE log_setup    PURGE;
+DROP TABLE user_roles   PURGE;
+DROP TABLE users        PURGE;
+*/
 CREATE TABLE users (
     user_id             VARCHAR2(30)    NOT NULL,
     --
