@@ -634,6 +634,8 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         log_id          logs.log_id%TYPE;
         action_name     logs.action_name%TYPE;
     BEGIN
+        ROLLBACK;
+        --
         action_name     := COALESCE(in_action, tree.get_caller_name(), 'UNEXPECTED_ERROR');
         log_id          := tree.log_error (
             in_action   => action_name,
