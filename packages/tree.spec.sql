@@ -560,6 +560,38 @@ CREATE OR REPLACE PACKAGE tree AS
 
 
 
+
+
+    -- ### Working with `DBMS_PROFILER`
+    --
+
+    --
+    -- Start profiler (based on trigger in `logs_setup` table)
+    --
+    PROCEDURE start_profiler (
+        rec                 logs%ROWTYPE
+    );
+
+
+
+    --
+    -- Start profiler manually
+    --
+    PROCEDURE start_profiler (
+        in_log_id           logs.log_id%TYPE
+    );
+
+
+
+    --
+    -- Stop running profiler
+    --
+    PROCEDURE stop_profiler (
+        in_log_id           logs.log_id%TYPE := NULL
+    );
+
+
+
     --
     -- Returns `log_id` used by `LOGS_PROFILER` view
     --
@@ -590,38 +622,6 @@ CREATE OR REPLACE PACKAGE tree AS
     --
     PROCEDURE set_coverage_id (
         in_log_id       logs.log_id%TYPE        := NULL
-    );
-
-
-
-
-
-    -- ### Working with `DBMS_PROFILER`
-    --
-
-    --
-    -- Start profiler (based on trigger in `logs_setup` table)
-    --
-    PROCEDURE start_profiler (
-        rec                 logs%ROWTYPE
-    );
-
-
-
-    --
-    -- Start profiler manually
-    --
-    PROCEDURE start_profiler (
-        in_log_id           logs.log_id%TYPE
-    );
-
-
-
-    --
-    -- Stop running profiler
-    --
-    PROCEDURE stop_profiler (
-        in_log_id           logs.log_id%TYPE := NULL
     );
 
 
