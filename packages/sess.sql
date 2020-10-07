@@ -256,10 +256,10 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         recent_session_id   := rec.session_id;
         --
         rec.user_id         := sess.get_user_id();
-        rec.app_id          := NVL(sess.get_app_id(),        0);
-        rec.page_id         := NVL(sess.get_page_id(),       0);
-        rec.session_db      := NVL(sess.get_session_db(),    0);
-        rec.session_apex    := NVL(sess.get_session_apex(),  0);
+        rec.app_id          := COALESCE(sess.get_app_id(),        0);
+        rec.page_id         := COALESCE(sess.get_page_id(),       0);
+        rec.session_db      := COALESCE(sess.get_session_db(),    0);
+        rec.session_apex    := COALESCE(sess.get_session_apex(),  0);
         rec.contexts        := sess.get_contexts();
         rec.src             := in_src;
         rec.created_at      := SYSTIMESTAMP;
@@ -291,7 +291,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     RETURN sessions.app_id%TYPE AS
     BEGIN
         $IF $$APEX_INSTALLED $THEN
-            RETURN NVL(APEX_APPLICATION.G_FLOW_ID, 0);
+            RETURN COALESCE(APEX_APPLICATION.G_FLOW_ID, 0);
         $ELSE
             RETURN 0;
         $END    
@@ -314,7 +314,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     FUNCTION get_user_id
     RETURN sessions.user_id%TYPE AS
     BEGIN
-        RETURN NVL(NULLIF(
+        RETURN COALESCE(NULLIF(
             COALESCE (                                              -- APEX first, because it is more reliable
                 SYS_CONTEXT('APEX$SESSION', 'APP_USER'),            -- APEX_APPLICATION.G_USER
                 SYS_CONTEXT(sess.app_namespace, sess.app_user_attr),
@@ -389,8 +389,8 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     RETURN VARCHAR2 AS      -- mimic APEX client_id
     BEGIN
         RETURN
-            NVL(in_user_id, sess.get_user_id()) || ':' ||
-            NVL(sess.get_session_apex(), SYS_CONTEXT('USERENV', 'SESSIONID'));
+            COALESCE(in_user_id, sess.get_user_id()) || ':' ||
+            COALESCE(sess.get_session_apex(), SYS_CONTEXT('USERENV', 'SESSIONID'));
     END;
 
 

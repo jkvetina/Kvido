@@ -114,10 +114,10 @@ CREATE OR REPLACE PACKAGE BODY tree AS
     AS
         out_log_id      logs.log_id%TYPE;
     BEGIN
-        SELECT MIN(NVL(e.log_parent, e.log_id)) INTO out_log_id
+        SELECT MIN(COALESCE(e.log_parent, e.log_id)) INTO out_log_id
         FROM logs e
         CONNECT BY PRIOR e.log_parent = e.log_id
-        START WITH e.log_id = NVL(in_log_id, recent_log_id);
+        START WITH e.log_id = COALESCE(in_log_id, recent_log_id);
         --
         RETURN out_log_id;
     END;
@@ -166,7 +166,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                 AND e.action_name   = 'START_PROFILER';
         END IF;
         --
-        recent_profiler_id := NVL(log_id, in_log_id);
+        recent_profiler_id := COALESCE(log_id, in_log_id);
     END;
 
 
@@ -196,7 +196,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                 AND e.action_name   = 'START_COVERAGE';
         END IF;
         --
-        recent_coverage_id := NVL(log_id, in_log_id);
+        recent_coverage_id := COALESCE(log_id, in_log_id);
     END;
 
 
@@ -234,7 +234,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
     RETURN logs.module_name%TYPE
     AS
         module_name         logs.module_name%TYPE;
-        offset              PLS_INTEGER                 := NVL(in_offset, 0);
+        offset              PLS_INTEGER                 := COALESCE(in_offset, 0);
     BEGIN
         -- find first caller before this package
         FOR i IN 2 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP
@@ -302,7 +302,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             IF UTL_CALL_STACK.DYNAMIC_DEPTH >= i + 1 AND in_parent_id IS NULL THEN
                 IF (out_module_name LIKE trigger_sess AND next_module = internal_log_fn) THEN
                     out_module_line := 0;
-                    out_parent_id   := NVL(recent_log_id, in_log_id);
+                    out_parent_id   := COALESCE(recent_log_id, in_log_id);
                     --
                     RETURN;  -- exit procedure
                 END IF;
@@ -341,7 +341,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             EXIT;  -- break, we need just first one
         END LOOP;
         --
-        out_module_line := NVL(out_module_line, 0);
+        out_module_line := COALESCE(out_module_line, 0);
     END;
 
 
@@ -817,8 +817,8 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                     i.item_name                                 AS name,
                     APEX_UTIL.GET_SESSION_STATE(i.item_name)    AS value
                 FROM apex_application_page_items i
-                WHERE i.application_id  = NV('APP_ID')
-                    AND i.page_id       = NVL(in_page_id, NV('APP_PAGE_ID'))
+                WHERE i.application_id  = sess.get_app_id()
+                    AND i.page_id       = COALESCE(in_page_id, sess.get_page_id())
                     AND i.item_name     LIKE in_filter
                 ORDER BY i.item_name
             ) LOOP
@@ -850,7 +850,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                     i.item_name                                 AS name,
                     APEX_UTIL.GET_SESSION_STATE(i.item_name)    AS value
                 FROM apex_application_items i
-                WHERE i.application_id  = NV('APP_ID')
+                WHERE i.application_id  = sess.get_app_id()
                     AND i.item_name     LIKE in_filter
                 ORDER BY i.item_name
             ) LOOP
@@ -968,7 +968,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         );
 
         -- find longops record
-        IF NVL(in_progress, 0) = 0 THEN
+        IF COALESCE(in_progress, 0) = 0 THEN
             -- first visit
             SELECT e.* INTO rec
             FROM logs e
@@ -995,7 +995,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             op_name         => rec.module_name,     -- 64 chars
             target_desc     => rec.action_name,     -- 32 chars
             context         => rec.log_id,
-            sofar           => NVL(in_progress, 0),
+            sofar           => COALESCE(in_progress, 0),
             totalwork       => 1,                   -- 1 = 100%
             units           => '%'
         );
@@ -1081,13 +1081,13 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         END IF;
 
         -- get user and update session info
-        rec.user_id         := NVL(rec.user_id, sess.get_user_id());
-        rec.flag            := NVL(in_flag, '?');
-        rec.module_line     := NVL(rec.module_line, 0);
+        rec.user_id         := COALESCE(rec.user_id, sess.get_user_id());
+        rec.flag            := COALESCE(in_flag, '?');
+        rec.module_line     := COALESCE(rec.module_line, 0);
         --
         tree.set_session (
             in_module_name  => rec.module_name,
-            in_action_name  => NVL(in_action_name, rec.module_name || tree.splitter || rec.module_line)
+            in_action_name  => COALESCE(in_action_name, rec.module_name || tree.splitter || rec.module_line)
         );
 
         -- override flag for SESS package calls
@@ -1137,8 +1137,8 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         END IF;
 
         -- prepare record
-        rec.app_id          := NVL(sess.get_app_id(),    0);  -- default to zero to match sessions table
-        rec.page_id         := NVL(sess.get_page_id(),   0);
+        rec.app_id          := COALESCE(sess.get_app_id(),  0);  -- default to zero to match sessions table
+        rec.page_id         := COALESCE(sess.get_page_id(), 0);
         rec.action_name     := SUBSTR(COALESCE(rec.action_name, in_action_name, tree.empty_action), 1, tree.length_action);
         rec.arguments       := SUBSTR(in_arguments, 1, tree.length_arguments);
         rec.message         := SUBSTR(in_message,   1, tree.length_message);  -- may be overwritten later
@@ -1152,7 +1152,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
         -- add error stack if available
         IF SQLCODE != 0 THEN
-            rec.action_name := NVL(NULLIF(rec.action_name, tree.empty_action), 'UNKNOWN_ERROR');
+            rec.action_name := COALESCE(NULLIF(rec.action_name, tree.empty_action), 'UNKNOWN_ERROR');
             rec.message     := SUBSTR(rec.message || tree.get_error_stack(), 1, tree.length_message);
         END IF;
 
@@ -1168,7 +1168,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         -- print message to console
         $IF $$OUTPUT_ENABLED $THEN
             DBMS_OUTPUT.PUT_LINE(
-                rec.log_id || ' ^' || NVL(rec.log_parent, 0) || ' [' || rec.flag || ']: ' ||
+                rec.log_id || ' ^' || COALESCE(rec.log_parent, 0) || ' [' || rec.flag || ']: ' ||
                 --RPAD(' ', (rec.module_depth - 1) * 2, ' ') ||
                 rec.module_name || ' [' || rec.module_line || '] ' || NULLIF(rec.action_name, tree.empty_action) ||
                 RTRIM(': ' || SUBSTR(in_arguments, 1, 40), ': ')
@@ -1205,7 +1205,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         --
         rec                 logs_lobs%ROWTYPE;
     BEGIN
-        rec.log_parent      := NVL(in_log_id, tree.log_module(in_log_id, in_lob_name));
+        rec.log_parent      := COALESCE(in_log_id, tree.log_module(in_log_id, in_lob_name));
         --
         rec.log_id          := log_id.NEXTVAL;
         rec.payload_clob    := in_payload;
@@ -1227,7 +1227,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         --
         rec                 logs_lobs%ROWTYPE;
     BEGIN
-        rec.log_parent      := NVL(in_log_id, tree.log_module(in_log_id, in_lob_name));
+        rec.log_parent      := COALESCE(in_log_id, tree.log_module(in_log_id, in_lob_name));
         --
         rec.log_id          := log_id.NEXTVAL;
         rec.payload_clob    := in_payload.GETCLOBVAL();
@@ -1249,7 +1249,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         --
         rec                 logs_lobs%ROWTYPE;
     BEGIN
-        rec.log_parent      := NVL(in_log_id, tree.log_module(in_log_id, in_lob_name));
+        rec.log_parent      := COALESCE(in_log_id, tree.log_module(in_log_id, in_lob_name));
         --
         rec.log_id          := log_id.NEXTVAL;
         rec.payload_blob    := in_payload;
@@ -1387,7 +1387,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                     OR rec.log_parent   IN (curr_profiler_id, parent_profiler_id)
                 )
             THEN
-                tree.stop_profiler(NVL(in_log_id, rec.log_parent));
+                tree.stop_profiler(COALESCE(in_log_id, rec.log_parent));
             END IF;
         $END
 
@@ -1400,7 +1400,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                 REGEXP_REPLACE(EXTRACT(SECOND FROM LOCALTIMESTAMP - e.created_at), '^[\.,]', '00,'),
                 '^(\d)[\.,]', '0\1,'
             ), 9, '0')
-        WHERE e.log_id = NVL(in_log_id, rec.log_parent);
+        WHERE e.log_id = COALESCE(in_log_id, rec.log_parent);
         --
         COMMIT;
     EXCEPTION
@@ -1481,14 +1481,14 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                     ',  -- ' || CASE
                         WHEN c.data_type LIKE '%CHAR%' OR c.data_type = 'RAW' THEN
                             c.data_type ||
-                            DECODE(NVL(c.char_length, 0), 0, '',
+                            DECODE(COALESCE(c.char_length, 0), 0, '',
                                 '(' || c.char_length || DECODE(c.char_used, 'C', ' CHAR', '') || ')'
                             )
                         WHEN c.data_type = 'NUMBER' AND c.data_precision = 38 THEN 'INTEGER'
                         WHEN c.data_type = 'NUMBER' THEN
                             c.data_type ||
-                            DECODE(NVL(c.data_precision || c.data_scale, 0), 0, '',
-                                DECODE(NVL(c.data_scale, 0), 0, '(' || c.data_precision || ')',
+                            DECODE(COALESCE(TO_NUMBER(c.data_precision || c.data_scale), 0), 0, '',
+                                DECODE(COALESCE(c.data_scale, 0), 0, '(' || c.data_precision || ')',
                                     '(' || c.data_precision || ',' || c.data_scale || ')'
                                 )
                             )
@@ -1536,7 +1536,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         tree.attach_clob (
             in_payload      => payload,
             in_lob_name     => 'DML_ERROR',
-            in_log_id       => NVL(error_id, in_log_id)
+            in_log_id       => COALESCE(error_id, in_log_id)
         );
 
         -- remove from DML ERR table
@@ -1713,11 +1713,11 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             FROM logs e
             JOIN logs_lobs l
                 ON l.log_parent = e.log_id
-            WHERE e.created_at < TRUNC(SYSDATE) - NVL(in_age, tree.table_rows_max_age)
+            WHERE e.created_at < TRUNC(SYSDATE) - COALESCE(in_age, tree.table_rows_max_age)
         );
         --
         DELETE FROM logs e
-        WHERE e.created_at < TRUNC(SYSDATE) - NVL(in_age, tree.table_rows_max_age);
+        WHERE e.created_at < TRUNC(SYSDATE) - COALESCE(in_age, tree.table_rows_max_age);
 
         -- purge whole partitions
         FOR c IN (
@@ -1726,7 +1726,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             WHERE p.table_name = tree.table_name
                 AND p.partition_position > 1
                 AND p.partition_position < (
-                    SELECT MAX(partition_position) - NVL(in_age, tree.table_rows_max_age)
+                    SELECT MAX(partition_position) - COALESCE(in_age, tree.table_rows_max_age)
                     FROM user_tab_partitions
                     WHERE table_name = tree.table_name
                 )
