@@ -111,12 +111,28 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     PROCEDURE create_session (
         in_user_id          sessions.user_id%TYPE,
         in_app_id           sessions.app_id%TYPE,
-        in_page_id          sessions.user_id%TYPE,
+        in_page_id          sessions.page_id%TYPE       := NULL,
         in_message          logs.message%TYPE           := NULL
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
+        --
+        recent_page_id      sessions.page_id%TYPE := in_page_id;
     BEGIN
         sess.init_session(in_user_id);
+
+        -- find recent page_id
+        IF in_page_id IS NULL THEN
+            BEGIN
+                SELECT MAX(s.page_id) KEEP (DENSE_RANK FIRST ORDER BY s.session_id DESC)
+                INTO recent_page_id
+                FROM sessions s
+                WHERE s.app_id = in_app_id
+                    AND s.user_id = in_user_id;
+            EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                NULL;
+            END;
+        END IF;
 
         $IF $$APEX_INSTALLED $THEN
             -- find and setup workspace
@@ -141,7 +157,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             -- create APEX session
             APEX_SESSION.CREATE_SESSION (
                 p_app_id    => in_app_id,
-                p_page_id   => in_page_id,
+                p_page_id   => recent_page_id,
                 p_username  => in_user_id
             );
         $END
@@ -150,7 +166,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         sess.load_session (
             in_user_id          => in_user_id,
             in_app_id           => in_app_id,
-            in_page_id          => in_page_id,
+            in_page_id          => recent_page_id,
             in_session_db       => NULL,
             in_session_apex     => NULL,
             in_created_at_min   => NULL
@@ -159,7 +175,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         -- store new values
         sess.update_session(in_src => 'C3');
         --
-        tree.log_module(in_user_id, in_message, in_app_id, in_page_id);
+        tree.log_module(in_user_id, in_message, in_app_id, recent_page_id);
         --
         COMMIT;
     EXCEPTION
@@ -192,12 +208,12 @@ CREATE OR REPLACE PACKAGE BODY sess AS
                     s.session_id DESC
                 )
             FROM sessions s
-            WHERE s.user_id         = NVL(in_user_id,           sess.get_user_id())
-                AND s.app_id        = NVL(in_app_id,            sess.get_app_id())
-                AND s.page_id       = NVL(in_page_id,           s.page_id)
-                AND s.session_db    = NVL(in_session_db,        s.session_db)
-                AND s.session_apex  = NVL(in_session_apex,      s.session_apex)
-                AND s.created_at    >= NVL(in_created_at_min,   TRUNC(SYSDATE))
+            WHERE s.user_id         = COALESCE(in_user_id,          sess.get_user_id())
+                AND s.app_id        = COALESCE(in_app_id,           sess.get_app_id())
+                AND s.page_id       = COALESCE(in_page_id,          s.page_id)
+                AND s.session_db    = COALESCE(in_session_db,       s.session_db)
+                AND s.session_apex  = COALESCE(in_session_apex,     s.session_apex)
+                AND s.created_at    >= COALESCE(in_created_at_min,  TRUNC(SYSDATE))
         );
 
         -- prepare contexts

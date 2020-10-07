@@ -83,7 +83,7 @@ CREATE OR REPLACE PACKAGE sess AS
     PROCEDURE create_session (
         in_user_id          sessions.user_id%TYPE,
         in_app_id           sessions.app_id%TYPE,
-        in_page_id          sessions.user_id%TYPE,
+        in_page_id          sessions.page_id%TYPE       := NULL,
         in_message          logs.message%TYPE           := NULL
     );
 
