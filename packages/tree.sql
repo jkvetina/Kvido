@@ -1107,6 +1107,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                 --
                 IF (rec.page_id             = rows_whitelist(i).page_id         OR rows_whitelist(i).page_id        IS NULL)
                     AND (rec.user_id        LIKE rows_whitelist(i).user_id      OR rows_whitelist(i).user_id        IS NULL)
+                    AND (rec.role_id        LIKE rows_whitelist(i).role_id      OR rows_whitelist(i).role_id        IS NULL)
                     AND (rec.module_name    LIKE rows_whitelist(i).module_name  OR rows_whitelist(i).module_name    IS NULL)
                     AND (rec.flag           = rows_whitelist(i).flag            OR rows_whitelist(i).flag           IS NULL)
                 THEN
@@ -1122,6 +1123,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                 --
                 IF (rec.page_id             = rows_blacklist(i).page_id         OR rows_blacklist(i).page_id        IS NULL)
                     AND (rec.user_id        LIKE rows_blacklist(i).user_id      OR rows_blacklist(i).user_id        IS NULL)
+                    AND (rec.role_id        LIKE rows_blacklist(i).role_id      OR rows_blacklist(i).role_id        IS NULL)
                     AND (rec.module_name    LIKE rows_blacklist(i).module_name  OR rows_blacklist(i).module_name    IS NULL)
                     AND (rec.flag           = rows_blacklist(i).flag            OR rows_blacklist(i).flag           IS NULL)
                 THEN
@@ -1273,10 +1275,11 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         --
         $IF $$PROFILER_INSTALLED $THEN
             FOR i IN 1 .. rows_profiler.COUNT LOOP
-                IF (rec.page_id             = rows_profiler(i).page_id         OR rows_profiler(i).page_id      IS NULL)
-                    AND (rec.user_id        LIKE rows_profiler(i).user_id      OR rows_profiler(i).user_id      IS NULL)
-                    AND (rec.module_name    LIKE rows_profiler(i).module_name  OR rows_profiler(i).module_name  IS NULL)
-                    AND (rec.flag           = rows_profiler(i).flag            OR rows_profiler(i).flag         IS NULL)
+                IF (rec.page_id             = rows_profiler(i).page_id          OR rows_profiler(i).page_id     IS NULL)
+                    AND (rec.user_id        LIKE rows_profiler(i).user_id       OR rows_profiler(i).user_id     IS NULL)
+                    AND (rec.role_id        LIKE rows_profiler(i).role_id       OR rows_profiler(i).role_id     IS NULL)
+                    AND (rec.module_name    LIKE rows_profiler(i).module_name   OR rows_profiler(i).module_name IS NULL)
+                    AND (rec.flag           = rows_profiler(i).flag             OR rows_profiler(i).flag        IS NULL)
                 THEN
                     DBMS_PROFILER.START_PROFILER(rec.log_id, run_number => curr_profiler_id);
                     $IF $$OUTPUT_ENABLED $THEN
@@ -1763,14 +1766,14 @@ BEGIN
     SELECT t.*
     BULK COLLECT INTO rows_whitelist
     FROM logs_setup t
-    WHERE (t.app_id     = sess.get_app_id() OR t.app_id IS NULL)
+    WHERE t.app_id      = sess.get_app_id()
         AND t.track     = 'Y'
         AND ROWNUM      <= rows_limit;
     --
     SELECT t.*
     BULK COLLECT INTO rows_blacklist
     FROM logs_setup t
-    WHERE (t.app_id     = sess.get_app_id() OR t.app_id IS NULL)
+    WHERE t.app_id      = sess.get_app_id()
         AND t.track     = 'N'
         AND ROWNUM      <= rows_limit;
 
@@ -1778,7 +1781,7 @@ BEGIN
     SELECT t.*
     BULK COLLECT INTO rows_profiler
     FROM logs_setup t
-    WHERE (t.app_id     = sess.get_app_id() OR t.app_id IS NULL)
+    WHERE t.app_id      = sess.get_app_id()
         AND t.track     = 'Y'
         AND t.profiler  = 'Y'
         AND ROWNUM      <= rows_limit;
