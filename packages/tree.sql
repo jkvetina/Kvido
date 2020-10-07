@@ -1107,7 +1107,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                 --
                 IF (rec.page_id             = rows_whitelist(i).page_id         OR rows_whitelist(i).page_id        IS NULL)
                     AND (rec.user_id        LIKE rows_whitelist(i).user_id      OR rows_whitelist(i).user_id        IS NULL)
-                    AND (rec.role_id        LIKE rows_whitelist(i).role_id      OR rows_whitelist(i).role_id        IS NULL)
+                    AND (sess.get_role_id_status(rows_whitelist(i).role_id)     OR rows_whitelist(i).role_id        IS NULL)
                     AND (rec.module_name    LIKE rows_whitelist(i).module_name  OR rows_whitelist(i).module_name    IS NULL)
                     AND (rec.flag           = rows_whitelist(i).flag            OR rows_whitelist(i).flag           IS NULL)
                 THEN
@@ -1123,7 +1123,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                 --
                 IF (rec.page_id             = rows_blacklist(i).page_id         OR rows_blacklist(i).page_id        IS NULL)
                     AND (rec.user_id        LIKE rows_blacklist(i).user_id      OR rows_blacklist(i).user_id        IS NULL)
-                    AND (rec.role_id        LIKE rows_blacklist(i).role_id      OR rows_blacklist(i).role_id        IS NULL)
+                    AND (sess.get_role_id_status(rows_blacklist(i).role_id)     OR rows_blacklist(i).role_id        IS NULL)
                     AND (rec.module_name    LIKE rows_blacklist(i).module_name  OR rows_blacklist(i).module_name    IS NULL)
                     AND (rec.flag           = rows_blacklist(i).flag            OR rows_blacklist(i).flag           IS NULL)
                 THEN
@@ -1277,7 +1277,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             FOR i IN 1 .. rows_profiler.COUNT LOOP
                 IF (rec.page_id             = rows_profiler(i).page_id          OR rows_profiler(i).page_id     IS NULL)
                     AND (rec.user_id        LIKE rows_profiler(i).user_id       OR rows_profiler(i).user_id     IS NULL)
-                    AND (rec.role_id        LIKE rows_profiler(i).role_id       OR rows_profiler(i).role_id     IS NULL)
+                    AND (sess.get_role_id_status(rows_profiler(i).role_id)      OR rows_profiler(i).role_id     IS NULL)
                     AND (rec.module_name    LIKE rows_profiler(i).module_name   OR rows_profiler(i).module_name IS NULL)
                     AND (rec.flag           = rows_profiler(i).flag             OR rows_profiler(i).flag        IS NULL)
                 THEN
