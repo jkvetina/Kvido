@@ -248,7 +248,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         rec.src             := in_src;
         rec.created_at      := SYSTIMESTAMP;
         --
-        IF rec.page_id > 0 THEN
+        IF rec.page_id BETWEEN 1 AND 999 THEN
             rec.apex_globals    := sess.get_apex_globals();
             rec.apex_locals     := sess.get_apex_locals();
         END IF;
@@ -558,7 +558,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         INTO out_payload
         FROM session_context s
         WHERE s.namespace       = sess.app_namespace
-            AND s.attribute     != sess.app_user_attr            -- user_id has dedicated column
+            AND s.attribute     != sess.app_user_attr           -- user_id has dedicated column
             AND s.attribute     NOT LIKE '%\_\_' ESCAPE '\'     -- ignore private contexts
             AND s.value         IS NOT NULL;
         --
