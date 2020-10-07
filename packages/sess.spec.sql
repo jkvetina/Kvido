@@ -107,8 +107,8 @@ CREATE OR REPLACE PACKAGE sess AS
     -- Store current contexts and items to `sessions` and update `logs` table
     --
     PROCEDURE update_session (
-        in_log_id           logs.log_id%TYPE        := NULL,
-        in_src              sessions.src%TYPE       := NULL
+        in_log_id           logs.log_id%TYPE            := NULL,
+        in_src              sessions.src%TYPE           := NULL
     );
 
 
@@ -123,6 +123,18 @@ CREATE OR REPLACE PACKAGE sess AS
     --
     FUNCTION get_user_id
     RETURN sessions.user_id%TYPE;
+
+
+
+    --
+    -- Returns `TRUE` if user has passed role
+    --
+    FUNCTION get_role_id_status (
+        in_role_id          user_roles.role_id%TYPE,
+        in_user_id          user_roles.user_id%TYPE     := NULL,
+        in_app_id           user_roles.app_id%TYPE      := NULL
+    )
+    RETURN BOOLEAN;
 
 
 
@@ -170,7 +182,7 @@ CREATE OR REPLACE PACKAGE sess AS
     -- Returns client_id for `DBMS_SESSION`
     --
     FUNCTION get_client_id (
-        in_user_id          sessions.user_id%TYPE := NULL
+        in_user_id          sessions.user_id%TYPE       := NULL
     )
     RETURN VARCHAR2;
 
@@ -220,7 +232,7 @@ CREATE OR REPLACE PACKAGE sess AS
     --
     PROCEDURE set_context (
         in_name     VARCHAR2,
-        in_value    VARCHAR2        := NULL
+        in_value    VARCHAR2    := NULL
     );
 
 

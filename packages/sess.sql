@@ -225,8 +225,8 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
     PROCEDURE update_session (
-        in_log_id           logs.log_id%TYPE        := NULL,
-        in_src              sessions.src%TYPE       := NULL
+        in_log_id           logs.log_id%TYPE            := NULL,
+        in_src              sessions.src%TYPE           := NULL
     )
     AS
         PRAGMA AUTONOMOUS_TRANSACTION;
@@ -305,6 +305,28 @@ CREATE OR REPLACE PACKAGE BODY sess AS
                 sess.app_user
             ),
             tree.dml_tables_owner), tree.empty_user);        
+    END;
+
+
+
+    FUNCTION get_role_id_status (
+        in_role_id          user_roles.role_id%TYPE,
+        in_user_id          user_roles.user_id%TYPE     := NULL,
+        in_app_id           user_roles.app_id%TYPE      := NULL
+    )
+    RETURN BOOLEAN AS
+        role_exists         PLS_INTEGER;
+    BEGIN
+        SELECT 1 INTO role_exists
+        FROM user_roles r
+        WHERE r.app_id      = COALESCE(in_app_id,  sess.get_app_id())
+            AND r.user_id   = COALESCE(in_user_id, sess.get_user_id())
+            AND r.role_id   = in_role_id;
+        --
+        RETURN TRUE;
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN FALSE;
     END;
 
 
@@ -421,7 +443,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
     PROCEDURE set_context (
         in_name     VARCHAR2,
-        in_value    VARCHAR2        := NULL
+        in_value    VARCHAR2    := NULL
     ) AS
     BEGIN
         IF SYS_CONTEXT(sess.app_namespace, sess.app_user_attr) IS NULL THEN
