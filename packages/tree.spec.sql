@@ -61,6 +61,9 @@ CREATE OR REPLACE PACKAGE tree AS
     dml_tables_owner        CONSTANT VARCHAR2(30)       := USER;
     dml_tables_postfix      CONSTANT VARCHAR2(30)       := '_E$';
 
+    -- arrays to specify adhoc requests
+    TYPE arr_log_setup      IS VARRAY(100) OF logs_setup%ROWTYPE;
+
 
 
 
@@ -724,6 +727,17 @@ CREATE OR REPLACE PACKAGE tree AS
         PACKAGE tree,
         PACKAGE tree_ut
     );
+
+
+
+    --
+    -- Check if we log current record or not
+    --
+    FUNCTION is_listed (
+        in_list         arr_log_setup,
+        in_row          logs%ROWTYPE
+    )
+    RETURN BOOLEAN;
 
 
 

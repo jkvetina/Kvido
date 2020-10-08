@@ -21,8 +21,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
     internal_update_timer   CONSTANT logs.module_name%TYPE      := 'TREE.UPDATE_TIMER';
 
     -- arrays to specify adhoc requests
-    TYPE arr_log_setup      IS VARRAY(100) OF logs_setup%ROWTYPE;
-    --
     rows_whitelist          arr_log_setup := arr_log_setup();
     rows_blacklist          arr_log_setup := arr_log_setup();
     rows_profiler           arr_log_setup := arr_log_setup();
@@ -1102,34 +1100,18 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
         -- check whitelist first
         IF NOT whitelisted THEN
-            FOR i IN 1 .. rows_whitelist.COUNT LOOP
-                EXIT WHEN whitelisted;
-                --
-                IF (rec.page_id             = rows_whitelist(i).page_id         OR rows_whitelist(i).page_id        IS NULL)
-                    AND (rec.user_id        LIKE rows_whitelist(i).user_id      OR rows_whitelist(i).user_id        IS NULL)
-                    AND (sess.get_role_id_status(rows_whitelist(i).role_id)     OR rows_whitelist(i).role_id        IS NULL)
-                    AND (rec.module_name    LIKE rows_whitelist(i).module_name  OR rows_whitelist(i).module_name    IS NULL)
-                    AND (rec.flag           = rows_whitelist(i).flag            OR rows_whitelist(i).flag           IS NULL)
-                THEN
-                    whitelisted := TRUE;
-                END IF;
-            END LOOP;
+            whitelisted := tree.is_listed (
+                in_list => rows_whitelist,
+                in_row  => rec
+            );
         END IF;
 
         -- check blacklist
         IF NOT whitelisted THEN
-            FOR i IN 1 .. rows_blacklist.COUNT LOOP
-                EXIT WHEN blacklisted;
-                --
-                IF (rec.page_id             = rows_blacklist(i).page_id         OR rows_blacklist(i).page_id        IS NULL)
-                    AND (rec.user_id        LIKE rows_blacklist(i).user_id      OR rows_blacklist(i).user_id        IS NULL)
-                    AND (sess.get_role_id_status(rows_blacklist(i).role_id)     OR rows_blacklist(i).role_id        IS NULL)
-                    AND (rec.module_name    LIKE rows_blacklist(i).module_name  OR rows_blacklist(i).module_name    IS NULL)
-                    AND (rec.flag           = rows_blacklist(i).flag            OR rows_blacklist(i).flag           IS NULL)
-                THEN
-                    blacklisted := TRUE;
-                END IF;
-            END LOOP;
+            blacklisted := tree.is_listed (
+                in_list => rows_blacklist,
+                in_row  => rec
+            );
             --
             IF blacklisted THEN
                 RETURN NULL;  -- exit function
@@ -1192,6 +1174,28 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         --
         COMMIT;
         RAISE_APPLICATION_ERROR(tree.app_exception_code, 'LOG_FAILED', TRUE);
+    END;
+
+
+
+    FUNCTION is_listed (
+        in_list         arr_log_setup,
+        in_row          logs%ROWTYPE
+    )
+    RETURN BOOLEAN AS
+    BEGIN
+        FOR i IN 1 .. in_list.COUNT LOOP
+            IF (in_row.page_id              = in_list(i).page_id            OR in_list(i).page_id       IS NULL)
+                AND (in_row.user_id         LIKE in_list(i).user_id         OR in_list(i).user_id       IS NULL)
+                AND (in_row.module_name     LIKE in_list(i).module_name     OR in_list(i).module_name   IS NULL)
+                AND (in_row.flag            = in_list(i).flag               OR in_list(i).flag          IS NULL)
+                AND (sess.get_role_id_status(in_list(i).role_id)            OR in_list(i).role_id       IS NULL)
+            THEN
+                RETURN TRUE;
+            END IF;
+        END LOOP;
+        --
+        RETURN FALSE;
     END;
 
 
@@ -1274,31 +1278,25 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         END IF;
         --
         $IF $$PROFILER_INSTALLED $THEN
-            FOR i IN 1 .. rows_profiler.COUNT LOOP
-                IF (rec.page_id             = rows_profiler(i).page_id          OR rows_profiler(i).page_id     IS NULL)
-                    AND (rec.user_id        LIKE rows_profiler(i).user_id       OR rows_profiler(i).user_id     IS NULL)
-                    AND (sess.get_role_id_status(rows_profiler(i).role_id)      OR rows_profiler(i).role_id     IS NULL)
-                    AND (rec.module_name    LIKE rows_profiler(i).module_name   OR rows_profiler(i).module_name IS NULL)
-                    AND (rec.flag           = rows_profiler(i).flag             OR rows_profiler(i).flag        IS NULL)
-                THEN
-                    DBMS_PROFILER.START_PROFILER(rec.log_id, run_number => curr_profiler_id);
-                    $IF $$OUTPUT_ENABLED $THEN
-                        DBMS_OUTPUT.PUT_LINE('  > START_PROFILER ' || curr_profiler_id);
-                    $END
-                    --
-                    out_log_id := tree.log__ (                  -- be aware that this may cause infinite loop
-                        in_action_name  => 'START_PROFILER',    -- used in logs_profiler view
-                        in_flag         => tree.flag_profiler,
-                        in_arguments    => curr_profiler_id,
-                        in_parent_id    => rec.log_id
-                    );
-                    --
-                    curr_profiler_id    := rec.log_id;          -- store current and parent log_id so we can stop profiler later
-                    parent_profiler_id  := rec.log_parent;
-                    --
-                    EXIT;  -- one profiler is enough
-                END IF;
-            END LOOP;
+            IF tree.is_listed (
+                in_list => rows_profiler,
+                in_row  => rec
+            ) THEN
+                DBMS_PROFILER.START_PROFILER(rec.log_id, run_number => curr_profiler_id);
+                $IF $$OUTPUT_ENABLED $THEN
+                    DBMS_OUTPUT.PUT_LINE('  > START_PROFILER ' || curr_profiler_id);
+                $END
+                --
+                out_log_id := tree.log__ (                  -- be aware that this may cause infinite loop
+                    in_action_name  => 'START_PROFILER',    -- used in logs_profiler view
+                    in_flag         => tree.flag_profiler,
+                    in_arguments    => curr_profiler_id,
+                    in_parent_id    => rec.log_id
+                );
+                --
+                curr_profiler_id    := rec.log_id;          -- store current and parent log_id so we can stop profiler later
+                parent_profiler_id  := rec.log_parent;
+            END IF;
         $END
     END;
 
