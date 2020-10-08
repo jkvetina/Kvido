@@ -20,10 +20,10 @@ CREATE TABLE logs_setup (
     CONSTRAINT fk_logs_setup_role_id FOREIGN KEY (role_id)
         REFERENCES roles (role_id),
     --
-    CONSTRAINT ch_logs_setup_track     CHECK (track        IN ('Y', 'N')),
-    CONSTRAINT ch_logs_setup_prof      CHECK (profiler     IN ('Y', 'N')),
+    CONSTRAINT ch_logs_setup_track      CHECK (track        IN ('Y', 'N')),
+    CONSTRAINT ch_logs_setup_prof       CHECK (profiler     IN ('Y', 'N')),
     --
-    CONSTRAINT ch_logs_setup_prof2     CHECK (
+    CONSTRAINT ch_logs_setup_prof2      CHECK (
         (profiler = 'N') OR
         (profiler = 'Y' AND track = 'Y')
     )
