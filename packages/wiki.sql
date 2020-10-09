@@ -7,8 +7,16 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
     BEGIN
         BEGIN
             SELECT 'Y' INTO is_view
-            FROM user_views v
-            WHERE v.view_name = in_name;
+            FROM DUAL
+            WHERE EXISTS (
+                SELECT 1
+                FROM user_views v
+                WHERE v.view_name = in_name
+                UNION ALL
+                SELECT 1
+                FROM user_mviews m
+                WHERE m.mview_name = in_name
+            );
         EXCEPTION
         WHEN NO_DATA_FOUND THEN
             NULL;
