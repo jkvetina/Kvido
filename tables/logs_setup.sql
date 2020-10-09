@@ -9,8 +9,7 @@ CREATE TABLE logs_setup (
     flag                CHAR(1),
     module_name         VARCHAR2(30),
     --
-    track               CHAR(1)         DEFAULT 'N' NOT NULL,
-    profiler            CHAR(1)         DEFAULT 'N' NOT NULL,
+    is_tracked          CHAR(1)         NOT NULL,
     --
     CONSTRAINT uq_logs_setup UNIQUE (app_id, page_id, user_id, role_id, flag, module_name),
     --
@@ -20,13 +19,7 @@ CREATE TABLE logs_setup (
     CONSTRAINT fk_logs_setup_role_id FOREIGN KEY (role_id)
         REFERENCES roles (role_id),
     --
-    CONSTRAINT ch_logs_setup_track      CHECK (track        IN ('Y', 'N')),
-    CONSTRAINT ch_logs_setup_prof       CHECK (profiler     IN ('Y', 'N')),
-    --
-    CONSTRAINT ch_logs_setup_prof2      CHECK (
-        (profiler = 'N') OR
-        (profiler = 'Y' AND track = 'Y')
-    )
+    CONSTRAINT ch_logs_setup_is_tracked     CHECK (is_tracked IN ('Y', 'N'))
 );
 --
 CREATE INDEX fk_logs_setup_user_id ON logs_setup (user_id) COMPUTE STATISTICS;
@@ -42,7 +35,5 @@ COMMENT ON COLUMN logs_setup.role_id        IS 'Role ID; `NULL` or `%` for any r
 --
 COMMENT ON COLUMN logs_setup.flag           IS 'Flag to differentiate logs; `NULL` for any flag';
 COMMENT ON COLUMN logs_setup.module_name    IS 'Module name; `NULL` for any module';
---
-COMMENT ON COLUMN logs_setup.track          IS '`Y` = track; `N` = dont track; `Y` > `N`';
-COMMENT ON COLUMN logs_setup.profiler       IS '`Y` = start DBMS_PROFILER';
+COMMENT ON COLUMN logs_setup.is_tracked     IS '`Y` = track; `N` = dont track; `Y` > `N`';
 

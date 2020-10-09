@@ -580,15 +580,6 @@ CREATE OR REPLACE PACKAGE tree AS
     --
 
     --
-    -- Start profiler (based on trigger in `logs_setup` table)
-    --
-    PROCEDURE start_profiler (
-        rec                 logs%ROWTYPE
-    );
-
-
-
-    --
     -- Start profiler manually
     --
     PROCEDURE start_profiler (

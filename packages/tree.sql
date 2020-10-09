@@ -23,7 +23,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
     -- arrays to specify adhoc requests
     rows_whitelist          arr_log_setup := arr_log_setup();
     rows_blacklist          arr_log_setup := arr_log_setup();
-    rows_profiler           arr_log_setup := arr_log_setup();
     --
     rows_limit              CONSTANT PLS_INTEGER                := 100;  -- match arr_log_setup VARRAY
 
@@ -1156,12 +1155,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                 RTRIM(': ' || SUBSTR(in_arguments, 1, 40), ': ')
             );
         $END
-
-        $IF $$PROFILER_INSTALLED $THEN
-            IF rec.flag != tree.flag_profiler AND rows_profiler.COUNT > 0 AND curr_profiler_id IS NULL THEN
-                tree.start_profiler(rec);
-            END IF;
-        $END
         --
         RETURN rec.log_id;
     EXCEPTION
@@ -1289,42 +1282,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
 
     PROCEDURE start_profiler (
-        rec                 logs%ROWTYPE
-    ) AS
-        out_log_id          logs.log_id%TYPE;
-    BEGIN
-        -- avoid infinite loop
-        IF (rec.flag = tree.flag_profiler OR rows_profiler.COUNT = 0 OR curr_profiler_id IS NOT NULL) THEN
-            DBMS_OUTPUT.PUT_LINE('  > EXIT_PROFILER');
-            RETURN;
-        END IF;
-        --
-        $IF $$PROFILER_INSTALLED $THEN
-            IF tree.is_listed (
-                in_list => rows_profiler,
-                in_row  => rec
-            ) THEN
-                DBMS_PROFILER.START_PROFILER(rec.log_id, run_number => curr_profiler_id);
-                $IF $$OUTPUT_ENABLED $THEN
-                    DBMS_OUTPUT.PUT_LINE('  > START_PROFILER ' || curr_profiler_id);
-                $END
-                --
-                out_log_id := tree.log__ (                  -- be aware that this may cause infinite loop
-                    in_action_name  => 'START_PROFILER',    -- used in logs_profiler view
-                    in_flag         => tree.flag_profiler,
-                    in_arguments    => curr_profiler_id,
-                    in_parent_id    => rec.log_id
-                );
-                --
-                curr_profiler_id    := rec.log_id;          -- store current and parent log_id so we can stop profiler later
-                parent_profiler_id  := rec.log_parent;
-            END IF;
-        $END
-    END;
-
-
-
-    PROCEDURE start_profiler (
         in_log_id           logs.log_id%TYPE
     ) AS
         out_log_id          logs.log_id%TYPE;
@@ -1396,20 +1353,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                 out_parent_id       => rec.log_parent
             );
         END IF;
-
-        -- when updating timer for same module which initiated start_profiler
-        $IF $$PROFILER_INSTALLED $THEN
-            IF rec.flag != tree.flag_profiler
-                AND rows_profiler.COUNT > 0
-                AND curr_profiler_id IS NOT NULL
-                AND (
-                    in_log_id           IN (curr_profiler_id, parent_profiler_id)
-                    OR rec.log_parent   IN (curr_profiler_id, parent_profiler_id)
-                )
-            THEN
-                tree.stop_profiler(COALESCE(in_log_id, rec.log_parent));
-            END IF;
-        $END
 
         -- update timer
         UPDATE logs e
@@ -1786,24 +1729,15 @@ BEGIN
     SELECT t.*
     BULK COLLECT INTO rows_whitelist
     FROM logs_setup t
-    WHERE t.app_id      = sess.get_app_id()
-        AND t.track     = 'Y'
-        AND ROWNUM      <= rows_limit;
+    WHERE t.app_id          = sess.get_app_id()
+        AND t.is_tracked    = 'Y'
+        AND ROWNUM          <= rows_limit;
     --
     SELECT t.*
     BULK COLLECT INTO rows_blacklist
     FROM logs_setup t
-    WHERE t.app_id      = sess.get_app_id()
-        AND t.track     = 'N'
-        AND ROWNUM      <= rows_limit;
-
-    -- load profiling requests
-    SELECT t.*
-    BULK COLLECT INTO rows_profiler
-    FROM logs_setup t
-    WHERE t.app_id      = sess.get_app_id()
-        AND t.track     = 'Y'
-        AND t.profiler  = 'Y'
-        AND ROWNUM      <= rows_limit;
+    WHERE t.app_id          = sess.get_app_id()
+        AND t.is_tracked    = 'N'
+        AND ROWNUM          <= rows_limit;
 END;
 /
