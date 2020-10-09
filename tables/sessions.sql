@@ -6,14 +6,14 @@ CREATE TABLE sessions (
     page_id             NUMBER(6)       NOT NULL,
     user_id             VARCHAR2(30)    NOT NULL,
     --
-    contexts            VARCHAR2(1000),             -- should match logs.sessions
-    apex_globals        VARCHAR2(1000),
-    apex_locals         VARCHAR2(1000),
+    contexts            VARCHAR2(2000),
+    apex_globals        VARCHAR2(2000),
+    apex_locals         VARCHAR2(2000),
     --
     session_db          NUMBER          NOT NULL,
     session_apex        NUMBER          NOT NULL,
     --
-    src                 VARCHAR2(2),
+    src                 VARCHAR2(2),                        -- remove later
     created_at          TIMESTAMP       NOT NULL,
     --
     CONSTRAINT pk_sessions PRIMARY KEY (session_id),

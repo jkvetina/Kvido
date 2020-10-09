@@ -19,6 +19,8 @@ CREATE TABLE logs_lobs (
     CONSTRAINT ch_logs_lobs_json CHECK (payload_json IS JSON)
 );
 --
+-- STORE INLINE OF POSSIBLE -> ENABLE STORAGE IN ROW, DB_BLOCK_SIZE 8K
+--
 COMMENT ON TABLE  logs_lobs                  IS 'Large objects storage for LOGS table';
 --
 COMMENT ON COLUMN logs_lobs.log_id           IS 'ID to have multiple LOBs attached to single row in LOGS';

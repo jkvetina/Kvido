@@ -1301,9 +1301,8 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             --
             curr_profiler_id    := out_log_id;          -- store current and parent log_id so we can stop profiler later
             parent_profiler_id  := in_log_id;
-        $ELSE
-            NULL;
         $END
+        RETURN;
     END;
 
 
@@ -1613,8 +1612,8 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         -- append all existing tables
         FOR c IN (
             SELECT
-                RTRIM(t.table_name, tree.dml_tables_postfix) AS data_table,
-                t.owner || '.' || t.table_name              AS error_table
+                RTRIM(t.table_name, tree.dml_tables_postfix)    AS data_table,
+                t.owner || '.' || t.table_name                  AS error_table
             FROM all_tables t
             WHERE t.owner           = tree.dml_tables_owner
                 AND t.table_name    LIKE '%' || dml_tables_postfix

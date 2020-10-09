@@ -294,7 +294,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             RETURN COALESCE(APEX_APPLICATION.G_FLOW_ID, 0);
         $ELSE
             RETURN 0;
-        $END    
+        $END
     END;
 
 
@@ -306,7 +306,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             RETURN APEX_APPLICATION.G_FLOW_STEP_ID;
         $ELSE
             RETURN NULL;
-        $END    
+        $END
     END;
 
 
@@ -580,7 +580,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
                     APEX_UTIL.SET_SESSION_STATE(payload_name, payload_value);
                 END IF;
             END LOOP;
-        $END    
+        $END
     END;
 
 
@@ -618,7 +618,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             FROM apex_application_items t
             WHERE t.application_id = sess.get_app_id()
                 AND APEX_UTIL.GET_SESSION_STATE(t.item_name) IS NOT NULL;
-        $END    
+        $END
         --
         RETURN out_items;
     END;
@@ -639,7 +639,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             WHERE t.application_id  = sess.get_app_id()
                 AND t.page_id       = sess.get_page_id()
                 AND APEX_UTIL.GET_SESSION_STATE(t.item_name) IS NOT NULL;
-        $END    
+        $END
         --
         RETURN out_items;
     END;
