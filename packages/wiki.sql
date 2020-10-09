@@ -24,7 +24,7 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
                     'BFILE',        'BINARY FILE LOB',
                     data_type
                 ) AS data_type,
-                CASE WHEN c.nullable IS NOT NULL THEN 'Y' END AS nn,
+                DECODE(c.nullable, 'N', 'Y', '') AS nn,
                 CASE WHEN c.data_default IS NOT NULL THEN 'Y' END AS dv,
                 k.pk,
                 k.uq,
