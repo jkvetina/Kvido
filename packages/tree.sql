@@ -1200,10 +1200,32 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
 
 
+    PROCEDURE attach_blob (
+        in_payload          logs_lobs.payload_blob%TYPE,
+        in_lob_name         logs_lobs.lob_name%TYPE         := NULL,
+        in_log_id           logs_lobs.log_id%TYPE           := NULL
+    ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+        --
+        rec                 logs_lobs%ROWTYPE;
+    BEGIN
+        rec.log_parent      := COALESCE(in_log_id, tree.log_module(in_log_id, in_lob_name));
+        --
+        rec.log_id          := log_id.NEXTVAL;
+        rec.payload_blob    := in_payload;
+        rec.lob_name        := in_lob_name;
+        rec.lob_length      := DBMS_LOB.GETLENGTH(rec.payload_blob);
+        --
+        INSERT INTO logs_lobs VALUES rec;
+        COMMIT;
+    END;
+
+
+
     PROCEDURE attach_clob (
-        in_payload          CLOB,
-        in_lob_name         logs_lobs.lob_name%TYPE     := NULL,
-        in_log_id           logs_lobs.log_id%TYPE       := NULL
+        in_payload          logs_lobs.payload_clob%TYPE,
+        in_lob_name         logs_lobs.lob_name%TYPE         := NULL,
+        in_log_id           logs_lobs.log_id%TYPE           := NULL
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
@@ -1222,10 +1244,10 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
 
 
-    PROCEDURE attach_clob (
-        in_payload          XMLTYPE,
-        in_lob_name         logs_lobs.lob_name%TYPE     := NULL,
-        in_log_id           logs_lobs.log_id%TYPE       := NULL
+    PROCEDURE attach_xml (
+        in_payload          logs_lobs.payload_xml%TYPE,
+        in_lob_name         logs_lobs.lob_name%TYPE         := NULL,
+        in_log_id           logs_lobs.log_id%TYPE           := NULL
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
@@ -1234,9 +1256,9 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         rec.log_parent      := COALESCE(in_log_id, tree.log_module(in_log_id, in_lob_name));
         --
         rec.log_id          := log_id.NEXTVAL;
-        rec.payload_clob    := in_payload.GETCLOBVAL();
+        rec.payload_xml     := in_payload;
         rec.lob_name        := in_lob_name;
-        rec.lob_length      := DBMS_LOB.GETLENGTH(rec.payload_clob);
+        rec.lob_length      := DBMS_LOB.GETLENGTH(XMLTYPE.GETCLOBVAL(rec.payload_xml));
         --
         INSERT INTO logs_lobs VALUES rec;
         COMMIT;
@@ -1244,10 +1266,10 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
 
 
-    PROCEDURE attach_blob (
-        in_payload          BLOB,
-        in_lob_name         logs_lobs.lob_name%TYPE     := NULL,
-        in_log_id           logs_lobs.log_id%TYPE       := NULL
+    PROCEDURE attach_json (
+        in_payload          logs_lobs.payload_json%TYPE,
+        in_lob_name         logs_lobs.lob_name%TYPE         := NULL,
+        in_log_id           logs_lobs.log_id%TYPE           := NULL
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
@@ -1256,9 +1278,9 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         rec.log_parent      := COALESCE(in_log_id, tree.log_module(in_log_id, in_lob_name));
         --
         rec.log_id          := log_id.NEXTVAL;
-        rec.payload_blob    := in_payload;
+        rec.payload_json    := in_payload;
         rec.lob_name        := in_lob_name;
-        rec.lob_length      := DBMS_LOB.GETLENGTH(rec.payload_blob);
+        rec.lob_length      := DBMS_LOB.GETLENGTH(rec.payload_json);
         --
         INSERT INTO logs_lobs VALUES rec;
         COMMIT;

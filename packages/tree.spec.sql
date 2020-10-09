@@ -366,12 +366,23 @@ CREATE OR REPLACE PACKAGE tree AS
     --
 
     --
+    -- Attach `BLOB` to current/requested `log_id`
+    --
+    PROCEDURE attach_blob (
+        in_payload          logs_lobs.payload_blob%TYPE,
+        in_lob_name         logs_lobs.lob_name%TYPE         := NULL,
+        in_log_id           logs_lobs.log_id%TYPE           := NULL
+    );
+
+
+
+    --
     -- Attach `CLOB` to current/requested `log_id`
     --
     PROCEDURE attach_clob (
-        in_payload          CLOB,
-        in_lob_name         logs_lobs.lob_name%TYPE     := NULL,
-        in_log_id           logs_lobs.log_id%TYPE       := NULL
+        in_payload          logs_lobs.payload_clob%TYPE,
+        in_lob_name         logs_lobs.lob_name%TYPE         := NULL,
+        in_log_id           logs_lobs.log_id%TYPE           := NULL
     );
 
 
@@ -379,21 +390,21 @@ CREATE OR REPLACE PACKAGE tree AS
     --
     -- Attach `XML` to current/requested `log_id`
     --
-    PROCEDURE attach_clob (
-        in_payload          XMLTYPE,
-        in_lob_name         logs_lobs.lob_name%TYPE     := NULL,
-        in_log_id           logs_lobs.log_id%TYPE       := NULL
+    PROCEDURE attach_xml (
+        in_payload          logs_lobs.payload_xml%TYPE,
+        in_lob_name         logs_lobs.lob_name%TYPE         := NULL,
+        in_log_id           logs_lobs.log_id%TYPE           := NULL
     );
 
 
 
     --
-    -- Attach `BLOB` to current/requested `log_id`
+    -- Attach `JSON` to current/requested `log_id`
     --
-    PROCEDURE attach_blob (
-        in_payload          BLOB,
-        in_lob_name         logs_lobs.lob_name%TYPE     := NULL,
-        in_log_id           logs_lobs.log_id%TYPE       := NULL
+    PROCEDURE attach_json (
+        in_payload          logs_lobs.payload_json%TYPE,
+        in_lob_name         logs_lobs.lob_name%TYPE         := NULL,
+        in_log_id           logs_lobs.log_id%TYPE           := NULL
     );
 
 
