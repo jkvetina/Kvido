@@ -210,15 +210,12 @@ CREATE OR REPLACE PACKAGE BODY tree AS
     )
     RETURN logs.arguments%TYPE AS
     BEGIN
-        RETURN SUBSTR(RTRIM(
-            in_arg1 || tree.splitter ||
-            in_arg2 || tree.splitter ||
-            in_arg3 || tree.splitter ||
-            in_arg4 || tree.splitter ||
-            in_arg5 || tree.splitter ||
-            in_arg6 || tree.splitter ||
-            in_arg7 || tree.splitter ||
-            in_arg8, tree.splitter), 1, tree.length_arguments);
+        RETURN SUBSTR(
+            REGEXP_REPLACE(
+                NULLIF(JSON_ARRAY(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8), '[]'),
+                '"(\d+)([.,]\d+)?"', '\1\2'  -- convert to numbers if possible
+            ),
+            1, tree.length_arguments);
     END;
 
 
