@@ -624,7 +624,9 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         in_arg6         logs.arguments%TYPE     := NULL,
         in_arg7         logs.arguments%TYPE     := NULL,
         in_arg8         logs.arguments%TYPE     := NULL,
-        in_rollback     BOOLEAN                 := TRUE
+        --
+        in_rollback     BOOLEAN                 := TRUE,
+        in_to_apex      BOOLEAN                 := FALSE
     ) AS
         log_id          logs.log_id%TYPE;
         action_name     logs.action_name%TYPE;
@@ -645,12 +647,37 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             in_arg7     => in_arg7,
             in_arg8     => in_arg8
         );
-        --
+
+        -- send error message to APEX
+        $IF $$APEX_INSTALLED $THEN
+        IF in_to_apex THEN
+            tree.raise_to_apex (
+                in_message  => action_name
+            );
+        END IF;
+        $END
+
         --RAISE tree.app_exception;
         -- we could raise this^, but without custom message
         -- so we append same code but with message to current err_stack
         -- and we can intercept this code in calls above
         RAISE_APPLICATION_ERROR(tree.app_exception_code, action_name || tree.splitter || log_id, TRUE);
+    END;
+
+
+
+    PROCEDURE raise_to_apex (
+        in_message          logs.message%TYPE
+    ) AS
+    BEGIN
+        $IF $$APEX_INSTALLED $THEN
+            APEX_ERROR.ADD_ERROR (
+                p_message           => in_message,
+                p_display_location  => APEX_ERROR.C_ON_ERROR_PAGE
+            );
+        $ELSE
+            NULL;
+        $END
     END;
 
 

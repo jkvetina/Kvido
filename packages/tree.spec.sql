@@ -297,7 +297,18 @@ CREATE OR REPLACE PACKAGE tree AS
         in_arg6         logs.arguments%TYPE     := NULL,
         in_arg7         logs.arguments%TYPE     := NULL,
         in_arg8         logs.arguments%TYPE     := NULL,
-        in_rollback     BOOLEAN                 := TRUE
+        --
+        in_rollback     BOOLEAN                 := TRUE,
+        in_to_apex      BOOLEAN                 := FALSE
+    );
+
+
+
+    --
+    -- Send error message to APEX; call `raise_error` first
+    --
+    PROCEDURE raise_to_apex (
+        in_message          logs.message%TYPE
     );
 
 
