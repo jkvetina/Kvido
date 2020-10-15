@@ -49,7 +49,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         FOR i IN REVERSE 2 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP  -- 2 = ignore this function
             out_module := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i));
             CONTINUE WHEN
-                UTL_CALL_STACK.OWNER(i) != USER                                 -- different user (APEX)
+                UTL_CALL_STACK.OWNER(i) != sess.app_user                        -- different user (APEX)
                 OR UTL_CALL_STACK.UNIT_LINE(i) IS NULL                          -- skip DML queries
                 OR REGEXP_LIKE(out_module, 'UT(\.|_[A-Z0-9_]*\.)[A-Z0-9_]+')    -- skip unit tests
                 OR (out_module = internal_log_fn AND i <= 2);                   -- skip target function
