@@ -296,7 +296,8 @@ CREATE OR REPLACE PACKAGE tree AS
         in_arg5         logs.arguments%TYPE     := NULL,
         in_arg6         logs.arguments%TYPE     := NULL,
         in_arg7         logs.arguments%TYPE     := NULL,
-        in_arg8         logs.arguments%TYPE     := NULL
+        in_arg8         logs.arguments%TYPE     := NULL,
+        in_rollback     BOOLEAN                 := TRUE
     );
 
 

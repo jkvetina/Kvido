@@ -623,12 +623,15 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         in_arg5         logs.arguments%TYPE     := NULL,
         in_arg6         logs.arguments%TYPE     := NULL,
         in_arg7         logs.arguments%TYPE     := NULL,
-        in_arg8         logs.arguments%TYPE     := NULL
+        in_arg8         logs.arguments%TYPE     := NULL,
+        in_rollback     BOOLEAN                 := TRUE
     ) AS
         log_id          logs.log_id%TYPE;
         action_name     logs.action_name%TYPE;
     BEGIN
-        ROLLBACK;
+        IF in_rollback THEN
+            ROLLBACK;
+        END IF;
         --
         action_name     := COALESCE(in_action, tree.get_caller_name(), 'UNEXPECTED_ERROR');
         log_id          := tree.log_error (
