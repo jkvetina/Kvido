@@ -742,6 +742,12 @@ CREATE OR REPLACE PACKAGE tree AS
     RETURN BOOLEAN;
 
 
+    --
+    -- Reload settings and clear callstack maps
+    --
+    PROCEDURE init;
+
+
 
 
 

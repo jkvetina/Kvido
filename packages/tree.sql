@@ -1719,21 +1719,33 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         DELETE FROM dbmspcc_runs;
     END;
 
+
+
+    PROCEDURE init AS
+    BEGIN
+        -- clear maps
+        map_modules := arr_map_module_to_id();
+        map_actions := arr_map_module_to_id();
+        --DBMS_SESSION.RESET_PACKAGE;
+
+        -- prepare arrays when session starts
+        -- load whitelist/blacklist data from logs_tracing table
+        SELECT t.*
+        BULK COLLECT INTO rows_whitelist
+        FROM logs_setup t
+        WHERE t.app_id          = sess.get_app_id()
+            AND t.is_tracked    = 'Y'
+            AND ROWNUM          <= rows_limit;
+        --
+        SELECT t.*
+        BULK COLLECT INTO rows_blacklist
+        FROM logs_setup t
+        WHERE t.app_id          = sess.get_app_id()
+            AND t.is_tracked    = 'N'
+            AND ROWNUM          <= rows_limit;
+        END;
+
 BEGIN
-    -- prepare arrays when session starts
-    -- load whitelist/blacklist data from logs_tracing table
-    SELECT t.*
-    BULK COLLECT INTO rows_whitelist
-    FROM logs_setup t
-    WHERE t.app_id          = sess.get_app_id()
-        AND t.is_tracked    = 'Y'
-        AND ROWNUM          <= rows_limit;
-    --
-    SELECT t.*
-    BULK COLLECT INTO rows_blacklist
-    FROM logs_setup t
-    WHERE t.app_id          = sess.get_app_id()
-        AND t.is_tracked    = 'N'
-        AND ROWNUM          <= rows_limit;
+    init();
 END;
 /
