@@ -64,6 +64,11 @@ CREATE OR REPLACE PACKAGE tree AS
     -- arrays to specify adhoc requests
     TYPE arr_log_setup      IS VARRAY(100) OF logs_setup%ROWTYPE;
 
+    -- list/array of log_id
+    TYPE arr_logs_log_id IS
+        TABLE OF logs.log_id%TYPE
+        INDEX BY PLS_INTEGER;
+
 
 
 
@@ -771,6 +776,24 @@ CREATE OR REPLACE PACKAGE tree AS
     --
     PROCEDURE purge_old (
         in_age          PLS_INTEGER := NULL
+    );
+
+
+
+    --
+    -- Delete logs (children only)
+    --
+    PROCEDURE delete_children (
+        in_log_id           logs.log_id%TYPE
+    );
+
+
+
+    --
+    -- Delete logs (parent and children)
+    --
+    PROCEDURE delete_tree (
+        in_log_id           logs.log_id%TYPE
     );
 
 END;

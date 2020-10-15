@@ -1751,6 +1751,42 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
 
 
+    PROCEDURE delete_children (
+        in_log_id           logs.log_id%TYPE
+    ) AS
+        rows_to_delete      arr_logs_log_id;
+    BEGIN
+        SELECT l.log_id
+        BULK COLLECT INTO rows_to_delete
+        FROM logs l
+        CONNECT BY PRIOR l.log_id   = l.log_parent
+        START WITH l.log_id         = in_log_id;
+        --
+        FORALL i IN rows_to_delete.FIRST .. rows_to_delete.LAST
+        DELETE FROM logs
+        WHERE log_id = rows_to_delete(i);
+    END;
+
+
+
+    PROCEDURE delete_tree (
+        in_log_id           logs.log_id%TYPE
+    ) AS
+        rows_to_delete      arr_logs_log_id;
+    BEGIN
+        SELECT l.log_id
+        BULK COLLECT INTO rows_to_delete
+        FROM logs l
+        CONNECT BY PRIOR l.log_id   = l.log_parent
+        START WITH l.log_id         = tree.get_root_id(in_log_id);
+        --
+        FORALL i IN rows_to_delete.FIRST .. rows_to_delete.LAST
+        DELETE FROM logs
+        WHERE log_id = rows_to_delete(i);
+    END;
+
+
+
     PROCEDURE init AS
     BEGIN
         -- clear maps
@@ -1773,7 +1809,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         WHERE t.app_id          = sess.get_app_id()
             AND t.is_tracked    = 'N'
             AND ROWNUM          <= rows_limit;
-        END;
+    END;
 
 BEGIN
     init();
