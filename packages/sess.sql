@@ -316,7 +316,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     BEGIN
         RETURN COALESCE(NULLIF(
             COALESCE (                                              -- APEX first, because it is more reliable
-                SYS_CONTEXT('APEX$SESSION', 'APP_USER'),            -- APEX_APPLICATION.G_USER
+                APEX_APPLICATION.G_USER,                            -- SYS_CONTEXT('APEX$SESSION', 'APP_USER')
                 SYS_CONTEXT(sess.app_namespace, sess.app_user_attr),
                 sess.app_user
             ),
