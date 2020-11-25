@@ -1763,6 +1763,10 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         START WITH l.log_id         = in_log_id;
         --
         FORALL i IN rows_to_delete.FIRST .. rows_to_delete.LAST
+        DELETE FROM logs_lobs
+        WHERE log_id = rows_to_delete(i);
+        --
+        FORALL i IN rows_to_delete.FIRST .. rows_to_delete.LAST
         DELETE FROM logs
         WHERE log_id = rows_to_delete(i);
     END;
@@ -1779,6 +1783,10 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         FROM logs l
         CONNECT BY PRIOR l.log_id   = l.log_parent
         START WITH l.log_id         = tree.get_root_id(in_log_id);
+        --
+        FORALL i IN rows_to_delete.FIRST .. rows_to_delete.LAST
+        DELETE FROM logs_lobs
+        WHERE log_id = rows_to_delete(i);
         --
         FORALL i IN rows_to_delete.FIRST .. rows_to_delete.LAST
         DELETE FROM logs
