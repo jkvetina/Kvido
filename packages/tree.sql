@@ -49,7 +49,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         FOR i IN REVERSE 2 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP  -- 2 = ignore this function
             out_module := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i));
             CONTINUE WHEN
-                UTL_CALL_STACK.OWNER(i) != sess.app_user                        -- different user (APEX)
+                UTL_CALL_STACK.OWNER(i) != tree.dml_tables_owner                -- different user (APEX)
                 OR UTL_CALL_STACK.UNIT_LINE(i) IS NULL                          -- skip DML queries
                 OR REGEXP_LIKE(out_module, 'UT(\.|_[A-Z0-9_]*\.)[A-Z0-9_]+')    -- skip unit tests
                 OR (out_module = internal_log_fn AND i <= 2);                   -- skip target function
@@ -942,7 +942,9 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             in_parent_id    => tree.recent_log_id
         );
         --
-        sess.update_session(in_log_id => log_id);               -- store current contexts and user_id for job
+        sess.create_session (
+            in_user_id => USER
+        );
         --
         DBMS_SCHEDULER.CREATE_JOB (
             in_job_name,
@@ -1065,7 +1067,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         --
         rec                 logs%ROWTYPE;
         map_index           logs.module_name%TYPE;
-        new_contexts        sessions.contexts%TYPE;
         --
         whitelisted         BOOLEAN := FALSE;   -- TRUE = log
         blacklisted         BOOLEAN := FALSE;   -- TRUE = dont log; whitelisted > blacklisted
@@ -1085,12 +1086,9 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         -- recover contexts for scheduler
         IF in_flag = tree.flag_scheduler AND in_parent_id IS NOT NULL THEN
             BEGIN
-                SELECT e.user_id, s.contexts
-                INTO rec.user_id, new_contexts
+                SELECT e.user_id INTO rec.user_id
                 FROM logs e
-                JOIN sessions s
-                    ON s.session_id = e.session_id
-                WHERE e.log_id      = in_parent_id;
+                WHERE e.log_id = in_parent_id;
             EXCEPTION
             WHEN NO_DATA_FOUND THEN
                 RAISE_APPLICATION_ERROR(tree.app_exception_code, 'SCHEDULER_ROOT_MISSING ' || in_parent_id, TRUE);
@@ -1099,8 +1097,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             -- recover app context values from log and set user
             recent_log_id := rec.log_id;  -- to link SESS calls to proper branch
             sess.create_session (
-                in_user_id      => rec.user_id,
-                in_contexts     => new_contexts
+                in_user_id      => rec.user_id
             );
         END IF;
 
@@ -1145,8 +1142,8 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         END IF;
 
         -- prepare record
-        rec.app_id          := COALESCE(sess.get_app_id(),  0);  -- default to zero to match sessions table
-        rec.page_id         := COALESCE(sess.get_page_id(), 0);
+        rec.app_id          := sess.get_app_id();
+        rec.page_id         := sess.get_page_id();
         rec.action_name     := SUBSTR(COALESCE(rec.action_name, in_action_name, tree.empty_action), 1, tree.length_action);
         rec.arguments       := SUBSTR(in_arguments, 1, tree.length_arguments);
         rec.message         := SUBSTR(in_message,   1, tree.length_message);  -- may be overwritten later
@@ -1209,7 +1206,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                 AND (in_row.user_id         LIKE in_list(i).user_id         OR in_list(i).user_id       IS NULL)
                 AND (in_row.module_name     LIKE in_list(i).module_name     OR in_list(i).module_name   IS NULL)
                 AND (in_row.flag            = in_list(i).flag               OR in_list(i).flag          IS NULL)
-                AND (sess.get_role_id_status(in_list(i).role_id)            OR in_list(i).role_id       IS NULL)
+                AND (sess.get_role_status(in_list(i).role_id)               OR in_list(i).role_id       IS NULL)
             THEN
                 RETURN TRUE;
             END IF;
