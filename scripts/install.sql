@@ -1,7 +1,7 @@
 --
 -- create context
 --
-CREATE CONTEXT APP USING lumberjack.sess;
+----CREATE CONTEXT APP USING lumberjack.sess;
 
 
 
@@ -10,12 +10,13 @@ CREATE CONTEXT APP USING lumberjack.sess;
 --
 @../tables/logs.sql
 @../tables/logs_lobs.sql
-@../tables/logs_setup.sql
+@../tables/roles.sql
 @../tables/users.sql
+@../tables/user_roles.sql
+@../tables/logs_setup.sql
 @../tables/sessions.sql
 --
 @../sequences/log_id.sql
-@../sequences/session_id.sql
 
 
 
