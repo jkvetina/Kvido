@@ -1673,9 +1673,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
     PROCEDURE purge_old (
         in_age          PLS_INTEGER         := NULL
     ) AS
-        partition_date  VARCHAR2(10);   -- YYYY-MM-DD
-        count_before    PLS_INTEGER;
-        count_after     PLS_INTEGER;
+        data_exists     PLS_INTEGER;
     BEGIN
         tree.log_module(in_age);
 
@@ -1688,9 +1686,11 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             EXECUTE IMMEDIATE 'ALTER TABLE logs_lobs ENABLE CONSTRAINT fk_logs_lobs_logs';
         END IF;
 
-        -- @TODO: sessions
+        -- remove old sessions
+        DELETE FROM sessions s
+        WHERE s.created_at < TRUNC(SYSDATE) - NVL(in_age, tree.table_rows_max_age);
         --
-        NULL;
+        COMMIT;  -- to reduce UNDO violations
 
         -- delete old LOBs
         DELETE FROM logs_lobs l
@@ -1702,36 +1702,39 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             WHERE e.created_at < TRUNC(SYSDATE) - COALESCE(in_age, tree.table_rows_max_age)
         );
         --
-        DELETE FROM logs e
-        WHERE e.created_at < TRUNC(SYSDATE) - COALESCE(in_age, tree.table_rows_max_age);
+        COMMIT;  -- to reduce UNDO violations
 
-        -- purge whole partitions
+        -- remove old partitions
         FOR c IN (
             SELECT table_name, partition_name, high_value, partition_position
             FROM user_tab_partitions p
             WHERE p.table_name = tree.table_name
                 AND p.partition_position > 1
                 AND p.partition_position < (
-                    SELECT MAX(partition_position) - COALESCE(in_age, tree.table_rows_max_age)
+                    SELECT MAX(partition_position) - NVL(in_age, tree.table_rows_max_age)
                     FROM user_tab_partitions
                     WHERE table_name = tree.table_name
                 )
         ) LOOP
-            partition_date := SUBSTR(REPLACE(SUBSTR(c.high_value, 1, 100), 'TIMESTAMP'' '), 1, 10);
-            --
+            -- delete old data in batches
+            FOR i IN 1 .. 10 LOOP
+                EXECUTE IMMEDIATE
+                    'DELETE FROM ' || tree.table_name ||
+                    ' PARTITION (' || c.partition_name || ') WHERE ROWNUM < 100000';
+                --
+                COMMIT;  -- to reduce UNDO violations
+            END LOOP;
+
+            -- check if data in partition exists
             EXECUTE IMMEDIATE
-                'SELECT COUNT(*) FROM ' || c.table_name INTO count_before;
+                'SELECT COUNT(*) FROM ' || tree.table_name ||
+                ' PARTITION (' || c.partition_name || ') WHERE ROWNUM = 1'
+                INTO data_exists;
             --
-            EXECUTE IMMEDIATE
-                'ALTER TABLE ' || c.table_name ||
-                ' DROP PARTITION ' || c.partition_name ||
-                ' UPDATE GLOBAL INDEXES';
-            --
-            EXECUTE IMMEDIATE
-                'SELECT COUNT(*) FROM ' || c.table_name INTO count_after;
-            --
-            IF in_age >= 0 THEN
-                tree.log_result(c.partition_name, partition_date, count_before - count_after);
+            IF data_exists = 0 THEN
+                EXECUTE IMMEDIATE
+                    'ALTER TABLE ' || tree.table_name ||
+                    ' DROP PARTITION ' || c.partition_name || ' UPDATE GLOBAL INDEXES';
             END IF;
         END LOOP;
 
