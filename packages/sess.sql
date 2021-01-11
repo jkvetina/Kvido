@@ -22,10 +22,43 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
 
+    FUNCTION get_user_lang
+    RETURN users.lang%TYPE AS
+        out_lang users.lang%TYPE;
+    BEGIN
+        SELECT u.lang INTO out_lang
+        FROM users u
+        WHERE u.user_id = sess.get_user_id;
+        --
+        RETURN out_lang;
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN NULL;
+    END;
+
+
+
     FUNCTION get_page_id
     RETURN sessions.page_id%TYPE AS
     BEGIN
         RETURN NVL(APEX_APPLICATION.G_FLOW_STEP_ID, 0);
+    END;
+
+
+
+    FUNCTION get_page_group
+    RETURN apex_application_pages.page_group%TYPE
+    AS
+        out_name apex_application_pages.page_group%TYPE;
+    BEGIN
+        SELECT p.page_group INTO out_name
+        FROM apex_application_pages p
+        WHERE p.application_id = sess.get_app_id();
+        --
+        RETURN out_name;
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN NULL;
     END;
 
 
