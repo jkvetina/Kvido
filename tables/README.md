@@ -8,9 +8,9 @@
 
 ### Users and Roles
 
-- [`users`](../../../wiki/users)
-- [`user_roles`](../../../wiki/user_roles)
-- [`roles`](../../../wiki/roles)
+- [`users`](../../../wiki/tables-users)
+- [`user_roles`](../../../wiki/tables-user_roles)
+- [`roles`](../../../wiki/tables-roles)
 
 ### Sessions
 
