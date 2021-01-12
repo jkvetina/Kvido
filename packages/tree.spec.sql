@@ -524,25 +524,6 @@ CREATE OR REPLACE PACKAGE tree AS
 
 
 
-    --
-    -- Get `APEX` items for selected/current page
-    --
-    PROCEDURE log_apex_items (
-        in_page_id          logs.page_id%TYPE       := NULL,
-        in_filter           logs.arguments%TYPE     := '%'
-    );
-
-
-
-    --
-    -- Get `APEX` global/app items
-    --
-    PROCEDURE log_apex_globals (
-        in_filter           logs.arguments%TYPE     := '%'
-    );
-
-
-
 
 
     -- ### Working with tree
