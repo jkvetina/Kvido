@@ -9,6 +9,12 @@ CREATE OR REPLACE PACKAGE apex AS
 
 
 
+    -- ### Functions to work with APEX items
+    --
+
+    --
+    -- Set item
+    --
     PROCEDURE set_item (
         in_name         VARCHAR2,
         in_value        VARCHAR2
@@ -16,6 +22,9 @@ CREATE OR REPLACE PACKAGE apex AS
 
 
 
+    --
+    -- Get (global and page) item
+    --
     FUNCTION get_item (
         in_name         VARCHAR2
     )
@@ -23,6 +32,9 @@ CREATE OR REPLACE PACKAGE apex AS
 
 
 
+    --
+    -- Clear requested, all or not used items on page
+    --
     PROCEDURE clear_items (
         in_items        VARCHAR2 := NULL
         --
@@ -34,6 +46,44 @@ CREATE OR REPLACE PACKAGE apex AS
 
 
 
+    --
+    -- Apply values from JSON object keys to items
+    --
+    PROCEDURE apply_items (
+        in_items            sessions.apex_items%TYPE
+    );
+
+
+
+    --
+    -- Get items for selected/current page as JSON object
+    --
+    FUNCTION get_page_items (
+        in_page_id          logs.page_id%TYPE       := NULL,
+        in_filter           logs.arguments%TYPE     := '%'
+    )
+    RETURN sessions.apex_items%TYPE;
+
+
+
+    --
+    -- Get global (app) items as JSON object
+    --
+    FUNCTION get_global_items (
+        in_filter           logs.arguments%TYPE     := '%'
+    )
+    RETURN sessions.apex_items%TYPE;
+
+
+
+
+
+    -- ### Functions to work with pages
+    --
+
+    --
+    -- Redirect to page and set items if needed
+    --
     PROCEDURE redirect (
         in_page_id      NUMBER      := NULL,
         in_names        VARCHAR2    := NULL,
@@ -42,6 +92,9 @@ CREATE OR REPLACE PACKAGE apex AS
 
 
 
+    --
+    -- Get link to page with items
+    --
     FUNCTION get_page_link (
         in_page_id      NUMBER      := NULL,
         in_names        VARCHAR2    := NULL,

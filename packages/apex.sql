@@ -64,6 +64,71 @@ CREATE OR REPLACE PACKAGE BODY apex AS
 
 
 
+    PROCEDURE apply_items (
+        in_items            sessions.apex_items%TYPE
+    ) AS
+        json_keys           JSON_KEY_LIST;
+    BEGIN
+        IF in_items IS NULL THEN
+            RETURN;
+        END IF;
+        --
+        json_keys := JSON_OBJECT_T(in_items).get_keys();
+        --
+        FOR i IN 1 .. json_keys.COUNT LOOP
+            BEGIN
+                APEX_UTIL.SET_SESSION_STATE(json_keys(i), JSON_VALUE(in_items, '$.' || json_keys(i)));
+            EXCEPTION
+            WHEN OTHERS THEN
+                NULL;
+            END;
+        END LOOP;
+    END;
+
+
+
+    FUNCTION get_page_items (
+        in_page_id          logs.page_id%TYPE       := NULL,
+        in_filter           logs.arguments%TYPE     := '%'
+    )
+    RETURN sessions.apex_items%TYPE AS
+        out_payload         sessions.apex_items%TYPE;
+    BEGIN
+        SELECT JSON_OBJECTAGG(t.item_name VALUE APEX_UTIL.GET_SESSION_STATE(t.item_name) ABSENT ON NULL)
+        INTO out_payload
+        FROM apex_application_page_items t
+        WHERE t.application_id  = sess.get_app_id()
+            AND t.page_id       = COALESCE(in_page_id, sess.get_page_id())
+            AND t.item_name     LIKE in_filter;
+        --
+        RETURN out_payload;
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN NULL;
+    END;
+
+
+
+    FUNCTION get_global_items (
+        in_filter           logs.arguments%TYPE     := '%'
+    )
+    RETURN sessions.apex_items%TYPE AS
+        out_payload         sessions.apex_items%TYPE;
+    BEGIN
+        SELECT JSON_OBJECTAGG(t.item_name VALUE APEX_UTIL.GET_SESSION_STATE(t.item_name) ABSENT ON NULL)
+        INTO out_payload
+        FROM apex_application_items t
+        WHERE t.application_id  = sess.get_app_id()
+            AND t.item_name     LIKE in_filter;
+        --
+        RETURN out_payload;
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN NULL;
+    END;
+
+
+
     PROCEDURE redirect (
         in_page_id      NUMBER      := NULL,
         in_names        VARCHAR2    := NULL,
@@ -120,10 +185,10 @@ CREATE OR REPLACE PACKAGE BODY apex AS
         --
         RETURN 'f?p=' ||
             sess.get_app_id() || ':' ||
-            NVL(in_page_id, sess.get_page_id()) || ':' ||
+            COALESCE(in_page_id, sess.get_page_id()) || ':' ||
             NV('APP_SESSION') || '::' ||
             NV('APP_DEBUG') || '::' ||
-            in_names || ':' || NVL(in_values, SUBSTR(out_values, 2, 2000));
+            in_names || ':' || COALESCE(in_values, SUBSTR(out_values, 2, 2000));
     END;
 
 END;
