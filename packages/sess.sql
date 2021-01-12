@@ -139,6 +139,16 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         rec sessions%ROWTYPE;
     BEGIN
         sess.init_session(in_user_id);
+
+        -- load APEX items from recent session
+        BEGIN
+            apex.apply_items(sess.get_recent_items());
+        EXCEPTION
+        WHEN OTHERS THEN
+            NULL;
+        END;
+
+        -- insert or update sessions table
         sess.update_session();
         --
         COMMIT;
@@ -185,6 +195,10 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             p_username  => in_user_id
         );
         --
+        sess.create_session (
+            in_user_id => in_user_id
+        );
+        --
         COMMIT;
     EXCEPTION
     WHEN OTHERS THEN
@@ -204,26 +218,34 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         --
     BEGIN
         rec.session_id      := sess.get_session_id();
+        rec.user_id         := sess.get_user_id();
+        rec.app_id          := sess.get_app_id();
         rec.page_id         := sess.get_page_id();
+        rec.session_db      := sess.get_session_db();
         rec.updated_at      := SYSTIMESTAMP;
         --
         IF rec.page_id BETWEEN sess.app_min_page AND sess.app_max_page THEN
-            rec.apex_items  := sess.get_apex_items();
+            rec.apex_items  := apex.get_global_items();
         END IF;
         --
         UPDATE sessions s
         SET s.page_id       = rec.page_id,
             s.apex_items    = rec.apex_items,
+            s.session_db    = rec.session_db,
             s.updated_at    = rec.updated_at
-        WHERE s.session_id  = rec.session_id;
+        WHERE s.session_id  = rec.session_id
+            AND s.user_id   = rec.user_id
+            AND s.app_id    = rec.app_id;       -- prevent app_id and user_id hijacking
         --
         IF SQL%ROWCOUNT = 0 THEN
-            rec.app_id          := sess.get_app_id();
-            rec.user_id         := sess.get_user_id();
-            rec.session_db      := sess.get_session_db();
-            rec.created_at      := rec.created_at;
+            rec.created_at  := rec.created_at;
             --
-            INSERT INTO sessions VALUES rec;
+            BEGIN
+                INSERT INTO sessions VALUES rec;
+            EXCEPTION
+            WHEN DUP_VAL_ON_INDEX THEN
+                NULL;  -- redirect to logout/login page
+            END;
         END IF;
         --
         COMMIT;
@@ -231,6 +253,30 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     WHEN OTHERS THEN
         ROLLBACK;
         RAISE_APPLICATION_ERROR(tree.app_exception_code, 'UPDATE_SESSION_FAILED', TRUE);
+    END;
+
+
+
+    FUNCTION get_recent_items (
+        in_user_id  sessions.user_id%TYPE   := NULL,
+        in_app_id   sessions.app_id%TYPE    := NULL
+    )
+    RETURN sessions.apex_items%TYPE AS
+        out_payload sessions.apex_items%TYPE;
+    BEGIN
+        SELECT s.apex_items INTO out_payload
+        FROM sessions s
+        WHERE s.session_id = (
+            SELECT MAX(s.session_id)
+            FROM sessions s
+            WHERE s.user_id     = COALESCE(in_user_id, sess.get_user_id())
+                AND s.app_id    = COALESCE(COALESCE(in_app_id, sess.get_app_id()), s.app_id)
+        );
+        --
+        RETURN out_payload;
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN NULL;
     END;
 
 
@@ -253,40 +299,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     EXCEPTION
     WHEN NO_DATA_FOUND THEN
         RETURN FALSE;
-    END;
-
-
-
-    FUNCTION get_apex_items
-    RETURN sessions.apex_items%TYPE
-    AS
-        out_items       sessions.apex_items%TYPE;
-    BEGIN
-        --
-        -- @TODO: return as JSON object
-        --
-        /*
-        SELECT
-            LISTAGG(t.item_name || sess.splitter_values || APEX_UTIL.GET_SESSION_STATE(t.item_name), sess.splitter_rows)
-                WITHIN GROUP (ORDER BY t.item_name)
-        INTO out_items
-        FROM apex_application_items t
-        WHERE t.application_id = sess.get_app_id()
-            AND APEX_UTIL.GET_SESSION_STATE(t.item_name) IS NOT NULL;
-        --
-        /*
-        -- APPEND^
-        SELECT
-            LISTAGG(t.item_name || sess.splitter_values || APEX_UTIL.GET_SESSION_STATE(t.item_name), sess.splitter_rows)
-                WITHIN GROUP (ORDER BY t.item_name)
-        INTO out_items
-        FROM apex_application_page_items t
-        WHERE t.application_id  = sess.get_app_id()
-            AND t.page_id       = sess.get_page_id()
-            AND APEX_UTIL.GET_SESSION_STATE(t.item_name) IS NOT NULL;
-        */
-        --
-        RETURN out_items;
     END;
 
 END;

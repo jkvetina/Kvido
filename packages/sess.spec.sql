@@ -121,7 +121,7 @@ CREATE OR REPLACE PACKAGE sess AS
 
 
     --
-    -- Set user_id and contexts from previous session
+    -- Set user_id and items from previous session
     --
     PROCEDURE create_session (
         in_user_id          sessions.user_id%TYPE
@@ -130,7 +130,7 @@ CREATE OR REPLACE PACKAGE sess AS
 
 
     --
-    -- Set user_id outside of APEX
+    -- Set user_id outside of APEX (from console, trigger, job...)
     --
     PROCEDURE create_session (
         in_user_id          sessions.user_id%TYPE,
@@ -141,9 +141,20 @@ CREATE OR REPLACE PACKAGE sess AS
 
 
     --
-    -- Store current contexts and items to `sessions` and update `logs` table
+    -- Store current APEX items and activity to `sessions`
     --
     PROCEDURE update_session;
+
+
+
+    --
+    -- Load session items from recent session
+    --
+    FUNCTION get_recent_items (
+        in_user_id  sessions.user_id%TYPE   := NULL,
+        in_app_id   sessions.app_id%TYPE    := NULL
+    )
+    RETURN sessions.apex_items%TYPE;
 
 
 
@@ -161,14 +172,6 @@ CREATE OR REPLACE PACKAGE sess AS
         in_app_id           user_roles.app_id%TYPE      := NULL
     )
     RETURN BOOLEAN;
-
-
-
-    --
-    -- Prepare JSON object with current APEX global and page items
-    --
-    FUNCTION get_apex_items
-    RETURN sessions.apex_items%TYPE;
 
 END;
 /
