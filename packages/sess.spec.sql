@@ -99,6 +99,14 @@ CREATE OR REPLACE PACKAGE sess AS
 
 
 
+    --
+    -- Returns requested URL
+    --
+    FUNCTION get_request
+    RETURN VARCHAR2;
+
+
+
 
 
     -- ### Initialization
