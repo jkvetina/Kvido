@@ -2,6 +2,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
     recent_session_db       sessions.session_db%TYPE;       -- to save resources
     --
+    app_session_id          sessions.session_id%TYPE;       -- session_id from APEX
     app_user_id             sessions.user_id%TYPE;          -- user_id used when called outside of APEX
 
 
@@ -66,7 +67,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     FUNCTION get_session_id
     RETURN sessions.session_id%TYPE AS
     BEGIN
-        RETURN NVL(SYS_CONTEXT('APEX$SESSION', 'APP_SESSION'), 0);
+        RETURN COALESCE(COALESCE(SYS_CONTEXT('APEX$SESSION', 'APP_SESSION'), app_session_id), 0);
     END;
 
 
