@@ -264,7 +264,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         -- update record
         UPDATE sessions s
         SET s.page_id       = rec.page_id,
-            s.apex_items    = rec.apex_items,
+            s.apex_items    = COALESCE(rec.apex_items, s.apex_items),
             s.session_db    = rec.session_db,
             s.updated_at    = rec.updated_at
         WHERE s.session_id  = rec.session_id
@@ -272,7 +272,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             AND s.app_id    = rec.app_id;       -- prevent app_id and user_id hijacking
         --
         IF SQL%ROWCOUNT = 0 THEN
-            rec.created_at  := rec.created_at;
+            rec.created_at  := rec.updated_at;
             --
             BEGIN
                 INSERT INTO sessions VALUES rec;
@@ -301,7 +301,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         SELECT s.apex_items INTO out_payload
         FROM sessions s
         WHERE s.session_id = (
-            SELECT MAX(s.session_id)
+            SELECT MAX(s.session_id)        -- @TODO: FIRST_VALUE()
             FROM sessions s
             WHERE s.user_id     = COALESCE(in_user_id, sess.get_user_id())
                 AND s.app_id    = COALESCE(COALESCE(in_app_id, sess.get_app_id()), s.app_id)
