@@ -253,7 +253,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
                     CONNECT BY LEVEL <= REGEXP_COUNT(req, '&' || 'G') + 1
                 ) t
                 JOIN apex_application_items a
-                    ON a.application_id     = sess.get_app_id()
+                    ON a.application_id     = rec.app_id
                     AND a.item_name         = t.item_name
             ) LOOP
                 apex.set_item(c.item_name, c.item_value);
