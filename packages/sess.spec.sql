@@ -151,7 +151,9 @@ CREATE OR REPLACE PACKAGE sess AS
     --
     -- Store current APEX items and activity to `sessions`
     --
-    PROCEDURE update_session;
+    PROCEDURE update_session (
+        in_note     VARCHAR2                := NULL
+    );
 
 
 

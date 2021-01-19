@@ -220,11 +220,14 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
 
-    PROCEDURE update_session
+    PROCEDURE update_session (
+        in_note     VARCHAR2                := NULL
+    )
     AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
         rec                 sessions%ROWTYPE;
+        req                 VARCHAR2(4000);
         --
         -- DONT CALL TREE PACKAGE FROM THIS MODULE
         --
@@ -237,9 +240,28 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         rec.updated_at      := SYSTIMESTAMP;
         --
         IF rec.page_id BETWEEN sess.app_min_page AND sess.app_max_page THEN
+            -- check for global items change requests
+            req := SUBSTR(sess.get_request(), 1, 4000);
+            FOR c IN (
+                SELECT t.item_name, t.item_value
+                FROM (
+                    SELECT
+                        REPLACE(REGEXP_SUBSTR(req, '[^&' || ']+[=]', 1, LEVEL), '=', '')                                            AS item_name,
+                        REPLACE(REGEXP_SUBSTR(req, '[^&' || ']+',    1, LEVEL), REGEXP_SUBSTR(req, '[^&' || ']+[=]', 1, LEVEL), '') AS item_value    
+                    FROM DUAL
+                    CONNECT BY LEVEL <= REGEXP_COUNT(req, '&' || 'G') + 1
+                ) t
+                JOIN apex_application_items a
+                    ON a.application_id     = sess.get_app_id()
+                    AND a.item_name         = t.item_name
+            ) LOOP
+                apex.set_item(c.item_name, c.item_value);
+            END LOOP;
+            --
             rec.apex_items  := apex.get_global_items();
         END IF;
-        --
+
+        -- update record
         UPDATE sessions s
         SET s.page_id       = rec.page_id,
             s.apex_items    = rec.apex_items,
