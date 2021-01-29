@@ -239,8 +239,13 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         -- DONT CALL TREE PACKAGE FROM THIS MODULE
         --
     BEGIN
-        rec.session_id      := sess.get_session_id();
         rec.user_id         := sess.get_user_id();
+        --
+        IF LOWER(rec.user_id) = 'nobody' THEN
+            RETURN;
+        END IF;
+        --
+        rec.session_id      := sess.get_session_id();
         rec.app_id          := sess.get_app_id();
         rec.page_id         := sess.get_page_id();
         rec.session_db      := sess.get_session_db();
