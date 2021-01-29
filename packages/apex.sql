@@ -10,10 +10,10 @@ CREATE OR REPLACE PACKAGE BODY apex AS
         FROM apex_workspace_developers d
         JOIN apex_applications a
             ON a.workspace                  = d.workspace_name
-        WHERE a.application_id              = 100
+        WHERE a.application_id              = sess.get_app_id()
             AND d.is_application_developer  = 'Yes'
             AND d.account_locked            = 'No'
-            AND COALESCE(in_username, sess.get_user_id()) IN (d.user_name, d.email);
+            AND COALESCE(in_username, sess.get_user_id()) IN (UPPER(d.user_name), LOWER(d.email));
         --
         RETURN TRUE;
     EXCEPTION
