@@ -43,7 +43,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
     RETURN logs.message%TYPE
     AS
         out_stack       VARCHAR2(32767);
-        out_module      logs.module_name%TYPE;
+        out_module      VARCHAR2(100);
     BEGIN
         -- better version of DBMS_UTILITY.FORMAT_CALL_STACK
         FOR i IN REVERSE 2 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP  -- 2 = ignore this function
@@ -625,7 +625,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         in_arg7         logs.arguments%TYPE     := NULL,
         in_arg8         logs.arguments%TYPE     := NULL,
         --
-        in_rollback     BOOLEAN                 := TRUE,
+        in_rollback     BOOLEAN                 := FALSE,
         in_to_apex      BOOLEAN                 := FALSE
     ) AS
         log_id          logs.log_id%TYPE;
