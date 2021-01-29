@@ -73,9 +73,10 @@ CREATE OR REPLACE PACKAGE BODY apex AS
                 FROM apex_application_page_items i
                 WHERE i.application_id  = sess.get_app_id()
                     AND i.page_id       = sess.get_page_id()
-                    AND (',' || REGEXP_SUBSTR(OWA_UTIL.GET_CGI_ENV('QUERY_STRING'), ':([^:]+):[^:]*$', 1, 1, 'i', 1) || ',' NOT LIKE '%,' || i.item_name || ',%'
+                    AND (
+                        NOT REGEXP_LIKE(sess.get_request(), '[:,]' || i.item_name || '[,:]')
                         OR in_items = '%'
-                    )                    
+                    )
             ) LOOP
                 APEX_UTIL.SET_SESSION_STATE(c.item_name, NULL);
             END LOOP;
