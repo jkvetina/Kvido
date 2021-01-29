@@ -227,7 +227,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
     PROCEDURE update_session (
-        in_note     VARCHAR2                := NULL
+        in_note             VARCHAR2                := NULL
     )
     AS
         PRAGMA AUTONOMOUS_TRANSACTION;
@@ -309,11 +309,11 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
     FUNCTION get_recent_items (
-        in_user_id  sessions.user_id%TYPE   := NULL,
-        in_app_id   sessions.app_id%TYPE    := NULL
+        in_user_id          sessions.user_id%TYPE       := NULL,
+        in_app_id           sessions.app_id%TYPE        := NULL
     )
     RETURN sessions.apex_items%TYPE AS
-        out_payload sessions.apex_items%TYPE;
+        out_payload         sessions.apex_items%TYPE;
     BEGIN
         SELECT s.apex_items INTO out_payload
         FROM sessions s

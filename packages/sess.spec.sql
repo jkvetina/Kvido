@@ -174,7 +174,7 @@ CREATE OR REPLACE PACKAGE sess AS
     -- Store current APEX items and activity to `sessions`
     --
     PROCEDURE update_session (
-        in_note     VARCHAR2                := NULL
+        in_note             VARCHAR2                    := NULL
     );
 
 
@@ -183,8 +183,8 @@ CREATE OR REPLACE PACKAGE sess AS
     -- Load session items from recent session
     --
     FUNCTION get_recent_items (
-        in_user_id  sessions.user_id%TYPE   := NULL,
-        in_app_id   sessions.app_id%TYPE    := NULL
+        in_user_id          sessions.user_id%TYPE       := NULL,
+        in_app_id           sessions.app_id%TYPE        := NULL
     )
     RETURN sessions.apex_items%TYPE;
 
