@@ -270,6 +270,11 @@ CREATE OR REPLACE PACKAGE BODY sess AS
                 apex.set_item(c.item_name, c.item_value);
             END LOOP;
             --
+            -- app specific item manipulation
+            --
+            sess_update_items();
+
+            -- load items
             rec.apex_items  := apex.get_global_items();
         END IF;
 
