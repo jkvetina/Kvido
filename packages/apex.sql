@@ -1,5 +1,36 @@
 CREATE OR REPLACE PACKAGE BODY apex AS
 
+    FUNCTION is_developer (
+        in_username     VARCHAR2        := NULL
+    )
+    RETURN BOOLEAN AS
+        valid           VARCHAR2(1);
+    BEGIN
+        SELECT 'Y' INTO valid
+        FROM apex_workspace_developers d
+        JOIN apex_applications a
+            ON a.workspace                  = d.workspace_name
+        WHERE a.application_id              = 100
+            AND d.is_application_developer  = 'Yes'
+            AND d.account_locked            = 'No'
+            AND COALESCE(in_username, sess.get_user_id()) IN (d.user_name, d.email);
+        --
+        RETURN TRUE;
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN FALSE;
+    END;
+
+
+
+    FUNCTION is_debug
+    RETURN BOOLEAN AS
+    BEGIN
+        RETURN APEX_APPLICATION.G_DEBUG;
+    END;
+
+
+
     PROCEDURE set_item (
         in_name         VARCHAR2,
         in_value        VARCHAR2
