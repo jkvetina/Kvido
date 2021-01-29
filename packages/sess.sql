@@ -18,7 +18,13 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     FUNCTION get_user_id
     RETURN sessions.user_id%TYPE AS
     BEGIN
-        RETURN COALESCE(COALESCE(APEX_APPLICATION.G_USER, app_user_id), USER);
+        RETURN LTRIM(RTRIM(
+            CONVERT(COALESCE(
+                CASE WHEN NVL(INSTR(APEX_APPLICATION.G_USER, '@'), 0) > 0
+                    THEN LOWER(APEX_APPLICATION.G_USER)                     -- emails lowercased
+                    ELSE UPPER(APEX_APPLICATION.G_USER) END,                -- otherwise uppercased
+                app_user_id, USER), 'US7ASCII')                             -- convert special chars
+        ));
     END;
 
 
