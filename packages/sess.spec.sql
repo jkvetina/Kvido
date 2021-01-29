@@ -16,14 +16,14 @@ CREATE OR REPLACE PACKAGE sess AS
      *             \@@@@@@@@@@   @@@@@@@@@@@@@@@   @@@@@@@@@@
      *               @@@@@@@@@   @@@@@@@@@@@@@@@  &@@@@@@@@
      *                 @@@@@@@(  @@@@@@@@@@@@@@@  @@@@@@@@
-     *                  @@@@@@(  @@@@@@@@@@@@@@   @@@@@@@
+     *                  @@@@@@(  @@@@@@@@@@@@@@,  @@@@@@@
      *                  .@@@@@,   @@@@@@@@@@@@@   @@@@@@
      *                   @@@@@@  *@@@@@@@@@@@@@   @@@@@@
      *                   @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@.
      *                    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@
      *                    @@@@@@@@@@@@@@@@@@@@@@@@@@@@
-     *                     ,@@@@@@@@@@@@@@@@@@@@@@@@@
-     *                       ,@@@@@@@@@@@@@@@@@@@@@
+     *                     .@@@@@@@@@@@@@@@@@@@@@@@@@
+     *                       .@@@@@@@@@@@@@@@@@@@@@
      *                            jankvetina.cz
      *                               -------
      *
@@ -32,8 +32,8 @@ CREATE OR REPLACE PACKAGE sess AS
 
 
     -- internal date formats
-    format_date         CONSTANT VARCHAR2(30)   := 'YYYY-MM-DD';
-    format_date_time    CONSTANT VARCHAR2(30)   := 'YYYY-MM-DD HH24:MI:SS';
+    format_date         CONSTANT VARCHAR2(30)           := 'YYYY-MM-DD';
+    format_date_time    CONSTANT VARCHAR2(30)           := 'YYYY-MM-DD HH24:MI:SS';
 
     -- pages available to users
     app_min_page        CONSTANT sessions.page_id%TYPE  := 1;

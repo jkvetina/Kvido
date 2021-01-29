@@ -2,7 +2,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
     recent_session_db       sessions.session_db%TYPE;       -- to save resources
     --
-    app_session_id          sessions.session_id%TYPE;       -- session_id from APEX
     app_user_id             sessions.user_id%TYPE;          -- user_id used when called outside of APEX
 
 
@@ -73,7 +72,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     FUNCTION get_session_id
     RETURN sessions.session_id%TYPE AS
     BEGIN
-        RETURN COALESCE(COALESCE(SYS_CONTEXT('APEX$SESSION', 'APP_SESSION'), app_session_id), 0);
+        RETURN COALESCE(SYS_CONTEXT('APEX$SESSION', 'APP_SESSION'), 0);
     END;
 
 
@@ -159,7 +158,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     BEGIN
         sess.init_session(in_user_id);
 
-        -- load APEX items from recent session
+        -- load APEX items from recent (previous) session
         BEGIN
             apex.apply_items(sess.get_recent_items());
         EXCEPTION
@@ -269,6 +268,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             ) LOOP
                 apex.set_item(c.item_name, c.item_value);
             END LOOP;
+
             --
             -- app specific item manipulation
             --
@@ -320,8 +320,9 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         WHERE s.session_id = (
             SELECT MAX(s.session_id)        -- @TODO: FIRST_VALUE()
             FROM sessions s
-            WHERE s.user_id     = COALESCE(in_user_id, sess.get_user_id())
-                AND s.app_id    = COALESCE(COALESCE(in_app_id, sess.get_app_id()), s.app_id)
+            WHERE s.user_id         = COALESCE(in_user_id, sess.get_user_id())
+                AND s.app_id        = COALESCE(in_app_id,  sess.get_app_id(), s.app_id)
+                AND s.session_id    != sess.get_session_id()
         );
         --
         RETURN out_payload;
