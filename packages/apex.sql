@@ -33,10 +33,10 @@ CREATE OR REPLACE PACKAGE BODY apex AS
 
     PROCEDURE set_item (
         in_name         VARCHAR2,
-        in_value        VARCHAR2
+        in_value        VARCHAR2        := NULL
     ) AS
     BEGIN
-        APEX_UTIL.SET_SESSION_STATE(in_name, in_value);
+        APEX_UTIL.SET_SESSION_STATE(REPLACE(in_name, apex.item_prefix, 'P' || sess.get_page_id() || '_'), in_value);
     END;
 
 
@@ -49,7 +49,7 @@ CREATE OR REPLACE PACKAGE BODY apex AS
     )
     RETURN VARCHAR2 AS
     BEGIN
-        RETURN APEX_UTIL.GET_SESSION_STATE(in_name);
+        RETURN APEX_UTIL.GET_SESSION_STATE(REPLACE(in_name, apex.item_prefix, 'P' || sess.get_page_id() || '_'));
     EXCEPTION
     WHEN OTHERS THEN
         RETURN NULL;
@@ -210,17 +210,18 @@ CREATE OR REPLACE PACKAGE BODY apex AS
                 )
                 ORDER BY order#
             ) LOOP
-                out_values := ',' || APEX_UTIL.GET_SESSION_STATE(c.item_name);
-                tree.log_debug(c.item_name, APEX_UTIL.GET_SESSION_STATE(c.item_name));
+                out_values := ',' || apex.get_item(c.item_name);
             END LOOP;
         END IF;
+        --
+        -- @TODO: THERE IS A BETTER WAY HOW TO DO THIS
         --
         RETURN 'f?p=' ||
             sess.get_app_id() || ':' ||
             COALESCE(in_page_id, sess.get_page_id()) || ':' ||
-            NV('APP_SESSION') || '::' ||
-            NV('APP_DEBUG') || '::' ||
-            in_names || ':' || COALESCE(in_values, SUBSTR(out_values, 2, 2000));
+            sess.get_session_id() || '::' ||
+            V('APP_DEBUG') || '::' ||
+            in_names || ':' || COALESCE(in_values, out_values);
     END;
 
 END;

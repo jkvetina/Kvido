@@ -29,6 +29,10 @@ CREATE OR REPLACE PACKAGE apex AS
      *
      */
 
+    item_prefix     CONSTANT VARCHAR2(4)        := '$';  -- transform $NAME to P500_NAME if current page_id = 500
+
+
+
 
 
     -- ### Auth functions
@@ -62,7 +66,7 @@ CREATE OR REPLACE PACKAGE apex AS
     --
     PROCEDURE set_item (
         in_name         VARCHAR2,
-        in_value        VARCHAR2
+        in_value        VARCHAR2        := NULL
     );
 
 
