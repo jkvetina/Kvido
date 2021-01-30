@@ -245,7 +245,11 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         IF LOWER(rec.user_id) = 'nobody' THEN
             RETURN;
         END IF;
-        --
+
+        -- make sure user exists (after successful authentication)
+        sess_create_user(rec.user_id);
+
+        -- values to store
         rec.session_id      := sess.get_session_id();
         rec.app_id          := sess.get_app_id();
         rec.page_id         := sess.get_page_id();
