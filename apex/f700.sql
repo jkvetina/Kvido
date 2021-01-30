@@ -28,7 +28,7 @@ prompt APPLICATION 700 - Lumberjack
 -- Application Export:
 --   Application:     700
 --   Name:            Lumberjack
---   Date and Time:   19:00 Saturday January 30, 2021
+--   Date and Time:   19:03 Saturday January 30, 2021
 --   Exported By:     CHR
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -127,7 +127,7 @@ wwv_flow_api.create_flow(
 ,p_email_from=>'jan.kvetina@gmail.com'
 ,p_friendly_url=>'N'
 ,p_last_updated_by=>'CHR'
-,p_last_upd_yyyymmddhh24miss=>'20210130185918'
+,p_last_upd_yyyymmddhh24miss=>'20210130190216'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>122
 ,p_ui_type_name => null
@@ -666,20 +666,6 @@ wwv_flow_api.create_flow_process(
 );
 end;
 /
-prompt --application/shared_components/logic/application_processes/on_submit_before_validation
-begin
-wwv_flow_api.create_flow_process(
- p_id=>wwv_flow_api.id(51334706847344861)
-,p_process_sequence=>31
-,p_process_point=>'BEFORE_HEADER'
-,p_process_type=>'NATIVE_PLSQL'
-,p_process_name=>'ON_SUBMIT_BEFORE_VALIDATION'
-,p_process_sql_clob=>'sess.update_session(''AFTER_SUBMIT:BEFORE_VALIDATION'');'
-,p_process_clob_language=>'PLSQL'
-,p_security_scheme=>'MUST_NOT_BE_PUBLIC_USER'
-);
-end;
-/
 prompt --application/shared_components/logic/application_processes/on_ajax_callback
 begin
 wwv_flow_api.create_flow_process(
@@ -707,6 +693,20 @@ wwv_flow_api.create_flow_process(
 '    in_user_id => :APP_USER',
 ');'))
 ,p_process_clob_language=>'PLSQL'
+);
+end;
+/
+prompt --application/shared_components/logic/application_processes/on_submit_before_validation
+begin
+wwv_flow_api.create_flow_process(
+ p_id=>wwv_flow_api.id(51334706847344861)
+,p_process_sequence=>31
+,p_process_point=>'ON_SUBMIT_BEFORE_COMPUTATION'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'ON_SUBMIT_BEFORE_VALIDATION'
+,p_process_sql_clob=>'sess.update_session(''ON_SUBMIT:BEFORE_VALIDATION'');'
+,p_process_clob_language=>'PLSQL'
+,p_security_scheme=>'MUST_NOT_BE_PUBLIC_USER'
 );
 end;
 /
