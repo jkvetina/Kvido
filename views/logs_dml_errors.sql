@@ -1,11 +1,15 @@
-CREATE OR REPLACE VIEW logs_dml_errors (
-    log_id, action, table_name, table_rowid, dml_rowid, err_message
-) AS
-SELECT 0, '-', '-', 'UROWID', ROWID, '-'
+CREATE OR REPLACE VIEW logs_dml_errors AS
+SELECT
+    --
+    -- THIS VIEW IS REGENERATED LATER
+    --
+    0           AS log_id,
+    '-'         AS action,
+    '-'         AS table_name,
+    'UROWID'    AS table_rowid,
+    ROWID       AS dml_rowid,
+    '-'         AS err_message
 FROM DUAL
---
--- THIS VIEW IS GENERATED
---
 WHERE ROWNUM = 0;
 --
 COMMENT ON COLUMN logs_dml_errors.log_id       IS 'Related log_id from logs table';
