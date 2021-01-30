@@ -28,7 +28,7 @@ prompt APPLICATION 700 - Lumberjack
 -- Application Export:
 --   Application:     700
 --   Name:            Lumberjack
---   Date and Time:   18:50 Saturday January 30, 2021
+--   Date and Time:   19:00 Saturday January 30, 2021
 --   Exported By:     CHR
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -127,7 +127,7 @@ wwv_flow_api.create_flow(
 ,p_email_from=>'jan.kvetina@gmail.com'
 ,p_friendly_url=>'N'
 ,p_last_updated_by=>'CHR'
-,p_last_upd_yyyymmddhh24miss=>'20210130185015'
+,p_last_upd_yyyymmddhh24miss=>'20210130185918'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>122
 ,p_ui_type_name => null
@@ -12202,8 +12202,8 @@ wwv_flow_api.create_page(
 ,p_step_template=>wwv_flow_api.id(64127379571157916)
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
-,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210130141919'
+,p_last_updated_by=>'CHR'
+,p_last_upd_yyyymmddhh24miss=>'20210130185824'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(51491410690418306)
@@ -12803,22 +12803,7 @@ wwv_flow_api.create_page_plug(
 ,p_query_type=>'SQL'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
 'SELECT e.*',
-'FROM logs e',
-'WHERE e.app_id          = sess.get_app_id()',
-'    AND e.log_id        = NVL(apex.get_item(''P901_LOG_ID''), e.log_id)',
-'    AND e.flag          = NVL(apex.get_item(''P901_FLAG''), e.flag)',
-'    AND e.page_id       = NVL(apex.get_item(''P901_PAGE_ID''), e.page_id)',
-'    AND e.user_id       = NVL(apex.get_item(''P901_USER_ID''), e.user_id)',
-'    AND e.session_id    = NVL(apex.get_item(''P901_SESSION_ID''), e.session_id)',
-'    AND 1 = CASE',
-'        WHEN apex.get_item(''P901_LOG_ID'') IS NOT NULL THEN 1',
-'        ELSE (',
-'            CASE WHEN ',
-'                    e.created_at    >= TO_DATE(COALESCE(apex.get_item(''P901_TODAY''), TO_CHAR(SYSDATE, ''YYYY-MM-DD'')), ''YYYY-MM-DD'')',
-'                AND e.created_at    <  TO_DATE(COALESCE(apex.get_item(''P901_TODAY''), TO_CHAR(SYSDATE, ''YYYY-MM-DD'')), ''YYYY-MM-DD'') + 1',
-'                THEN 1 END',
-'        ) END',
-''))
+'FROM p901_logs e;'))
 ,p_plug_source_type=>'NATIVE_IG'
 ,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
 );
@@ -13325,9 +13310,6 @@ wwv_flow_api.create_ig_report_column(
 ,p_is_frozen=>false
 ,p_width=>54
 );
-end;
-/
-begin
 wwv_flow_api.create_ig_report_column(
  p_id=>wwv_flow_api.id(51546202620666166)
 ,p_view_id=>wwv_flow_api.id(51541364344666149)
@@ -13362,6 +13344,9 @@ wwv_flow_api.create_ig_report_column(
 ,p_is_frozen=>false
 ,p_width=>108
 );
+end;
+/
+begin
 wwv_flow_api.create_ig_report_column(
  p_id=>wwv_flow_api.id(51548259114666170)
 ,p_view_id=>wwv_flow_api.id(51541364344666149)
@@ -14545,8 +14530,8 @@ begin
 wwv_flow_api.create_page(
  p_id=>9999
 ,p_user_interface_id=>wwv_flow_api.id(63766922917014449)
-,p_name=>'Login Page'
-,p_alias=>'LOGIN_DESKTOP'
+,p_name=>'LOGIN'
+,p_alias=>'LOGIN'
 ,p_step_title=>'Sign In'
 ,p_warn_on_unsaved_changes=>'N'
 ,p_first_item=>'AUTO_FIRST_ITEM'
@@ -14555,8 +14540,8 @@ wwv_flow_api.create_page(
 ,p_step_template=>wwv_flow_api.id(63643432606014288)
 ,p_page_template_options=>'#DEFAULT#'
 ,p_page_is_public_y_n=>'Y'
-,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210130142053'
+,p_last_updated_by=>'CHR'
+,p_last_upd_yyyymmddhh24miss=>'20210130185918'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(63773048623014571)
