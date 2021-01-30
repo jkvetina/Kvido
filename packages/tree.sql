@@ -1497,8 +1497,11 @@ CREATE OR REPLACE PACKAGE BODY tree AS
     ) AS
     BEGIN
         tree.log_module(in_table_like);
-        -- process existing data first
-        process_dml_errors(in_table_like);  -- it calls tree.process_dml_error
+
+        -- process existing data first, dynamically to avoid compilation errors
+        EXECUTE IMMEDIATE
+            'BEGIN process_dml_errors(:table_name); END;'
+            USING in_table_like;  -- it calls tree.process_dml_error
 
         -- drop existing tables
         tree.drop_dml_tables(in_table_like);
@@ -1673,14 +1676,18 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         END LOOP;
 
         -- delete profiler data
-        DELETE FROM plsql_profiler_data;
-        DELETE FROM plsql_profiler_units;
-        DELETE FROM plsql_profiler_runs;
+        EXECUTE IMMEDIATE
+            'DELETE FROM plsql_profiler_data;' ||
+            'DELETE FROM plsql_profiler_units;' ||
+            'DELETE FROM plsql_profiler_runs;';
 
         -- delete code coverage data
-        DELETE FROM dbmspcc_blocks;
-        DELETE FROM dbmspcc_units;
-        DELETE FROM dbmspcc_runs;
+        EXECUTE IMMEDIATE
+            'DELETE FROM dbmspcc_blocks;' ||
+            'DELETE FROM dbmspcc_units;' ||
+            'DELETE FROM dbmspcc_runs;';
+        --
+        COMMIT;
     END;
 
 
