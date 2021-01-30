@@ -67,7 +67,16 @@ CREATE OR REPLACE PACKAGE sess AS
     -- Returns current user id (APEX, SYS_CONTEXT, DB...)
     --
     FUNCTION get_user_id
-    RETURN sessions.user_id%TYPE;
+    RETURN users.user_id%TYPE;
+
+
+    --
+    -- Transform user name
+    --
+    FUNCTION get_user_name (
+        in_username         sessions.user_id%TYPE
+    )
+    RETURN users.user_id%TYPE;
 
 
 

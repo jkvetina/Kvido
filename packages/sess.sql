@@ -15,14 +15,24 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
     FUNCTION get_user_id
-    RETURN sessions.user_id%TYPE AS
+    RETURN users.user_id%TYPE AS
+    BEGIN
+        RETURN sess.get_user_name(COALESCE(APEX_APPLICATION.G_USER, app_user_id, USER));
+    END;
+
+
+
+    FUNCTION get_user_name (
+        in_username         sessions.user_id%TYPE
+    )
+    RETURN users.user_id%TYPE AS
     BEGIN
         RETURN LTRIM(RTRIM(
-            CONVERT(COALESCE(
-                CASE WHEN NVL(INSTR(APEX_APPLICATION.G_USER, '@'), 0) > 0
-                    THEN LOWER(APEX_APPLICATION.G_USER)                     -- emails lowercased
-                    ELSE UPPER(APEX_APPLICATION.G_USER) END,                -- otherwise uppercased
-                app_user_id, USER), 'US7ASCII')                             -- convert special chars
+            CONVERT(
+                CASE WHEN NVL(INSTR(in_username, '@'), 0) > 0
+                    THEN LOWER(in_username)                     -- emails lowercased
+                    ELSE UPPER(in_username) END,                -- otherwise uppercased
+                'US7ASCII')                                     -- convert special chars
         ));
     END;
 
@@ -254,7 +264,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         rec.app_id          := sess.get_app_id();
         rec.page_id         := sess.get_page_id();
         rec.session_db      := sess.get_session_db();
-        rec.updated_at      := SYSTIMESTAMP;
+        rec.updated_at      := SYSDATE;
         --
         IF rec.page_id BETWEEN sess.app_min_page AND sess.app_max_page THEN
             -- check for global items change requests
