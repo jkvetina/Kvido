@@ -169,6 +169,10 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         rec sessions%ROWTYPE;
     BEGIN
         sess.init_session(in_user_id);
+        --
+        IF UPPER(in_user_id) = sess.anonymous_user THEN
+            RETURN;
+        END IF;
 
         -- load APEX items from recent (previous) session
         BEGIN
@@ -177,6 +181,9 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         WHEN OTHERS THEN
             NULL;
         END;
+
+        -- log request
+        tree.log_module('START');
 
         -- insert or update sessions table
         sess.update_session();
@@ -244,20 +251,27 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
+        in_user_id          CONSTANT users.user_id%TYPE := sess.get_user_id();
+        --
         rec                 sessions%ROWTYPE;
         req                 VARCHAR2(4000);
         --
         -- DONT CALL TREE PACKAGE FROM THIS MODULE
         --
     BEGIN
-        rec.user_id         := sess.get_user_id();
-        --
-        IF LOWER(rec.user_id) = 'nobody' THEN
+        IF UPPER(in_user_id) = sess.anonymous_user THEN
             RETURN;
         END IF;
 
         -- make sure user exists (after successful authentication)
-        sess_create_user(rec.user_id);
+        BEGIN
+            SELECT u.user_id INTO rec.user_id
+            FROM users u
+            WHERE u.user_id = in_user_id;
+        EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            sess_create_user(in_user_id);
+        END;
 
         -- values to store
         rec.session_id      := sess.get_session_id();
@@ -274,7 +288,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
                 FROM (
                     SELECT
                         REPLACE(REGEXP_SUBSTR(req, '[^&' || ']+[=]', 1, LEVEL), '=', '')                                            AS item_name,
-                        REPLACE(REGEXP_SUBSTR(req, '[^&' || ']+',    1, LEVEL), REGEXP_SUBSTR(req, '[^&' || ']+[=]', 1, LEVEL), '') AS item_value    
+                        REPLACE(REGEXP_SUBSTR(req, '[^&' || ']+',    1, LEVEL), REGEXP_SUBSTR(req, '[^&' || ']+[=]', 1, LEVEL), '') AS item_value
                     FROM DUAL
                     CONNECT BY LEVEL <= REGEXP_COUNT(req, '&' || 'G') + 1
                 ) t

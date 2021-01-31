@@ -39,6 +39,9 @@ CREATE OR REPLACE PACKAGE sess AS
     app_min_page        CONSTANT sessions.page_id%TYPE  := 1;
     app_max_page        CONSTANT sessions.page_id%TYPE  := 999;
 
+    -- anonymous user used on login pages in APEX
+    anonymous_user      CONSTANT VARCHAR2(30)           := 'NOBODY';  -- uppercase
+
 
 
 

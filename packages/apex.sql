@@ -168,9 +168,8 @@ CREATE OR REPLACE PACKAGE BODY apex AS
     ) AS
         target_url      VARCHAR2(32767);
     BEGIN
-        tree.log_module(in_page_id, in_names, in_values);
-        --
-        COMMIT;  -- otherwise anything before redirect will be rolled back
+        -- commit otherwise anything before redirect will be rolled back
+        COMMIT;
 
         -- check if we are in APEX or not
         HTP.INIT;
@@ -180,13 +179,15 @@ CREATE OR REPLACE PACKAGE BODY apex AS
             in_values   => in_values
         );
         --
-        tree.log_result(target_url);
-        tree.update_timer();
+        tree.log_module(in_page_id, in_names, in_values, target_url);
         --
         OWA_UTIL.REDIRECT_URL(target_url);
         --
         APEX_APPLICATION.STOP_APEX_ENGINE;
-        --WHEN APEX_APPLICATION.E_STOP_APEX_ENGINE THEN
+        --
+        -- EXCEPTION
+        -- WHEN APEX_APPLICATION.E_STOP_APEX_ENGINE THEN
+        --
     END;
 
 
