@@ -362,6 +362,9 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         END IF;
         --
         COMMIT;
+
+        -- log request
+        tree.log_module(in_note, APEX_APPLICATION.G_REQUEST);
     EXCEPTION
     WHEN OTHERS THEN
         ROLLBACK;
