@@ -328,9 +328,12 @@ CREATE OR REPLACE PACKAGE BODY sess AS
                 apex.set_item(c.item_name, c.item_value);
             END LOOP;
 
-            --
+            -- automatic items reset, co no need for reset page process
+            IF REGEXP_LIKE(req, '[:,]' || 'P' || rec.page_id || '_RESET' || '[,:]') THEN  -- @TODO: should check also Y value
+                apex.clear_items();
+            END IF;
+
             -- app specific item manipulation
-            --
             sess_update_items();
 
             -- load items
