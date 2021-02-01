@@ -89,11 +89,11 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     AS
         out_id              apex_application_pages.page_id%TYPE;
     BEGIN
-        SELECT CONNECT_BY_ROOT(n.page_id) INTO out_id
+        SELECT REGEXP_SUBSTR(MAX(SYS_CONNECT_BY_PATH(n.page_id, '/')), '[0-9]+$') INTO out_id
         FROM navigation n
         WHERE n.app_id          = sess.get_app_id()
         CONNECT BY n.app_id     = PRIOR n.app_id
-            AND n.parent_id     = PRIOR n.page_id
+            AND n.page_id       = PRIOR n.parent_id
         START WITH n.page_id    = COALESCE(in_page_id, sess.get_page_id());
         --
         RETURN out_id;
