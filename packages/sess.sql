@@ -62,16 +62,41 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
 
-    FUNCTION get_page_group
+    FUNCTION get_page_group (
+        in_page_id          sessions.page_id%TYPE       := NULL
+    )
     RETURN apex_application_pages.page_group%TYPE
     AS
-        out_name apex_application_pages.page_group%TYPE;
+        out_name            apex_application_pages.page_group%TYPE;
     BEGIN
         SELECT p.page_group INTO out_name
         FROM apex_application_pages p
-        WHERE p.application_id = sess.get_app_id();
+        WHERE p.application_id      = sess.get_app_id()
+            AND p.page_id           = COALESCE(in_page_id, sess.get_page_id());
         --
         RETURN out_name;
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN NULL;
+    END;
+
+
+
+    FUNCTION get_root_page_id (
+        in_page_id          sessions.page_id%TYPE       := NULL
+    )
+    RETURN apex_application_pages.page_id%TYPE
+    AS
+        out_id              apex_application_pages.page_id%TYPE;
+    BEGIN
+        SELECT CONNECT_BY_ROOT(n.page_id) INTO out_id
+        FROM navigation n
+        WHERE n.app_id          = sess.get_app_id()
+        CONNECT BY n.app_id     = PRIOR n.app_id
+            AND n.parent_id     = PRIOR n.page_id
+        START WITH n.page_id    = COALESCE(in_page_id, sess.get_page_id());
+        --
+        RETURN out_id;
     EXCEPTION
     WHEN NO_DATA_FOUND THEN
         RETURN NULL;
@@ -126,7 +151,11 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     RETURN VARCHAR2
     AS
     BEGIN
-        RETURN UTL_URL.UNESCAPE(OWA_UTIL.GET_CGI_ENV('SCRIPT_NAME') || OWA_UTIL.GET_CGI_ENV('PATH_INFO') || '?' || OWA_UTIL.GET_CGI_ENV('QUERY_STRING'));
+        RETURN UTL_URL.UNESCAPE(
+            OWA_UTIL.GET_CGI_ENV('SCRIPT_NAME') ||
+            OWA_UTIL.GET_CGI_ENV('PATH_INFO')   || '?' ||
+            OWA_UTIL.GET_CGI_ENV('QUERY_STRING')
+        );
     EXCEPTION
     WHEN OTHERS THEN
         RETURN NULL;

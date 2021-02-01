@@ -100,10 +100,22 @@ CREATE OR REPLACE PACKAGE sess AS
 
 
     --
-    -- Returns APEX page group name
+    -- Returns APEX page group name for requested or current page
     --
-    FUNCTION get_page_group
+    FUNCTION get_page_group (
+        in_page_id          sessions.page_id%TYPE       := NULL
+    )
     RETURN apex_application_pages.page_group%TYPE;
+
+
+
+    --
+    -- Returns root page ID for requested or current page
+    --
+    FUNCTION get_root_page_id (
+        in_page_id          sessions.page_id%TYPE       := NULL
+    )
+    RETURN apex_application_pages.page_id%TYPE;
 
 
 
