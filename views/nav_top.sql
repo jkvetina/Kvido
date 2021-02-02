@@ -25,11 +25,8 @@ WITH t AS (
         ON i.application_id         = a.application_id
         AND i.page_id               = a.page_id
         AND i.item_name             = 'P' || TO_CHAR(a.page_id) || '_RESET'
-    WHERE (
-            n.visibility            IS NULL
-            OR n.visibility         != 'H'
-        )
     WHERE n.app_id                  = sess.get_app_id()
+        AND n.is_hidden             IS NULL
         AND NVL(nav.is_available(n.page_id), 'Y') = 'Y'
 )
 SELECT
