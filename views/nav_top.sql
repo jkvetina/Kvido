@@ -39,7 +39,7 @@ SELECT
     --
     CASE WHEN t.page_id > 0 THEN
         APEX_PAGE.GET_URL (
-            p_page      => t.page_id,
+            p_page      => NVL(t.page_alias, t.page_id),
             p_items     => CASE WHEN t.reset_item IS NOT NULL THEN t.reset_item END,
             p_values    => CASE WHEN t.reset_item IS NOT NULL THEN 'Y' END
         )
@@ -65,3 +65,4 @@ CONNECT BY t.app_id         = PRIOR t.app_id
     AND t.parent_id         = PRIOR t.page_id
 START WITH t.parent_id      IS NULL
 ORDER SIBLINGS BY t.order#;
+
