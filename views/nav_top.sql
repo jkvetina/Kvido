@@ -29,6 +29,7 @@ WITH t AS (
             n.visibility            IS NULL
             OR n.visibility         != 'H'
         )
+    WHERE n.app_id                  = sess.get_app_id()
         AND NVL(nav.is_available(n.page_id), 'Y') = 'Y'
 )
 SELECT
