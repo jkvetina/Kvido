@@ -363,8 +363,10 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         --
         COMMIT;
 
-        -- log request
-        tree.log_module(in_note, APEX_APPLICATION.G_REQUEST);
+        -- log request, except for login page
+        IF rec.page_id != 9999 THEN
+            tree.log_module(in_note, APEX_APPLICATION.G_REQUEST);
+        END IF;
     EXCEPTION
     WHEN OTHERS THEN
         ROLLBACK;
