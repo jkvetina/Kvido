@@ -8,6 +8,7 @@ CREATE TABLE navigation (
     label               VARCHAR2(255),
     icon_name           VARCHAR2(64),
     css_class           VARCHAR2(64),
+    group_id            VARCHAR2(30),
     is_hidden           VARCHAR2(1),
     --
     CONSTRAINT pk_navigation
@@ -16,6 +17,10 @@ CREATE TABLE navigation (
     CONSTRAINT fk_navigation_parent
         FOREIGN KEY (app_id, parent_id)
         REFERENCES navigation (app_id, page_id),
+    --
+    CONSTRAINT fk_navigation_group
+        FOREIGN KEY (app_id, group_id)
+        REFERENCES navigation_groups (app_id, group_id),
     --
     CONSTRAINT ch_navigation_is_hidden
         CHECK (is_hidden = 'Y' OR is_hidden IS NULL)
@@ -33,6 +38,7 @@ COMMENT ON COLUMN navigation.order#         IS 'Order of siblings';
 COMMENT ON COLUMN navigation.label          IS 'Label for menu item';
 COMMENT ON COLUMN navigation.icon_name      IS 'Icon name from font APEX';
 COMMENT ON COLUMN navigation.css_class      IS 'CSS class for menu item (icon_only, icon_left, icon_right...)';
+COMMENT ON COLUMN navigation.group_id       IS 'Group ID to hide some items in menu based on active group';
 COMMENT ON COLUMN navigation.is_hidden      IS 'Y = dont show in menu';
 
 
