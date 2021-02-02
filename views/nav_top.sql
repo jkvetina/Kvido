@@ -32,10 +32,10 @@ WITH t AS (
 SELECT
     CASE WHEN t.parent_id IS NULL THEN 1 ELSE 2 END AS lvl,
     --
-    CASE WHEN t.css_class LIKE '%icon_left%' AND t.icon_name IS NOT NULL THEN '<span class="' || t.icon_name || '"></span> &' || 'nbsp; ' END ||
-    CASE WHEN t.css_class LIKE '%icon_only%' AND t.icon_name IS NOT NULL THEN '<span class="' || t.icon_name || '"></span>' END ||
-    CASE WHEN (t.css_class IS NULL OR t.css_class NOT LIKE '%icon_only%') THEN t.label END ||
-    CASE WHEN t.css_class LIKE '%icon_right%' AND t.icon_name IS NOT NULL THEN ' &' || 'nbsp; <span class="' || t.icon_name || '"></span>' END AS label,
+    CASE WHEN t.icon_name LIKE '{<%' THEN '<span class="fa ' || REGEXP_SUBSTR(t.icon_name, '{.([^}]+)', 1, 1, NULL, 1) || '"></span> &' || 'nbsp; ' END ||
+    CASE WHEN t.icon_name LIKE '{!%' THEN '<span class="fa ' || REGEXP_SUBSTR(t.icon_name, '{.([^}]+)', 1, 1, NULL, 1) || '" title="' || t.label || '"></span>' END ||
+    CASE WHEN (t.icon_name IS NULL OR t.icon_name NOT LIKE '{!%') THEN t.label END ||
+    CASE WHEN t.icon_name LIKE '{>%' THEN ' &' || 'nbsp; <span class="fa ' || REGEXP_SUBSTR(t.icon_name, '{.([^}]+)', 1, 1, NULL, 1) || '"></span>' END AS label,
     --
     CASE WHEN t.page_id > 0 THEN
         APEX_PAGE.GET_URL (
