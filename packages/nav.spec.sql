@@ -17,5 +17,13 @@ CREATE OR REPLACE PACKAGE nav AS
     )
     RETURN CHAR;
 
+
+
+    PROCEDURE remove_missing_pages;
+
+
+
+    PROCEDURE add_new_pages;
+
 END;
 /

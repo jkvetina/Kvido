@@ -84,6 +84,58 @@ CREATE OR REPLACE PACKAGE BODY nav AS
         END;
     END;
 
+
+
+    PROCEDURE remove_missing_pages
+    AS
+    BEGIN
+        tree.log_module();
+
+        -- remove rows for pages which dont exists
+        FOR c IN (
+            SELECT n.app_id, n.page_id
+            FROM p910_nav_pages_to_remove n
+        ) LOOP
+            tree.log_debug('DELETING', c.page_id);
+            --
+            DELETE FROM navigation n
+            WHERE n.app_id      = c.app_id
+                AND n.page_id   = c.page_id;
+        END LOOP;
+        --
+        tree.update_timer();
+    END;
+
+
+
+    PROCEDURE add_new_pages
+    AS
+        rec         navigation%ROWTYPE;
+    BEGIN
+        tree.log_module();
+
+        -- add pages which are present in APEX but missing in Navigation table
+        FOR c IN (
+            SELECT n.*
+            FROM p910_nav_pages_to_add n
+        ) LOOP
+            tree.log_debug('ADDING', c.page_id);
+            --
+            rec.app_id      := c.app_id;
+            rec.page_id     := c.page_id;
+            rec.parent_id   := c.parent_id;
+            rec.order#      := c.order#;
+            rec.label       := c.label;
+            rec.icon_name   := c.icon_name;
+            rec.css_class   := c.css_class;
+            rec.is_hidden   := c.is_hidden;
+            --
+            INSERT INTO navigation VALUES rec;
+        END LOOP;
+        --
+        tree.update_timer();
+    END;
+
 END;
 /
 
