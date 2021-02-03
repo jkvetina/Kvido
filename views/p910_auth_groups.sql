@@ -8,7 +8,7 @@ SELECT
     --
     CASE WHEN MAX(s.procedure_name) IS NOT NULL
         THEN '<span class="fa fa-check-square" style="color: #666;" title="Auth procedure exists"></span>'
-        END AS valid,
+        END AS status,
     --
     NULLIF(COUNT(p.page_id), 0)     AS pages
 FROM apex_application_authorization a
