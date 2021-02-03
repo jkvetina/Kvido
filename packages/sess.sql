@@ -365,7 +365,11 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
         -- log request, except for login page
         IF rec.page_id != 9999 THEN
-            tree.log_module(in_note, APEX_APPLICATION.G_REQUEST);
+            tree.log_module (
+                in_note,
+                APEX_APPLICATION.G_REQUEST,                                 -- button name
+                REGEXP_REPLACE(req, '^/[^/]+/[^/]+/f[?]p=([^:]*:){6}', '')  -- arguments in URL
+            );
         END IF;
     EXCEPTION
     WHEN OTHERS THEN
