@@ -18,7 +18,7 @@ t AS (
         a.page_alias,
         n.icon_name,
         n.css_class,
-        i.item_name AS reset_item,
+        i.item_name     AS reset_item,
         n.order#,
         n.parent_id,
         --
@@ -28,7 +28,7 @@ t AS (
             '$CTX:ENV_NAME',        'ENV_NAME'),
             '$CTX:',                ''
         ) AS label,
-        g.page_id AS group_id
+        g.page_id       AS group_id
     FROM navigation n
     CROSS JOIN curr
     LEFT JOIN apex_application_pages a              -- we need LEFT JOIN for pages -1 and 0
@@ -48,6 +48,8 @@ t AS (
         --
         AND 'Y' = nav.is_available(n.page_id)
         AND 'Y' = nav.is_visible(curr.page_id, n.page_id)
+        --
+        AND (a.page_id IS NOT NULL OR n.page_id < 1 OR n.page_id > 999)
 )
 SELECT
     CASE WHEN t.parent_id IS NULL THEN 1 ELSE 2 END AS lvl,
@@ -89,5 +91,5 @@ FROM t
 CONNECT BY t.app_id         = PRIOR t.app_id
     AND t.parent_id         = PRIOR t.page_id
 START WITH t.parent_id      IS NULL
-ORDER SIBLINGS BY t.order#;
+ORDER SIBLINGS BY t.order#, t.page_id;
 
