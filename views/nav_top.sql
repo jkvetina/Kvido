@@ -1,5 +1,17 @@
 CREATE OR REPLACE VIEW nav_top AS
-WITH t AS (
+WITH curr AS (
+    SELECT
+        n.app_id,
+        n.page_id,
+        n.parent_id,
+        sess.get_root_page_id(n.page_id)    AS root_id,
+        sess.get_user_id()                  AS user_id,
+        sess.get_page_group(n.page_id)      AS page_group
+    FROM navigation n
+    WHERE n.app_id      = sess.get_app_id()
+        AND n.page_id   = sess.get_page_id()
+),
+t AS (
     SELECT
         n.app_id,
         n.page_id,
@@ -7,17 +19,19 @@ WITH t AS (
         n.icon_name,
         n.css_class,
         i.item_name AS reset_item,
-        --
         n.order#,
         n.parent_id,
+        --
         REPLACE(REPLACE(REPLACE(REPLACE(n.label,
             '$CTX:DATE',            TO_CHAR(SYSDATE, 'YYYY-MM-DD')),
-            '$CTX:USER_NAME',       sess.get_user_id()),
+            '$CTX:USER_NAME',       curr.user_id),
             '$CTX:ENV_NAME',        'ENV_NAME'),
             '$CTX:',                ''
-        ) AS label
+        ) AS label,
+        g.page_id AS group_id
     FROM navigation n
-    LEFT JOIN apex_application_pages a
+    CROSS JOIN curr
+    LEFT JOIN apex_application_pages a              -- we need LEFT JOIN for pages -1 and 0
         ON a.application_id         = n.app_id
         AND a.page_id               = n.page_id
         AND a.page_id               > 0
@@ -25,9 +39,15 @@ WITH t AS (
         ON i.application_id         = a.application_id
         AND i.page_id               = a.page_id
         AND i.item_name             = 'P' || TO_CHAR(a.page_id) || '_RESET'
-    WHERE n.app_id                  = sess.get_app_id()
+    LEFT JOIN navigation_groups g
+        ON g.app_id                 = n.app_id
+        AND g.page_id               = n.page_id
+        AND g.page_group            = sess.get_page_group(curr.page_id)
+    WHERE n.app_id                  = curr.app_id
         AND n.is_hidden             IS NULL
-        AND NVL(nav.is_available(n.page_id), 'Y') = 'Y'
+        --
+        AND 'Y' = nav.is_available(n.page_id)
+        AND 'Y' = nav.is_visible(curr.page_id, n.page_id)
 )
 SELECT
     CASE WHEN t.parent_id IS NULL THEN 1 ELSE 2 END AS lvl,
@@ -45,7 +65,12 @@ SELECT
         )
         END AS target,
     --
-    CASE WHEN t.page_id = sess.get_root_page_id() THEN 'YES' END AS is_current_list_entry,
+    CASE        
+        WHEN t.page_id = (SELECT page_id        FROM curr)  THEN 'YES'
+        WHEN t.page_id = (SELECT parent_id      FROM curr)  THEN 'YES'
+        WHEN t.page_id = (SELECT root_id        FROM curr)  THEN 'YES'
+        WHEN t.page_id = t.group_id                         THEN 'YES'
+        END AS is_current_list_entry,
     --
     NULL                    AS image,
     NULL                    AS image_attribute,
