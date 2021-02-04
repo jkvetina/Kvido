@@ -91,10 +91,26 @@ CREATE OR REPLACE PACKAGE BODY nav AS
     BEGIN
         tree.log_module();
 
-        -- remove rows for pages which dont exists
+        -- remove references
         FOR c IN (
             SELECT n.app_id, n.page_id
-            FROM p910_nav_pages_to_remove n
+            FROM p910_nav_pages_to_remove p
+            JOIN navigation n
+                ON n.app_id         = p.app_id
+                AND n.parent_id     = p.page_id
+        ) LOOP
+            tree.log_debug('REMOVING_PARENT', c.page_id);
+            --
+            UPDATE navigation n
+            SET n.parent_id = NULL
+            WHERE n.app_id      = c.app_id
+                AND n.page_id   = c.page_id;
+        END LOOP;
+
+        -- remove rows for pages which dont exists
+        FOR c IN (
+            SELECT p.app_id, p.page_id
+            FROM p910_nav_pages_to_remove p
         ) LOOP
             tree.log_debug('DELETING', c.page_id);
             --
