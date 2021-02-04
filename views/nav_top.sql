@@ -5,7 +5,6 @@ WITH curr AS (
         n.page_id,
         n.parent_id,
         sess.get_root_page_id(n.page_id)    AS root_id,
-        sess.get_user_id()                  AS user_id,
         sess.get_page_group(n.page_id)      AS page_group
     FROM navigation n
     WHERE n.app_id      = sess.get_app_id()
@@ -16,22 +15,15 @@ t AS (
         n.app_id,
         n.page_id,
         a.page_alias,
-        n.icon_name,
+        a.page_name,
         n.css_class,
         i.item_name     AS reset_item,
         n.order#,
         n.parent_id,
-        --
-        REPLACE(REPLACE(REPLACE(REPLACE(n.label,
-            '$CTX:DATE',            TO_CHAR(SYSDATE, 'YYYY-MM-DD')),
-            '$CTX:USER_NAME',       curr.user_id),
-            '$CTX:ENV_NAME',        'ENV_NAME'),
-            '$CTX:',                ''
-        ) AS label,
         g.page_id       AS group_id
     FROM navigation n
     CROSS JOIN curr
-    LEFT JOIN apex_application_pages a              -- we need LEFT JOIN for pages -1 and 0
+    LEFT JOIN apex_application_pages a                  -- left join needed for pages <= 0
         ON a.application_id         = n.app_id
         AND a.page_id               = n.page_id
         AND a.page_id               > 0
@@ -54,11 +46,10 @@ t AS (
 SELECT
     CASE WHEN t.parent_id IS NULL THEN 1 ELSE 2 END AS lvl,
     --
-    CASE WHEN t.icon_name LIKE '{<%' THEN '<span class="fa ' || REGEXP_SUBSTR(t.icon_name, '{.([^}]+)', 1, 1, NULL, 1) || '"></span> &' || 'nbsp; ' END ||
-    CASE WHEN t.icon_name LIKE '{!%' THEN '<span class="fa ' || REGEXP_SUBSTR(t.icon_name, '{.([^}]+)', 1, 1, NULL, 1) || '" title="' || t.label || '"></span>' END ||
-    CASE WHEN (t.icon_name IS NULL OR t.icon_name NOT LIKE '{!%') THEN t.label END ||
-    CASE WHEN t.icon_name LIKE '{>%' THEN ' &' || 'nbsp; <span class="fa ' || REGEXP_SUBSTR(t.icon_name, '{.([^}]+)', 1, 1, NULL, 1) || '"></span>' END AS label,
-    --
+    CASE
+        WHEN t.page_id > 0 THEN nav.get_page_label(t.page_name)
+        WHEN t.page_id = 0 THEN '</li></ul><ul class="empty"></ul><ul><li>'
+        ELSE t.page_name END AS label,
     CASE WHEN t.page_id > 0 THEN
         APEX_PAGE.GET_URL (
             p_page      => NVL(t.page_alias, t.page_id),

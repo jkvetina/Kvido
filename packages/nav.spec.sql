@@ -1,6 +1,6 @@
 CREATE OR REPLACE PACKAGE nav AS
 
-    auth_package        CONSTANT VARCHAR2(30) := 'AUTH';
+    auth_package                CONSTANT VARCHAR2(30)       := 'AUTH';
 
 
 
@@ -24,6 +24,13 @@ CREATE OR REPLACE PACKAGE nav AS
 
 
     PROCEDURE add_new_pages;
+
+
+
+    FUNCTION get_page_label (
+        in_page_name            apex_application_pages.page_name%TYPE
+    )
+    RETURN VARCHAR2;
 
 END;
 /

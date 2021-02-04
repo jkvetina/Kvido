@@ -6,8 +6,6 @@ CREATE TABLE navigation (
     parent_id           NUMBER(6),
     order#              NUMBER(4),
     --
-    label               VARCHAR2(255),
-    icon_name           VARCHAR2(64),
     css_class           VARCHAR2(64),
     is_hidden           VARCHAR2(1),
     --
@@ -31,8 +29,6 @@ COMMENT ON COLUMN navigation.page_id        IS 'APEX page ID';
 COMMENT ON COLUMN navigation.parent_id      IS 'Parent id for tree';
 COMMENT ON COLUMN navigation.order#         IS 'Order of siblings';
 --
-COMMENT ON COLUMN navigation.label          IS 'Label for menu item';
-COMMENT ON COLUMN navigation.icon_name      IS 'Icon name from font APEX';
 COMMENT ON COLUMN navigation.css_class      IS 'CSS class for menu item (icon_only, icon_left, icon_right...)';
 COMMENT ON COLUMN navigation.is_hidden      IS 'Y = dont show in menu';
 

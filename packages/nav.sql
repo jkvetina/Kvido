@@ -125,8 +125,6 @@ CREATE OR REPLACE PACKAGE BODY nav AS
             rec.page_id     := c.page_id;
             rec.parent_id   := c.parent_id;
             rec.order#      := c.order#;
-            rec.label       := c.label;
-            rec.icon_name   := c.icon_name;
             rec.css_class   := c.css_class;
             rec.is_hidden   := c.is_hidden;
             --
@@ -142,5 +140,30 @@ END;
         RETURN NULL;
     END;
 
+    FUNCTION get_page_label (
+        in_page_name            apex_application_pages.page_name%TYPE
+    )
+    RETURN VARCHAR2
+    AS
+        out_page_name           VARCHAR2(4000)      := in_page_name;
+        out_search              VARCHAR2(256);
+    BEGIN
+        FOR i IN 1 .. NVL(REGEXP_COUNT(in_page_name, '(#fa-)'), 0) LOOP
+            out_search      := REGEXP_SUBSTR(out_page_name, '(#fa-[[:alnum:]+_-]+\s*)+');
+            out_page_name   := REPLACE(
+                out_page_name,
+                out_search,
+                ' &' || 'nbsp; <span class="fa' || REPLACE(REPLACE(out_search, '#fa-', '+'), '+', ' fa-') || '"></span> &' || 'nbsp; '
+            );
+        END LOOP;
+        --
+        out_page_name := REPLACE(REPLACE(REPLACE(out_page_name,
+            '$CTX:DATE',            TO_CHAR(SYSDATE, 'YYYY-MM-DD')),
+            '$CTX:USER_NAME',       sess.get_user_id()),
+            '$CTX:ENV_NAME',        'ENV_NAME'
+        );
+        --
+        RETURN REGEXP_REPLACE(out_page_name, '((^\s*&' || 'nbsp;\s*)|(\s*&' || 'nbsp;\s*$))', '');
+    END;
 END;
 /
