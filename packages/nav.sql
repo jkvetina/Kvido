@@ -150,11 +150,7 @@ CREATE OR REPLACE PACKAGE BODY nav AS
         tree.update_timer();
     END;
 
-END;
-/
 
-        RETURN NULL;
-    END;
 
     FUNCTION get_page_label (
         in_page_name            apex_application_pages.page_name%TYPE
