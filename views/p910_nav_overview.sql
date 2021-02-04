@@ -26,7 +26,7 @@ SELECT
                 p_items         => 'FB_FLOW_ID,FB_FLOW_PAGE_ID,F4000_P1_FLOW,F4000_P4150_GOTO_PAGE,F4000_P1_PAGE',
                 p_values        => n.app_id || ',' || n.page_id || ',' || n.app_id || ',' || n.page_id || ',' || n.page_id
             ) ||
-            '"><span class="fa fa-external-link" style="color: #333;" title="Open page in APEX"></span></a>'
+            '"><span class="fa fa-file-code-o " style="color: #333;" title="Open page in APEX"></span></a>'
         END AS page_link,
     --
     p.authorization_scheme      AS auth_scheme
@@ -63,7 +63,7 @@ SELECT
         p_items         => 'FB_FLOW_ID,FB_FLOW_PAGE_ID,F4000_P1_FLOW,F4000_P4150_GOTO_PAGE,F4000_P1_PAGE',
         p_values        => a.app_id || ',' || a.page_id || ',' || a.app_id || ',' || a.page_id || ',' || a.page_id
     ) ||
-    '"><span class="fa fa-external-link" style="color: #333;" title="Open page in APEX"></span></a>' AS page_link,
+    '"><span class="fa fa-file-code-o " style="color: #333;" title="Open page in APEX"></span></a>' AS page_link,
     --
     a.auth_scheme
 FROM p910_nav_pages_to_add a
