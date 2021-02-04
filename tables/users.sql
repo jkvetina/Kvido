@@ -16,7 +16,8 @@ CREATE TABLE users (
     --
     CONSTRAINT fk_users_updated_by FOREIGN KEY (updated_by)
         REFERENCES users (user_id)
-);
+)
+STORAGE (BUFFER_POOL KEEP);
 --
 CREATE INDEX fk_users_updated_by ON users (updated_by) COMPUTE STATISTICS;
 --

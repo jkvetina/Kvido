@@ -20,7 +20,8 @@ CREATE TABLE logs_setup (
         REFERENCES roles (role_id),
     --
     CONSTRAINT ch_logs_setup_is_tracked     CHECK (is_tracked IN ('Y', 'N'))
-);
+)
+STORAGE (BUFFER_POOL KEEP);
 --
 CREATE INDEX fk_logs_setup_user_id ON logs_setup (user_id) COMPUTE STATISTICS;
 CREATE INDEX fk_logs_setup_role_id ON logs_setup (role_id) COMPUTE STATISTICS;

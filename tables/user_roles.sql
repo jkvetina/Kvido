@@ -11,7 +11,8 @@ CREATE TABLE user_roles (
     --
     CONSTRAINT fk_users_roles_role_id FOREIGN KEY (role_id)
         REFERENCES roles (role_id)
-);
+)
+STORAGE (BUFFER_POOL KEEP);
 --
 CREATE INDEX fk_users_roles_user_role ON user_roles (user_id, role_id) COMPUTE STATISTICS;
 --

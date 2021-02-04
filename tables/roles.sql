@@ -5,7 +5,8 @@ CREATE TABLE roles (
     description_        VARCHAR2(1000),
     --
     CONSTRAINT pk_roles PRIMARY KEY (role_id)
-);
+)
+STORAGE (BUFFER_POOL KEEP);
 --
 COMMENT ON TABLE  roles                     IS 'List of roles';
 --
