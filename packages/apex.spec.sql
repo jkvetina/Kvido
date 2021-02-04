@@ -56,6 +56,14 @@ CREATE OR REPLACE PACKAGE apex AS
 
 
 
+    --
+    -- Find current session_id for Developer in APEX
+    --
+    FUNCTION get_developer_session_id
+    RETURN apex_workspace_sessions.apex_session_id%TYPE;
+
+
+
 
 
     -- ### Functions to work with APEX items

@@ -31,6 +31,34 @@ CREATE OR REPLACE PACKAGE BODY apex AS
 
 
 
+    FUNCTION get_developer_session_id
+    RETURN apex_workspace_sessions.apex_session_id%TYPE
+    AS
+        session_id      apex_workspace_sessions.apex_session_id%TYPE;
+    BEGIN
+        SELECT MIN(s.apex_session_id) KEEP (DENSE_RANK FIRST ORDER BY s.session_idle_timeout_on DESC)
+        INTO session_id
+        FROM apex_workspace_developers d
+        JOIN apex_applications a
+            ON a.workspace                  = d.workspace_name
+        JOIN apex_workspace_sessions m
+            ON m.apex_session_id            = sess.get_session_id()
+            AND m.workspace_name            = d.workspace_name
+        JOIN apex_workspace_sessions s
+            ON s.workspace_id               = m.workspace_id
+            AND s.remote_addr               = m.remote_addr
+            AND s.apex_session_id           != m.apex_session_id
+            AND UPPER(s.user_name)          IN (UPPER(d.user_name), UPPER(d.email))
+        WHERE a.application_id              = sess.get_app_id()
+            AND d.is_application_developer  = 'Yes'
+            AND d.account_locked            = 'No'
+            AND sess.get_user_id()          IN (UPPER(d.user_name), LOWER(d.email));
+        --
+        RETURN session_id;
+    END;
+
+
+
     PROCEDURE set_item (
         in_name         VARCHAR2,
         in_value        VARCHAR2        := NULL
