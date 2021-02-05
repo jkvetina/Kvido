@@ -379,6 +379,40 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
 
+    PROCEDURE delete_session (
+        in_session_id       sessions.session_id%TYPE,
+        in_created_at       sessions.created_at%TYPE
+    ) AS
+        keep_this           logs.log_id%TYPE;
+        rows_to_delete      tree.arr_logs_log_id;
+    BEGIN
+        keep_this := tree.log_module();
+        --
+        SELECT l.log_id
+        BULK COLLECT INTO rows_to_delete
+        FROM logs l
+        WHERE l.session_id      = in_session_id
+            AND l.log_parent    IS NULL
+            AND l.created_at    >= TRUNC(in_created_at);
+        --
+        IF rows_to_delete.FIRST IS NOT NULL THEN
+            FOR i IN rows_to_delete.FIRST .. rows_to_delete.LAST LOOP
+                IF keep_this != rows_to_delete(i) THEN
+                    tree.delete_tree(rows_to_delete(i));
+                    COMMIT;
+                END IF;
+            END LOOP;
+        END IF;
+        --
+        DELETE FROM sessions s
+        WHERE s.session_id      = in_session_id
+            AND s.session_id    != sess.get_session_id();
+        --
+        tree.update_timer();
+    END;
+
+
+
     FUNCTION get_recent_items (
         in_user_id          sessions.user_id%TYPE       := NULL,
         in_app_id           sessions.app_id%TYPE        := NULL
@@ -389,7 +423,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         SELECT s.apex_items INTO out_payload
         FROM sessions s
         WHERE s.session_id = (
-            SELECT MAX(s.session_id)        -- @TODO: FIRST_VALUE()
+            SELECT MAX(s.session_id)        -- @TODO: MIN(d.id) KEEP (DENSE_RANK FIRST ORDER BY d.id)
             FROM sessions s
             WHERE s.user_id         = COALESCE(in_user_id, sess.get_user_id())
                 AND s.app_id        = COALESCE(in_app_id,  sess.get_app_id(), s.app_id)
