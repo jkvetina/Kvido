@@ -5,7 +5,7 @@ CREATE OR REPLACE PACKAGE BODY auth AS
         PRAGMA UDF;
     BEGIN
         -- respect settings in peek_roles_item even for this role
-        IF apex.is_developer() AND sess.get_page_id() = nav.peek_page_id THEN
+        IF apex.is_developer() AND sess.get_page_id() = nav.peek_page_id AND apex.get_item(nav.peek_tree_item) = 'Y' THEN
             RETURN CASE WHEN (NVL(INSTR(
                 ':' || apex.get_item(nav.peek_roles_item) || ':',
                 ':' || 'IS_DEVELOPER' || ':'
