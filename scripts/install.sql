@@ -18,6 +18,10 @@
 @../tables/navigation.sql
 @../tables/navigation_groups.sql
 --
+@../triggers/navigation_def.sql
+@../triggers/navigation_groups_def.sql
+@../triggers/users_def.sql
+--
 @../sequences/log_id.sql
 
 
@@ -29,6 +33,8 @@
 --
 @../packages/tree.spec.sql
 @../packages/sess.spec.sql
+
+EXEC recompile;
 
 
 

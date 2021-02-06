@@ -299,7 +299,13 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             WHERE u.user_id = in_user_id;
         EXCEPTION
         WHEN NO_DATA_FOUND THEN
-            sess_create_user(in_user_id);
+            BEGIN
+                sess_create_user(in_user_id);
+                rec.user_id := in_user_id;
+            EXCEPTION
+            WHEN OTHERS THEN
+                RAISE_APPLICATION_ERROR(tree.app_exception_code, 'CREATE_USER_FAILED', TRUE);
+            END;
         END;
 
         -- values to store
