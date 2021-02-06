@@ -226,31 +226,52 @@ CREATE OR REPLACE PACKAGE BODY apex AS
         in_values       VARCHAR2    := NULL
     )
     RETURN VARCHAR2 AS
-        out_values      VARCHAR2(32767) := '';
+        reset_item      apex_application_page_items.item_name%TYPE;
+        out_page_id     navigation.page_id%TYPE;
+        out_names       VARCHAR2(32767);
+        out_values      VARCHAR2(32767);
     BEGIN
+        out_page_id     := COALESCE(in_page_id, sess.get_page_id());
+        out_names       := in_names;
+        out_values      := in_values;
+
+        -- check existance of reset item on target page
+        SELECT MAX(i.item_name) INTO reset_item
+        FROM apex_application_page_items i
+        WHERE i.application_id  = sess.get_app_id()
+            AND i.page_id       = out_page_id
+            AND i.item_name     = 'P' || out_page_id || '_RESET';
+
+        -- autofill missing values
         IF in_names IS NOT NULL AND in_values IS NULL THEN
-            -- loop thru in_names, find page item value, build output string
             FOR c IN (
-                SELECT *
+                SELECT item_name
                 FROM (
                     SELECT DISTINCT REGEXP_SUBSTR(in_names, '[^,]+', 1, LEVEL) AS item_name, LEVEL AS order#
                     FROM DUAL
                     CONNECT BY LEVEL <= REGEXP_COUNT(in_names, ',') + 1
                 )
-                ORDER BY order#
+                ORDER BY order# DESC
             ) LOOP
-                out_values := ',' || apex.get_item(c.item_name);
+                out_values := apex.get_item(c.item_name) || ',' || out_values;
             END LOOP;
         END IF;
-        --
-        -- @TODO: THERE IS A BETTER WAY HOW TO DO THIS
-        --
-        RETURN 'f?p=' ||
-            sess.get_app_id() || ':' ||
-            COALESCE(in_page_id, sess.get_page_id()) || ':' ||
-            sess.get_session_id() || '::' ||
-            V('APP_DEBUG') || '::' ||
-            in_names || ':' || COALESCE(in_values, out_values);
+
+        -- auto add reset item to args if not passed already
+        IF NVL(INSTR(out_names, reset_item), 0) = 0 THEN
+            out_names   := reset_item || ',' || out_names;
+            out_values  := 'Y,' || out_values;
+        END IF;
+
+        -- generate url
+        RETURN APEX_PAGE.GET_URL (
+            p_page      => out_page_id,
+            p_items     => out_names,
+            p_values    => out_values
+        );
+    EXCEPTION
+    WHEN OTHERS THEN
+        tree.raise_error();
     END;
 
 END;
