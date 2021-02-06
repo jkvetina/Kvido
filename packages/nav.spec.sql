@@ -38,6 +38,7 @@ CREATE OR REPLACE PACKAGE nav AS
     peek_page_id                CONSTANT navigation.page_id%TYPE    := 910;
     peek_page_item              CONSTANT VARCHAR2(30)               := 'P910_PEEK_PAGE';
     peek_roles_item             CONSTANT VARCHAR2(30)               := 'P910_PEEK_ROLES';
+    peek_adjustment_item        CONSTANT VARCHAR2(30)               := 'P910_PEEK_ROLE';
     peek_tree_item              CONSTANT VARCHAR2(30)               := 'P910_TREE_MODE';
 
 
@@ -82,6 +83,23 @@ CREATE OR REPLACE PACKAGE nav AS
     --
     FUNCTION is_role_peeking_enabled
     RETURN BOOLEAN;
+
+
+
+    --
+    -- Check if requested role is peek enabled (active)
+    --
+    FUNCTION is_role_peeking_enabled (
+        in_auth_scheme          apex_application_pages.authorization_scheme%TYPE
+    )
+    RETURN CHAR;
+
+
+
+    --
+    -- Adjust item holding peek roles
+    --
+    PROCEDURE adjust_peek_roles;
 
 
 

@@ -92,12 +92,39 @@ CREATE OR REPLACE PACKAGE BODY nav AS
         -- peeking just for developers to check navigation tree
         IF apex.is_developer() AND sess.get_page_id() = nav.peek_page_id THEN
             RETURN (NVL(INSTR(
-                ':' || apex.get_item(nav.peek_roles_item) || ':',
-                ':' || REPLACE(tree.get_caller_name(1), nav.auth_package || '.', '') || ':'
+                apex.get_item(nav.peek_roles_item) || '.',
+                REPLACE(tree.get_caller_name(1), nav.auth_package || '.', '') || '.'
                 ), 0) > 0);
         END IF;
         --
         RETURN FALSE;
+    END;
+
+
+
+    FUNCTION is_role_peeking_enabled (
+        in_auth_scheme          apex_application_pages.authorization_scheme%TYPE
+    )
+    RETURN CHAR AS
+        PRAGMA UDF;             -- SQL only
+    BEGIN
+        RETURN CASE WHEN NVL(INSTR(apex.get_item(nav.peek_roles_item), in_auth_scheme || '.'), 0) > 0 THEN 'Y' ELSE 'N' END;
+    END;
+
+
+
+    PROCEDURE adjust_peek_roles AS
+        new_role                apex_application_pages.authorization_scheme%TYPE;
+        active_roles            VARCHAR2(32767);
+    BEGIN
+        new_role                := apex.get_item(nav.peek_adjustment_item);
+        active_roles            := apex.get_item(nav.peek_roles_item);
+        --
+        IF NVL(INSTR(active_roles, new_role || '.'), 0) > 0 THEN
+            apex.set_item(nav.peek_roles_item, REPLACE(active_roles, new_role || '.', ''));
+        ELSE
+            apex.set_item(nav.peek_roles_item, active_roles || new_role || '.');
+        END IF;
     END;
 
 
