@@ -1,10 +1,10 @@
 CREATE OR REPLACE PACKAGE BODY apex AS
 
     FUNCTION is_developer (
-        in_username     VARCHAR2        := NULL
+        in_username             VARCHAR2
     )
     RETURN BOOLEAN AS
-        valid           VARCHAR2(1);
+        valid                   VARCHAR2(1);
     BEGIN
         SELECT 'Y' INTO valid
         FROM apex_workspace_developers d
@@ -36,7 +36,7 @@ CREATE OR REPLACE PACKAGE BODY apex AS
     AS
         session_id      apex_workspace_sessions.apex_session_id%TYPE;
     BEGIN
-        SELECT MIN(s.apex_session_id) KEEP (DENSE_RANK FIRST ORDER BY s.session_idle_timeout_on DESC)
+        SELECT MIN(s.apex_session_id) KEEP (DENSE_RANK FIRST ORDER BY s.session_created DESC)
         INTO session_id
         FROM apex_workspace_developers d
         JOIN apex_applications a
@@ -46,13 +46,13 @@ CREATE OR REPLACE PACKAGE BODY apex AS
             AND m.workspace_name            = d.workspace_name
         JOIN apex_workspace_sessions s
             ON s.workspace_id               = m.workspace_id
-            AND s.remote_addr               = m.remote_addr
+            --AND s.remote_addr               = m.remote_addr       -- sadly this may not match
             AND s.apex_session_id           != m.apex_session_id
             AND UPPER(s.user_name)          IN (UPPER(d.user_name), UPPER(d.email))
         WHERE a.application_id              = sess.get_app_id()
             AND d.is_application_developer  = 'Yes'
             AND d.account_locked            = 'No'
-            AND sess.get_user_id()          IN (UPPER(d.user_name), LOWER(d.email));
+            AND UPPER(sess.get_user_id())   IN (UPPER(d.user_name), UPPER(d.email));
         --
         RETURN session_id;
     END;
@@ -202,7 +202,7 @@ CREATE OR REPLACE PACKAGE BODY apex AS
         -- check if we are in APEX or not
         HTP.INIT;
         target_url := apex.get_page_link (
-            in_page_id,
+            in_page_id  => in_page_id,
             in_names    => in_names,
             in_values   => in_values
         );
