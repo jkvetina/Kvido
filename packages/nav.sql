@@ -86,6 +86,33 @@ CREATE OR REPLACE PACKAGE BODY nav AS
 
 
 
+    FUNCTION is_role_peeking_enabled
+    RETURN BOOLEAN AS
+    BEGIN
+        -- peeking just for developers to check navigation tree
+        IF apex.is_developer() AND sess.get_page_id() = auth.peek_page_id THEN
+            RETURN (NVL(INSTR(
+                ':' || apex.get_item(auth.peek_roles_item) || ':',
+                ':' || REPLACE(tree.get_caller_name(1), nav.auth_package || '.', '') || ':'
+                ), 0) > 0);
+        END IF;
+        --
+        RETURN FALSE;
+    END;
+
+
+
+    FUNCTION get_peeked_page_id
+    RETURN navigation.page_id%TYPE AS
+    BEGIN
+        RETURN CASE
+            WHEN apex.is_developer() AND sess.get_page_id() = auth.peek_page_id
+            THEN TO_NUMBER(apex.get_item(auth.peek_page_item))
+            END;
+    END;
+
+
+
     FUNCTION get_page_label (
         in_page_name            apex_application_pages.page_name%TYPE
     )

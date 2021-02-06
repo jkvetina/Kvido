@@ -8,7 +8,7 @@ WITH curr AS (
         sess.get_page_group(n.page_id)      AS page_group
     FROM navigation n
     WHERE n.app_id      = sess.get_app_id()
-        AND n.page_id   = sess.get_page_id()
+        AND n.page_id   = COALESCE(nav.get_peeked_page_id(), sess.get_page_id())
 ),
 t AS (
     SELECT

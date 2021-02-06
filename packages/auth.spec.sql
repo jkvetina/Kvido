@@ -1,7 +1,14 @@
-CREATE OR REPLACE PACKAGE BODY auth AS
+CREATE OR REPLACE PACKAGE auth AS
+
+    -- ### Introduction
+    --
+    -- This package is used for application specific roles
+    --
+
+
 
     --
-    -- Check if current user id APEX developer, returns Y/N
+    -- Check if user is a developer
     --
     FUNCTION is_developer
     RETURN CHAR;
