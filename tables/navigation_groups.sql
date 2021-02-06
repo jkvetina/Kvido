@@ -9,4 +9,9 @@ CREATE TABLE navigation_groups (
 )
 STORAGE (BUFFER_POOL KEEP);
 --
+COMMENT ON TABLE  navigation_groups                 IS 'Navigation groups to show extra menu items';
+--
+COMMENT ON COLUMN navigation_groups.app_id          IS 'APEX application ID';
+COMMENT ON COLUMN navigation_groups.page_id         IS 'APEX page ID';
+COMMENT ON COLUMN navigation_groups.page_group      IS 'Group name';
 

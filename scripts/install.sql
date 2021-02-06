@@ -15,6 +15,8 @@
 @../tables/user_roles.sql
 @../tables/logs_setup.sql
 @../tables/sessions.sql
+@../tables/navigation.sql
+@../tables/navigation_groups.sql
 --
 @../sequences/log_id.sql
 

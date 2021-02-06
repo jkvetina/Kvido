@@ -19,7 +19,7 @@ LEFT JOIN apex_application_pages p
     AND p.authorization_scheme      = a.authorization_scheme_name
 LEFT JOIN user_procedures s
     ON s.object_name                = 'AUTH'  -- nav.auth_package
-    AND s.procedure_name            = p.authorization_scheme
+    AND s.procedure_name            = a.authorization_scheme_name
 LEFT JOIN (
     SELECT
         'IS_' || u.role_id  AS role_id,
