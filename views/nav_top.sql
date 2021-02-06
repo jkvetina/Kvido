@@ -14,13 +14,14 @@ t AS (
     SELECT
         n.app_id,
         n.page_id,
+        n.parent_id,
         a.page_alias,
         a.page_name,
+        a.authorization_scheme      AS auth_scheme,
         n.css_class,
-        i.item_name     AS reset_item,
-        n.order#,
-        n.parent_id,
-        g.page_id       AS group_id
+        i.item_name                 AS reset_item,
+        g.page_id                   AS group_id,
+        n.order#
     FROM navigation n
     CROSS JOIN curr
     LEFT JOIN apex_application_pages a                  -- left join needed for pages <= 0
@@ -77,10 +78,15 @@ SELECT
     NULL                    AS attribute07,
     NULL                    AS attribute08,
     NULL                    AS attribute09,
-    NULL                    AS attribute10
+    NULL                    AS attribute10,
+    --
+    t.page_id,
+    t.parent_id,
+    t.auth_scheme,
+    --
+    REPLACE(RPAD(' ', (LEVEL - 1) * 4, ' '), ' ', '&' || 'nbsp; ') || t.page_name AS label__
 FROM t
 CONNECT BY t.app_id         = PRIOR t.app_id
     AND t.parent_id         = PRIOR t.page_id
 START WITH t.parent_id      IS NULL
-ORDER SIBLINGS BY t.order#, t.page_id;
-
+ORDER SIBLINGS BY t.order# NULLS LAST, t.page_id;
