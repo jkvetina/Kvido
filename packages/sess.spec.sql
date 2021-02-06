@@ -204,6 +204,16 @@ CREATE OR REPLACE PACKAGE sess AS
 
 
     --
+    -- Delete logs for requested session
+    --
+    PROCEDURE delete_session (
+        in_session_id       sessions.session_id%TYPE,
+        in_created_at       sessions.created_at%TYPE
+    );
+
+
+
+    --
     -- Load session items from recent session
     --
     FUNCTION get_recent_items (
@@ -211,23 +221,6 @@ CREATE OR REPLACE PACKAGE sess AS
         in_app_id           sessions.app_id%TYPE        := NULL
     )
     RETURN sessions.apex_items%TYPE;
-
-
-
-
-
-    -- ### Little helpers
-    --
-
-    --
-    -- Returns `TRUE` if user has passed requested role
-    --
-    FUNCTION get_role_status (
-        in_role_id          user_roles.role_id%TYPE,
-        in_user_id          user_roles.user_id%TYPE     := NULL,
-        in_app_id           user_roles.app_id%TYPE      := NULL
-    )
-    RETURN BOOLEAN;
 
 END;
 /

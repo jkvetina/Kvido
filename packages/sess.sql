@@ -436,27 +436,5 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         RETURN NULL;
     END;
 
-
-
-    FUNCTION get_role_status (
-        in_role_id          user_roles.role_id%TYPE,
-        in_user_id          user_roles.user_id%TYPE     := NULL,
-        in_app_id           user_roles.app_id%TYPE      := NULL
-    )
-    RETURN BOOLEAN AS
-        role_exists         PLS_INTEGER;
-    BEGIN
-        SELECT 1 INTO role_exists
-        FROM user_roles r
-        WHERE r.app_id      = COALESCE(in_app_id,  sess.get_app_id())
-            AND r.user_id   = COALESCE(in_user_id, sess.get_user_id())
-            AND r.role_id   = in_role_id;
-        --
-        RETURN TRUE;
-    EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        RETURN FALSE;
-    END;
-
 END;
 /
