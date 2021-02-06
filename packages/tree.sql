@@ -1140,7 +1140,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                 AND (in_row.user_id         LIKE in_list(i).user_id         OR in_list(i).user_id       IS NULL)
                 AND (in_row.module_name     LIKE in_list(i).module_name     OR in_list(i).module_name   IS NULL)
                 AND (in_row.flag            = in_list(i).flag               OR in_list(i).flag          IS NULL)
-                AND (sess.get_role_status(in_list(i).role_id)               OR in_list(i).role_id       IS NULL)
+                --AND (sess.get_role_status(in_list(i).role_id)               OR in_list(i).role_id       IS NULL)
             THEN
                 RETURN TRUE;
             END IF;
