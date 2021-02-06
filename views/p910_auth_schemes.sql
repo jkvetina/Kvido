@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p910_auth_groups AS
+CREATE OR REPLACE VIEW p910_auth_schemes AS
 SELECT
     a.authorization_scheme_name     AS auth_scheme,
     MAX(s.procedure_name)           AS auth_procedure,
