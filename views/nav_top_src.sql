@@ -16,6 +16,7 @@ SELECT
     n.parent_id,
     a.page_alias,
     a.page_name,
+    a.page_group,
     a.authorization_scheme      AS auth_scheme,
     n.css_class,
     i.item_name                 AS reset_item,
