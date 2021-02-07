@@ -185,12 +185,21 @@ table.a-GV-table div.a-Toolbar-group [data-action="edit"] {
 /**
  * HAMBURGER MENU IN GRID
  */
- table.a-GV-table button.a-Button.a-Button--noLabel.a-Button--iconTextButton.a-Button--actions.js-menuButton {
+table.a-GV-table button.a-Button.a-Button--noLabel.a-Button--iconTextButton.a-Button--actions.js-menuButton {
     background:             transparent !important;
     border:                 0           !important;
 }
 table.a-GV-table button.a-Button.a-Button--noLabel.a-Button--iconTextButton.a-Button--actions.js-menuButton:hover {
     color:                  #518D54;
+}
+
+
+
+/**
+ * BACKGROUND ON GRID STICKY HEADER
+ */
+div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
+    background:             #F2F2F2 !important;
 }
 
 
