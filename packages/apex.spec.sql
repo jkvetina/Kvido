@@ -90,16 +90,9 @@ CREATE OR REPLACE PACKAGE apex AS
 
 
     --
-    -- Clear requested, all or not used items on page
+    -- Clear page items except items passed in url
     --
-    PROCEDURE clear_items (
-        in_items        VARCHAR2 := NULL
-        --
-        -- NULL = all except passed in args
-        -- %    = all
-        -- list = only items on list
-        --
-    );
+    PROCEDURE clear_items;
 
 
 

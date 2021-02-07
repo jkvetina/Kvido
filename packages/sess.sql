@@ -343,6 +343,8 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             -- automatic items reset, co no need for reset page process
             IF REGEXP_LIKE(req, '[:,]' || 'P' || rec.page_id || '_RESET' || '[,:]') THEN  -- @TODO: should check also Y value
                 apex.clear_items();
+            ELSIF req LIKE '%p' || rec.page_id || '_reset=Y%' THEN  -- for friendly url
+                apex.clear_items();
             END IF;
 
             -- app specific item manipulation

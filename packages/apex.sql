@@ -85,41 +85,22 @@ CREATE OR REPLACE PACKAGE BODY apex AS
 
 
 
-    PROCEDURE clear_items (
-        in_items        VARCHAR2 := NULL
-        --
-        -- NULL = all except passed in args
-        -- %    = all
-        -- list = only items on list
-        --
-    ) AS
+    PROCEDURE clear_items AS
+        req                 VARCHAR2(4000) := SUBSTR(sess.get_request(), 1, 4000);
     BEGIN
-        -- delete items one by one, except items passed in query string
-        IF (in_items IS NULL OR in_items = '%') THEN
-            FOR c IN (
-                SELECT i.item_name
-                FROM apex_application_page_items i
-                WHERE i.application_id  = sess.get_app_id()
-                    AND i.page_id       = sess.get_page_id()
-                    AND (
-                        NOT REGEXP_LIKE(sess.get_request(), '[:,]' || i.item_name || '[,:]')
-                        OR in_items = '%'
-                    )
-            ) LOOP
-                APEX_UTIL.SET_SESSION_STATE(c.item_name, NULL);
-            END LOOP;
-        ELSE
-            -- delete requested items one by one
-            FOR c IN (
-                SELECT i.item_name
-                FROM apex_application_page_items i
-                WHERE i.application_id  = sess.get_app_id()
-                    AND i.page_id       = sess.get_page_id()
-                    AND ',' || in_items || ',' NOT LIKE '%,' || i.item_name || ',%'
-            ) LOOP
-                APEX_UTIL.SET_SESSION_STATE(c.item_name, NULL);
-            END LOOP;
-        END IF;
+        -- delete page items one by one, except items passed in query string
+        FOR c IN (
+            SELECT i.item_name
+            FROM apex_application_page_items i
+            WHERE i.application_id  = sess.get_app_id()
+                AND i.page_id       = sess.get_page_id()
+                AND (
+                    NOT REGEXP_LIKE(req, '[:,]' || i.item_name || '[,:]')       -- for legacy
+                    AND NOT REGEXP_LIKE(req, LOWER(i.item_name) || '[=&]')      -- for friendly url
+                )
+        ) LOOP
+            apex.set_item(c.item_name, NULL);
+        END LOOP;
     END;
 
 
