@@ -1,6 +1,6 @@
 --DROP MATERIALIZED VIEW logs_modules;
 CREATE MATERIALIZED VIEW logs_modules
-BUILD IMMEDIATE
+BUILD DEFERRED
 REFRESH COMPLETE ON DEMAND
 AS
 WITH t AS (
@@ -195,7 +195,9 @@ COMMENT ON COLUMN logs_modules.f_id            IS 'Overload ID for F/P clone';
 --
 -- REFRESH MVIEW
 --
+/*
 BEGIN
     DBMS_SNAPSHOT.REFRESH('LOGS_MODULES');
 END;
-/
+*/
+
