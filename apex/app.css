@@ -27,13 +27,16 @@
 /**
  * HEADERS
  */
- .t-Region-title,
+.t-Region-title,
 h2.report_header {
     font-family:            'Roboto Slab';
     font-style:             normal;
     font-weight:            300;
     font-size:              2.5rem;
     margin:                 2rem 0 0;
+}
+div.H3 h2.report_header {
+    font-size:              2.3rem;
 }
 h2.t-Region-title button.t-Button,
 h2.t-Region-title button.t-Button+.t-Button {
@@ -52,9 +55,6 @@ button, a {
 /**
  * HOT BUTTON + BUTTON IN HEADER ON HOVER
  */
-.t-Button--hot,
-body .ui-button.ui-button--hot,
-body button.ui-state-default.ui-priority-primary,
 h2.report_header button {
     margin-left:            2rem;
 }
@@ -179,6 +179,17 @@ table.a-GV-table .ui-button:active {
  */
 table.a-GV-table div.a-Toolbar-group [data-action="edit"] {
     display:                none !important;
+}
+
+/**
+ * HAMBURGER MENU IN GRID
+ */
+ table.a-GV-table button.a-Button.a-Button--noLabel.a-Button--iconTextButton.a-Button--actions.js-menuButton {
+    background:             transparent !important;
+    border:                 0           !important;
+}
+table.a-GV-table button.a-Button.a-Button--noLabel.a-Button--iconTextButton.a-Button--actions.js-menuButton:hover {
+    color:                  #518D54;
 }
 
 
@@ -379,9 +390,15 @@ table.a-GV-table div.a-Toolbar-group [data-action="edit"] {
 footer.t-Footer {
     background-color:       #bfbaa3;
     color:                  #fff;
+    height:                 10rem;
 }
 footer.t-Footer div.t-Footer-top a {  /* LINK TO TOP */
     color:                  #666;
+}
+#main {
+    min-height:             calc(100vh - 14rem);  /* 100 - footer - header */
+    padding:                1.6rem;
+    padding-top:            1rem;
 }
 
 
