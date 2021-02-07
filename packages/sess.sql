@@ -269,6 +269,12 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     EXCEPTION
     WHEN OTHERS THEN
         ROLLBACK;
+        --
+        IF SQLCODE = -20987 THEN
+            RAISE_APPLICATION_ERROR(tree.app_exception_code, 'APP_MISSING', TRUE);
+            RETURN;
+        END IF;
+        --
         RAISE_APPLICATION_ERROR(tree.app_exception_code, 'CREATE_SESSION_FAILED', TRUE);
     END;
 
