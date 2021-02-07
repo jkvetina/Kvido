@@ -1,0 +1,398 @@
+/**
+ * APEX BASIC ADJUSTMENTS
+ */
+.t-IRR-region {
+    box-shadow:             none;
+}
+.t-Region-header,
+.t-Region-bodyWrap,
+.t-Region,
+.t-Region--scrollBody,
+.js-apex-region {
+    border:                 0;
+    box-shadow:             none;
+    background:             transparent;
+}
+.t-Region-bodyWrap,
+.t-Region-body {
+    padding:                0;
+    box-shadow:             none;
+}
+.a-IRR-container {
+    margin:                 0;
+}
+
+
+
+/**
+ * HEADERS
+ */
+ .t-Region-title,
+h2.report_header {
+    font-family:            'Roboto Slab';
+    font-style:             normal;
+    font-weight:            300;
+    font-size:              2.5rem;
+    margin:                 2rem 0 0;
+}
+h2.t-Region-title button.t-Button,
+h2.t-Region-title button.t-Button+.t-Button {
+    margin:                 -0.25rem 0 0 2.4rem;
+}
+h2.report_header {
+    margin:                 2rem 1rem 1.5rem 0;
+}
+
+button, a {
+    cursor:                 pointer !important;
+}
+
+
+
+/**
+ * HOT BUTTON + BUTTON IN HEADER ON HOVER
+ */
+.t-Button--hot,
+body .ui-button.ui-button--hot,
+body button.ui-state-default.ui-priority-primary,
+h2.report_header button {
+    margin-left:            2rem;
+}
+.t-Button--hot,
+body .ui-button.ui-button--hot,
+body button.ui-state-default.ui-priority-primary {
+    background:             #518D54;
+    color:                  #fff;
+    border:                 1px solid #547B5F;
+}
+.t-Button--hot:hover,
+body .ui-button.ui-button--hot:hover,
+body button.ui-state-default.ui-priority-primary:hover,
+h2.report_header button:hover {
+    background:             #5e5750;
+    color:                  #fff;
+    border:                 1px solid #444;
+}
+.t-Button--hot:focus,
+.t-Button--hot:focus:hover,
+.t-Button--hot:active,
+body .ui-button.ui-button--hot:focus,
+body .ui-button.ui-button--hot:focus:hover,
+body .ui-button.ui-button--hot:active,
+body button.ui-state-default.ui-priority-primary:focus,
+body button.ui-state-default.ui-priority-primary:focus:hover,
+body button.ui-state-default.ui-priority-primary:active,
+h2.report_header button:focus,
+h2.report_header button:focus:hover,
+h2.report_header button:active {
+    background:             #444              !important;
+    color:                  #fff              !important;
+    border:                 1px solid #333    !important;
+    text-shadow:            none                !important;
+    box-shadow:             0 1px 0 0 rgb(255 255 255 / 50%) inset !important;
+}
+
+
+
+/**
+ * LINKS IN GRID
+ */
+table.a-GV-table a {
+    font-style:             normal;
+    font-weight:            bold        !important;
+    text-decoration:        none        !important;
+    color:                  #547B5F   !important;
+}
+table.a-GV-table a:hover {
+    text-decoration:        underline   !important;
+    color:                  #000      !important;
+}
+table.a-GV-table a span.fa {
+    color:                  #333      !important;
+}
+table.a-GV-table a span.fa:hover {
+    color:                  #000      !important;
+}
+
+/**
+ * BACKGROUND ON SELECTED ROW IN GRID + SHADOW
+ */
+.a-GV-table tr.is-selected .a-GV-cell {
+    background-color:       #efefef   !important;
+}
+.a-GV-table .a-GV-cell.is-focused,
+.a-GV-table .a-GV-controlBreakHeader.is-focused,
+.a-GV-table .a-GV-header.is-focused,
+.a-GV-table .a-GV-headerGroup.is-focused {
+    box-shadow:             inset 0 0 0 1px #547B5F;
+}
+
+
+
+/**
+ * CHECKBOX IN GRID + IN REPORT HEADER
+ */
+table.a-GV-table .apex-item-single-checkbox input:checked+.u-checkbox,
+table.a-GV-table .apex-item-single-checkbox input:checked+label,
+table.a-GV-table .u-checkbox.is-checked,
+.a-IG-controlsCheckbox:checked+.a-IG-controlsCheckboxLabel,
+.a-IRR-controlsCheckbox:checked+.a-IRR-controlsCheckboxLabel,
+.u-selector.is-selected,
+ul.a-IG-reportSummary a.a-IG-reportSummary-label,
+
+
+ul.a-IG-reportSummary span.a-IG-reportSummary-icon {
+    --a-checkbox-background-color:      #7A9867 !important;
+    --a-checkbox-text-color:            #fff    !important;
+}
+table.a-GV-table .apex-item-single-checkbox input:checked+.u-checkbox:hover,
+table.a-GV-table .apex-item-single-checkbox input:checked+label:hover,
+table.a-GV-table .u-checkbox.is-checked:hover,
+.a-IG-controlsCheckbox:checked+.a-IG-controlsCheckboxLabel:hover,
+.a-IRR-controlsCheckbox:checked+.a-IRR-controlsCheckboxLabel:hover,
+.u-selector.is-selected:hover,
+ul.a-IG-reportSummary span.a-IG-reportSummary-icon:hover {
+    --a-checkbox-background-color:      #5e5750 !important;
+}
+
+/**
+ * ACTIVE SORT ARROWS IN GRID
+ */
+table.a-GV-table .a-Button.is-active,
+table.a-GV-table .a-Button.is-active:active,
+table.a-GV-table .a-Button.is-active:not(:active),
+table.a-GV-table .a-Button:active,
+table.a-GV-table .t-Button.is-active,
+table.a-GV-table .t-Button.is-active:active,
+table.a-GV-table .t-Button.is-active:not(:active),
+table.a-GV-table .t-Button:active,
+table.a-GV-table .ui-button.is-active,
+table.a-GV-table .ui-button.is-active:active,
+table.a-GV-table .ui-button.is-active:not(:active),
+table.a-GV-table .ui-button:active {
+    background:             #7A9867             !important;
+    border:                 1px solid #7A9867   !important;
+}
+
+/**
+ * HIDE USELESS EDIT BUTTON ------------------------------------- NOT WORKING
+ */
+table.a-GV-table div.a-Toolbar-group [data-action="edit"] {
+    display:                none !important;
+}
+
+
+
+
+
+/**
+ * NAVIGATION TOP BAR
+ */
+#t_Header {
+    height: 4rem;
+}
+#t_Header > #top_header,
+#t_Header > #top_header * {
+    user-drag:              none;
+    -moz-user-select:       none;
+    -webkit-user-drag:      none;
+    -moz-user-drag:         none;
+    margin: 0;
+    padding: 0;
+    color:                  #fff;
+}
+#t_Header > #top_header {
+    width:                  100%;
+    height:                 4rem;  /* BAR_HEIGHT */
+    z-index:                1000;
+    position:               fixed;
+    top:                    0;
+}
+#t_Header > #top_header nav {
+    display:                flex;
+    flex-direction:         row;
+    flex-wrap:              nowrap;
+    justify-content:        space-between;
+    align-items:            stretch;
+}
+#t_Header > #top_header nav > * {
+    flex-grow:              0;
+}
+#t_Header > #top_header nav > .empty {
+    flex-grow:              1;
+}
+
+
+
+/**
+ * NAVIGATION MENUS
+ */
+#t_Header > #top_header > nav > * {
+    float:                  left;
+    text-align:             left;
+}
+#t_Header > #top_header > nav a,
+#t_Header > #top_header > nav a:hover {
+    font-family:            'Roboto Slab';
+    font-style:             normal;
+    font-weight:            400;
+    text-decoration:        none;
+    color:                  #fff;
+}
+#t_Header > #top_header > nav .HIDDEN {
+    display:                none;
+}
+
+
+
+/**
+ * DROPDOWN LISTS
+ */
+#t_Header > #top_header > nav ul {
+    list-style-type:        none;
+}
+#t_Header > #top_header > nav ul li {               /* FOR ALIGN BATCH NUMBERS - EXTEND WIDTH */
+    display:                block;
+    float:                  left;
+    position:               relative;
+    transition-duration:    0.2s;
+    font-family:            'Roboto Slab';
+    font-style:             normal;
+    font-weight:            400;
+    font-size:              1.3rem;
+}
+#t_Header > #top_header > nav ul li a {
+    display:                block;
+    padding:                1.5rem 1.6rem !important;
+    white-space:            nowrap;
+    line-height:            1rem;
+}
+#t_Header > #top_header > nav ul li ul {
+    display:                none;
+    position:               absolute;
+    left:                   0;
+    visibility:             hidden;
+    opacity:                0;
+    z-index:                1000;
+    transition:             all 0.2s ease;
+    box-shadow:             0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 20px 0 rgba(0, 0, 0, 0.1);
+}
+#t_Header > #top_header > nav ul li.right ul {
+    left:                   auto;
+    right:                  0;
+}
+#t_Header > #top_header > nav ul li.right ul li,
+#t_Header > #top_header > nav ul li.right ul li > * {
+    text-align:             right;
+}
+#t_Header > #top_header > nav ul li:hover > ul,
+#t_Header > /*#top_header > nav ul li:focus-within > ul,*/
+#t_Header > #top_header > nav ul li ul:hover {
+    display:                block;
+    visibility:             visible;
+    opacity:                1;
+}
+#t_Header > #top_header > nav ul li ul li {
+    clear:                  both;
+    width:                  100%;
+}
+#t_Header > #top_header > nav ul li span.fa {
+    line-height:            1rem;
+    height:                 1rem;
+}
+
+
+
+/**
+ * MIDDLE (EMPTY PART) OF TOP MENU
+ */
+#t_Header > #top_header,
+#t_Header > #top_header > nav ul li.TRANSPARENT {
+    background:             #A0AF88;  /* 8fa681, darker green #79A368, AEC29D, 95B293, ..... 96A88E, B0BA8D */
+    color:                  #fff;
+}
+
+
+
+/**
+ * MAIN/TOP MENU ITEM
+ */
+#t_Header > #top_header > nav ul li {
+    background:             #7A9867;
+}
+
+
+
+/**
+ * LOGO
+ */
+#t_Header > #top_header > nav ul li.LOGO:first-child {
+    border-left:            1.6rem solid #5e5750;
+}
+#t_Header > #top_header > nav ul li.LOGO {
+    background:             #5e5750;
+    font-size:              1.3rem;
+}
+#t_Header > #top_header > nav ul li.LOGO a:hover {
+    background:             #333;
+}
+#t_Header > #top_header > nav ul li.LOGO:first-child:hover {
+    border-left:            1.6rem solid #333;
+}
+
+
+
+/**
+ * LOGOUT
+ */
+#t_Header > #top_header > nav ul li.LOGOUT {
+    background:             #7A7363;
+}
+#t_Header > #top_header > nav ul li.LOGOUT:last-child {
+    border-right:           1.6rem solid #5e5750;
+}
+#t_Header > #top_header > nav ul li.LOGOUT a:hover {
+    background:             #5e5750;
+}
+
+
+
+/**
+ * ACTIVE ITEMS OVERWRITE
+ */
+#t_Header > #top_header > nav ul li.active {
+    background:             #444;
+}
+#t_Header > #top_header > nav ul li.active_hover,  /* ASSIGN THIS CLASS WHEN HOVER OVER CALENDAR */
+#t_Header > #top_header > nav ul li.active:hover {
+    background:             #444;
+}
+#t_Header > #top_header > nav ul li:hover {
+    background:             #444;
+}
+
+
+
+/**
+ * FOOTER
+ */
+footer.t-Footer {
+    background-color:       #bfbaa3;
+    color:                  #fff;
+}
+footer.t-Footer div.t-Footer-top a {  /* LINK TO TOP */
+    color:                  #666;
+}
+
+
+
+/**
+ * SUCCESS MESSAGE
+ */
+.t-Alert.t-Alert--success.t-Alert--horizontal {
+    background:             #518D54 !important;
+}
+
+
+
+
