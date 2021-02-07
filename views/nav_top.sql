@@ -35,6 +35,11 @@ SELECT
     NULL                    AS attribute09,
     NULL                    AS attribute10
 FROM nav_top_src t
+WHERE t.is_hidden           IS NULL
+    --
+    AND 'Y' = nav.is_available(t.page_id)
+    AND 'Y' = nav.is_visible(t.curr_page_id, t.page_id)
+    --
 CONNECT BY t.app_id         = PRIOR t.app_id
     AND t.parent_id         = PRIOR t.page_id
 START WITH t.parent_id      IS NULL

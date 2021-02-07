@@ -21,6 +21,7 @@ SELECT
     i.item_name                 AS reset_item,
     g.page_id                   AS group_id,
     n.order#,
+    n.is_hidden,
     curr.page_id                AS curr_page_id,
     curr.parent_id              AS curr_parent_id,
     curr.root_id                AS curr_root_id
@@ -39,10 +40,6 @@ LEFT JOIN navigation_groups g
     AND g.page_id               = n.page_id
     AND g.page_group            = sess.get_page_group(curr.page_id)
 WHERE n.app_id                  = curr.app_id
-    AND n.is_hidden             IS NULL
-    --
-    AND 'Y' = nav.is_available(n.page_id)
-    AND 'Y' = nav.is_visible(curr.page_id, n.page_id)
     --
     AND (a.page_id IS NOT NULL OR n.page_id < 1 OR n.page_id > 999);
 --
