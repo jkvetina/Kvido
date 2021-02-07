@@ -1,12 +1,5 @@
 --
--- create context
---
-----CREATE CONTEXT APP USING lumberjack.sess;
-
-
-
---
--- create tables and sequences
+-- CREATE TABLES AND SEQUENCES
 --
 @../tables/logs.sql
 @../tables/logs_lobs.sql
@@ -17,59 +10,121 @@
 @../tables/sessions.sql
 @../tables/navigation.sql
 @../tables/navigation_groups.sql
+
+
+
 --
-@../triggers/navigation_def.sql
-@../triggers/navigation_groups_def.sql
-@../triggers/users_def.sql
+-- CREATE PACKAGE SPECIFICATIONS
+--
+@../packages/tree.spec.sql
+@../packages/sess.spec.sql
+@../packages/apex.spec.sql
+@../packages/auth.spec.sql
+@../packages/app.spec.sql
+@../packages/nav.spec.sql
+@../packages/wiki.spec.sql
+
+
+
+--
+-- CREATE SEQUENCES
 --
 @../sequences/log_id.sql
 
 
 
 --
--- create packages
+-- CREATE PROCEDURES
 --
 @../procedures/recompile.sql
 --
-@../packages/tree.spec.sql
-@../packages/sess.spec.sql
-
-EXEC recompile;
+@../procedures/process_dml_errors.sql
+@../procedures/sess_create_user.sql
+@../procedures/sess_update_items.sql
 
 
 
 --
--- profiler + coverage tables
+-- PROFILER + COVERAGE TABLES
 --
+/*
 @./proftab.sql
 EXEC DBMS_PLSQL_CODE_COVERAGE.CREATE_COVERAGE_TABLES(force_it => TRUE);
+*/
 
 
 
 --
--- create views
+-- CREATE VIEWS
 --
 @../views/logs_tree.sql
+@../views/logs_tree_extended.sql
 @../views/logs_dml_errors.sql
+--
+-- @TODO: TOO SLOW
 @../views/logs_modules.sql
-@../views/logs_profiler.sql
-@../views/logs_profiler_sum.sql
+--
+--@../views/logs_profiler.sql
+--@../views/logs_profiler_sum.sql
+--
+@../views/apex_app_items.sql
+@../views/apex_page_items.sql
+--
+@../views/nav_top.sql
+--
+@../views/p900_dashboard.sql
+@../views/p901_logs.sql
+@../views/p902_sessions.sql
+--
+@../views/p910_nav_pages_to_add.sql
+@../views/p910_nav_pages_to_remove.sql
+@../views/p910_nav_overview.sql
+@../views/p910_nav_groups.sql
+@../views/p910_auth_schemes.sql
+@../views/p910_nav_left.sql
+@../views/p910_nav_right.sql
 
 
 
 --
--- create packages and procedures
+-- CREATE TRIGGERS
 --
-@../procedures/process_dml_errors.sql
+@../triggers/navigation_def.sql
+@../triggers/navigation_groups_def.sql
+@../triggers/users_def.sql
+
+
+
 --
-@../packages/sess.sql
+-- CREATE PACKAGES
+--
+EXEC recompile;
+--
 @../packages/tree.sql
+@../packages/sess.sql
+@../packages/apex.sql
+@../packages/wiki.sql
+@../packages/nav.sql
+@../packages/app.sql
+@../packages/auth.sql
 
 
 
 --
--- create jobs
+-- CREATE JOBS
 --
 @../jobs/process_dml_errors_.sql
 @../jobs/purge_old_logs.sql
+
+
+
+--
+-- REFRESH VIEW
+--
+EXEC recompile;
+--
+BEGIN
+    DBMS_SNAPSHOT.REFRESH('LOGS_MODULES');
+END;
+/
 
