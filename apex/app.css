@@ -57,6 +57,7 @@ button, a {
  */
 h2.report_header button {
     margin-left:            2rem;
+    margin-top:             -0.2rem;
 }
 .t-Button--hot,
 body .ui-button.ui-button--hot,
@@ -341,14 +342,11 @@ table.a-GV-table button.a-Button.a-Button--noLabel.a-Button--iconTextButton.a-Bu
     border-left:            1.6rem solid #5e5750;
 }
 #t_Header > #top_header > nav ul li.LOGO {
-    background:             #5e5750;
+    background:             #333;
     font-size:              1.3rem;
 }
 #t_Header > #top_header > nav ul li.LOGO a:hover {
-    background:             #333;
-}
-#t_Header > #top_header > nav ul li.LOGO:first-child:hover {
-    border-left:            1.6rem solid #333;
+    background:             #5e5750;
 }
 
 
@@ -397,8 +395,7 @@ footer.t-Footer div.t-Footer-top a {  /* LINK TO TOP */
 }
 #main {
     min-height:             calc(100vh - 14rem);  /* 100 - footer - header */
-    padding:                1.6rem;
-    padding-top:            1rem;
+    padding:                0 1rem 2rem;
 }
 
 
