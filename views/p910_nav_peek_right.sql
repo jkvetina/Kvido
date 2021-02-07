@@ -1,5 +1,6 @@
 CREATE OR REPLACE VIEW p910_nav_peek_right AS
 SELECT
+    n.page_id,
     CASE WHEN n.parent_id IS NOT NULL
         THEN '&' || 'nbsp; ' || '&' || 'nbsp; ' || '&' || 'nbsp; '
         END ||
