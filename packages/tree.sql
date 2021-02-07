@@ -1676,16 +1676,26 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         END LOOP;
 
         -- delete profiler data
-        EXECUTE IMMEDIATE
-            'DELETE FROM plsql_profiler_data;' ||
-            'DELETE FROM plsql_profiler_units;' ||
-            'DELETE FROM plsql_profiler_runs;';
+        BEGIN
+            EXECUTE IMMEDIATE
+                'DELETE FROM plsql_profiler_data;' ||
+                'DELETE FROM plsql_profiler_units;' ||
+                'DELETE FROM plsql_profiler_runs;';
+        EXCEPTION
+        WHEN OTHERS THEN
+            tree.log_warning('PLSQL_PROFILER_MISSING');
+        END;
 
         -- delete code coverage data
-        EXECUTE IMMEDIATE
-            'DELETE FROM dbmspcc_blocks;' ||
-            'DELETE FROM dbmspcc_units;' ||
-            'DELETE FROM dbmspcc_runs;';
+        BEGIN
+            EXECUTE IMMEDIATE
+                'DELETE FROM dbmspcc_blocks;' ||
+                'DELETE FROM dbmspcc_units;' ||
+                'DELETE FROM dbmspcc_runs;';
+        EXCEPTION
+        WHEN OTHERS THEN
+            tree.log_warning('CODE_COVERAGE_MISSING');
+        END;
         --
         COMMIT;
     END;
