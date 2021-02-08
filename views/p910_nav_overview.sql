@@ -8,7 +8,7 @@ SELECT
     --
     CASE
         WHEN r.page_id IS NOT NULL
-            THEN '<span class="fa fa-minus-square" style="color: #666;" title="Remove record from Navigation table"></span>'
+            THEN '<span class="fa fa-minus-square" style="" title="Remove record from Navigation table"></span>'
         END AS status,
     --
     n.order#,
@@ -30,7 +30,7 @@ SELECT
         END AS page_link,
     --
     CASE WHEN p.authorization_scheme LIKE '%MUST_NOT_BE_PUBLIC_USER%'
-        THEN '<span class="fa fa-check-square" style="color: #666;" title="MUST_NOT_BE_PUBLIC_USER"></span>'
+        THEN '<span class="fa fa-check-square" style="" title="MUST_NOT_BE_PUBLIC_USER"></span>'
         ELSE p.authorization_scheme
         END AS auth_scheme,
     q.seq#
@@ -72,7 +72,7 @@ SELECT
     a.page_alias,
     a.page_name,
     --
-    '<span class="fa fa-plus-square" style="color: #666;" title="Create record in Navigation table"></span>' AS status,
+    '<span class="fa fa-plus-square" style="" title="Create record in Navigation table"></span>' AS status,
     --
     a.order#,
     a.css_class,
@@ -91,7 +91,7 @@ SELECT
     '"><span class="fa fa-file-code-o" style="color: #333;" title="Open page in APEX"></span></a>' AS page_link,
     --
     CASE WHEN a.auth_scheme LIKE '%MUST_NOT_BE_PUBLIC_USER%'
-        THEN '<span class="fa fa-check-square" style="color: #666;" title="MUST_NOT_BE_PUBLIC_USER"></span>'
+        THEN '<span class="fa fa-check-square" style="" title="MUST_NOT_BE_PUBLIC_USER"></span>'
         ELSE a.auth_scheme
         END AS auth_scheme,
     NULL AS seq#
