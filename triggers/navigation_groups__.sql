@@ -1,4 +1,4 @@
-CREATE OR REPLACE TRIGGER navigation_groups_def
+CREATE OR REPLACE TRIGGER navigation_groups__
 BEFORE INSERT OR UPDATE ON navigation_groups
 FOR EACH ROW
 BEGIN
