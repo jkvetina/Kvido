@@ -32,11 +32,11 @@ h2.report_header {
     font-family:            'Roboto Slab', serif;
     font-style:             normal;
     font-weight:            300;
-    font-size:              3rem;
+    font-size:              2.5rem;
     margin:                 2rem 0 0;
 }
 div.H3 h2.report_header {
-    font-size:              2.6rem;
+    font-size:              2.3rem;
 }
 h2.t-Region-title button.t-Button,
 h2.t-Region-title button.t-Button+.t-Button {
@@ -136,13 +136,7 @@ table.a-GV-table a span.fa:hover {
 table.a-GV-table .apex-item-single-checkbox input:checked+.u-checkbox,
 table.a-GV-table .apex-item-single-checkbox input:checked+label,
 table.a-GV-table .u-checkbox.is-checked,
-.a-IG-controlsCheckbox:checked+.a-IG-controlsCheckboxLabel,
-.a-IRR-controlsCheckbox:checked+.a-IRR-controlsCheckboxLabel,
-.u-selector.is-selected,
-ul.a-IG-reportSummary a.a-IG-reportSummary-label,
-
-
-ul.a-IG-reportSummary span.a-IG-reportSummary-icon {
+.u-selector.is-selected {
     --a-checkbox-background-color:      #7A9867 !important;
     --a-checkbox-text-color:            #fff    !important;
 }
@@ -154,7 +148,26 @@ table.a-GV-table .u-checkbox.is-checked:hover,
 .u-selector.is-selected:hover,
 ul.a-IG-reportSummary span.a-IG-reportSummary-icon:hover {
     --a-checkbox-background-color:      #5e5750 !important;
+    --a-checkbox-text-color:            #fff    !important;
 }
+
+
+
+/**
+ * INTERACTIVE GRID LINE WITH FILTERS
+ */
+div.a-IG-body div.a-MediaBlock.a-IG-controlsContainer.a-Collapsible {
+    background:                         #F2F2F2 !important;
+}
+.a-IG-controlsCheckbox:checked+.a-IG-controlsCheckboxLabel,
+.a-IRR-controlsCheckbox:checked+.a-IRR-controlsCheckboxLabel,
+ul.a-IG-reportSummary a.a-IG-reportSummary-label,
+ul.a-IG-reportSummary span.a-IG-reportSummary-icon {
+    --a-checkbox-background-color:      #fff    !important;
+    --a-checkbox-text-color:            #333    !important;
+}
+
+
 
 /**
  * ACTIVE SORT ARROWS IN GRID
