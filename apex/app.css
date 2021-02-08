@@ -29,14 +29,14 @@
  */
 .t-Region-title,
 h2.report_header {
-    font-family:            'Roboto Slab';
+    font-family:            'Roboto Slab', serif;
     font-style:             normal;
     font-weight:            300;
-    font-size:              2.5rem;
+    font-size:              3rem;
     margin:                 2rem 0 0;
 }
 div.H3 h2.report_header {
-    font-size:              2.3rem;
+    font-size:              2.6rem;
 }
 h2.t-Region-title button.t-Button,
 h2.t-Region-title button.t-Button+.t-Button {
@@ -176,9 +176,9 @@ table.a-GV-table .ui-button:active {
 }
 
 /**
- * HIDE USELESS EDIT BUTTON ------------------------------------- NOT WORKING
+ * HIDE USELESS EDIT BUTTON
  */
-table.a-GV-table div.a-Toolbar-group [data-action="edit"] {
+div.a-Toolbar-group [data-action="edit"] {
     display:                none !important;
 }
 
@@ -254,7 +254,7 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
 }
 #t_Header > #top_header > nav a,
 #t_Header > #top_header > nav a:hover {
-    font-family:            'Roboto Slab';
+    font-family:            'Roboto Slab', serif;
     font-style:             normal;
     font-weight:            400;
     text-decoration:        none;
@@ -277,7 +277,7 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
     float:                  left;
     position:               relative;
     transition-duration:    0.2s;
-    font-family:            'Roboto Slab';
+    font-family:            'Roboto Slab', serif;
     font-style:             normal;
     font-weight:            400;
     font-size:              1.3rem;
