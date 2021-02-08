@@ -3,22 +3,20 @@ SELECT
     CASE WHEN t.parent_id IS NULL THEN 1 ELSE 2 END AS lvl,
     --
     CASE
-        WHEN t.page_id > 0 THEN nav.get_page_label(t.page_name)
         WHEN t.page_id = 0 THEN '</li></ul><ul class="empty"></ul><ul><li>'
-        ELSE t.page_name END AS label,
+        ELSE nav.get_page_label(t.page_name)
+        END AS label,
     CASE WHEN t.page_id > 0 THEN
         APEX_PAGE.GET_URL (
             p_page      => NVL(t.page_alias, t.page_id),
             p_items     => CASE WHEN t.reset_item IS NOT NULL THEN t.reset_item END,
             p_values    => CASE WHEN t.reset_item IS NOT NULL THEN 'Y' END
         )
+        ELSE t.page_target
         END AS target,
     --
     CASE        
-        WHEN t.page_id = t.curr_page_id     THEN 'YES'
-        WHEN t.page_id = t.curr_parent_id   THEN 'YES'
-        WHEN t.page_id = t.curr_root_id     THEN 'YES'
-        WHEN t.page_id = t.group_id         THEN 'YES'
+        WHEN t.page_id IN (t.curr_page_id, t.curr_parent_id, t.curr_root_id, t.group_id) THEN 'YES'
         END AS is_current_list_entry,
     --
     NULL                    AS image,

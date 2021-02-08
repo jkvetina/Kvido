@@ -16,6 +16,7 @@ SELECT
     n.parent_id,
     a.page_alias,
     a.page_name,
+    NULL                        AS page_target,
     a.page_group,
     a.authorization_scheme      AS auth_scheme,
     n.css_class,
@@ -27,11 +28,11 @@ SELECT
     curr.parent_id              AS curr_parent_id,
     curr.root_id                AS curr_root_id
 FROM navigation n
-CROSS JOIN curr
-LEFT JOIN apex_application_pages a                  -- left join needed for pages <= 0
+JOIN curr
+    ON curr.app_id              = n.app_id
+JOIN apex_application_pages a
     ON a.application_id         = n.app_id
     AND a.page_id               = n.page_id
-    AND a.page_id               > 0
 LEFT JOIN apex_application_page_items i
     ON i.application_id         = a.application_id
     AND i.page_id               = a.page_id
@@ -40,9 +41,27 @@ LEFT JOIN navigation_groups g
     ON g.app_id                 = n.app_id
     AND g.page_id               = n.page_id
     AND g.page_group            = sess.get_page_group(curr.page_id)
-WHERE n.app_id                  = curr.app_id
-    --
-    AND (a.page_id IS NOT NULL OR n.page_id < 1 OR n.page_id > 999);
+UNION ALL
+SELECT
+    n.app_id,
+    NULL                        AS page_id,
+    NULL                        AS parent_id,
+    n.page_alias,
+    n.page_name,
+    n.page_target,
+    n.page_group,
+    n.auth_scheme,
+    n.css_class,
+    NULL                        AS reset_item,
+    NULL                        AS group_id,
+    n.order#,
+    n.is_hidden,
+    curr.page_id                AS curr_page_id,
+    curr.parent_id              AS curr_parent_id,
+    curr.root_id                AS curr_root_id
+FROM navigation_virtuals n
+JOIN curr
+    ON curr.app_id              = n.app_id;
 --
 COMMENT ON TABLE nav_top_src    IS 'Source data for top menu and for Navigation page';
 

@@ -54,7 +54,6 @@ LEFT JOIN (
             n.group_id,
             n.order#
         FROM nav_top_src n
-        --WHERE t.app_id = 700
         CONNECT BY n.app_id         = PRIOR n.app_id
             AND n.parent_id         = PRIOR n.page_id
         START WITH n.parent_id      IS NULL
@@ -63,7 +62,6 @@ LEFT JOIN (
 ) q
     ON q.page_id                = n.page_id
 WHERE n.app_id                  = sess.get_app_id()
-    AND n.page_id               BETWEEN 1 AND 999  -- sess.app_min_page AND sess.app_max_page
 UNION ALL
 SELECT
     a.app_id,
@@ -96,6 +94,4 @@ SELECT
         END AS auth_scheme,
     NULL AS seq#
 FROM p910_nav_pages_to_add a
-WHERE a.app_id          = sess.get_app_id()
-    AND a.page_id       BETWEEN 1 AND 999   -- sess.app_min_page AND sess.app_max_page
-;
+WHERE a.app_id          = sess.get_app_id();
