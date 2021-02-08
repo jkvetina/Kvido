@@ -34,9 +34,11 @@ h2.report_header {
     font-weight:            300;
     font-size:              2.5rem;
     margin:                 2rem 0 0;
+    color:                  #111;
 }
 div.H3 h2.report_header {
     font-size:              2.3rem;
+    color:                  #222;
 }
 h2.t-Region-title button.t-Button,
 h2.t-Region-title button.t-Button+.t-Button {
@@ -393,10 +395,19 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
 }
 #t_Header > #top_header > nav ul li.LOGO {
     background:             #333;
-    font-size:              1.3rem;
 }
 #t_Header > #top_header > nav ul li.LOGO a:hover {
     background:             #5e5750;
+}
+
+#t_Header > #top_header > nav ul li.ENV_NAME {
+    border-left:            1.6rem solid #5e5750;
+}
+#t_Header > #top_header > nav ul li.ENV_NAME,
+#t_Header > #top_header > nav ul li.ENV_NAME a,
+#t_Header > #top_header > nav ul li.ENV_NAME a:hover {
+    background:             #5e5750;
+    cursor:                 default !important;
 }
 
 
