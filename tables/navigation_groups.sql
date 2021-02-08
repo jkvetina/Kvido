@@ -4,6 +4,9 @@ CREATE TABLE navigation_groups (
     page_id             NUMBER(6)       NOT NULL,
     page_group          VARCHAR2(30)    NOT NULL,
     --
+    updated_by          VARCHAR2(30),
+    updated_at          DATE,
+    --
     CONSTRAINT pk_navigation_groups
         PRIMARY KEY (app_id, page_id)
 )

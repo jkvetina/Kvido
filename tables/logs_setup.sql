@@ -12,6 +12,9 @@ CREATE TABLE logs_setup (
     is_tracked          CHAR(1)         NOT NULL,
     --
     CONSTRAINT uq_logs_setup UNIQUE (app_id, page_id, user_id, role_id, flag, module_name),
+    updated_by          VARCHAR2(30),
+    updated_at          DATE,
+    --
     --
     CONSTRAINT fk_logs_setup_user_id FOREIGN KEY (user_id)
         REFERENCES users (user_id),

@@ -9,6 +9,9 @@ CREATE TABLE navigation (
     css_class           VARCHAR2(64),
     is_hidden           VARCHAR2(1),
     --
+    updated_by          VARCHAR2(30),
+    updated_at          DATE,
+    --
     CONSTRAINT pk_navigation
         PRIMARY KEY (app_id, page_id),
     --
