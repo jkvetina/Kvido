@@ -1,5 +1,5 @@
-CREATE OR REPLACE TRIGGER navigation__
-FOR UPDATE OR INSERT OR DELETE ON navigation
+CREATE OR REPLACE TRIGGER logs_setup__
+FOR UPDATE OR INSERT OR DELETE ON logs_setup
 COMPOUND TRIGGER
 
     in_updated_by       CONSTANT users.updated_by%TYPE  := sess.get_user_id();
@@ -30,9 +30,6 @@ COMPOUND TRIGGER
     BEGIN
         IF NOT DELETING THEN
             -- overwrite some values
-            :NEW.app_id         := COALESCE(:NEW.app_id, sess.get_app_id());
-            :NEW.is_hidden      := NULLIF(:NEW.is_hidden, 'N');
-            --
             :NEW.updated_by     := COALESCE(in_updated_by, :NEW.updated_by);
             :NEW.updated_at     := in_updated_at;
         END IF;
