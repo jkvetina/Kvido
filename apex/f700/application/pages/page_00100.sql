@@ -14,7 +14,7 @@ wwv_flow_api.component_begin (
 wwv_flow_api.create_page(
  p_id=>100
 ,p_user_interface_id=>wwv_flow_api.id(63766922917014449)
-,p_name=>'APP NAME [${ENV_NAME}]'
+,p_name=>'APPLICATION NAME'
 ,p_alias=>'HOME'
 ,p_step_title=>'Home'
 ,p_autocomplete_on_off=>'OFF'
@@ -22,7 +22,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210207181134'
+,p_last_upd_yyyymmddhh24miss=>'20210208214653'
 );
 wwv_flow_api.component_end;
 end;

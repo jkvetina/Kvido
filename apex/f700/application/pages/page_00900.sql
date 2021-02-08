@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210207213754'
+,p_last_upd_yyyymmddhh24miss=>'20210208192228'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(67910472130821334)
@@ -75,9 +75,12 @@ wwv_flow_api.create_worksheet(
  p_id=>wwv_flow_api.id(67910634236821335)
 ,p_max_row_count=>'1000000'
 ,p_show_nulls_as=>'-'
-,p_show_search_bar=>'N'
+,p_pagination_type=>'ROWS_X_TO_Y_OF_Z'
+,p_pagination_display_pos=>'BOTTOM_RIGHT'
 ,p_report_list_mode=>'TABS'
 ,p_show_detail_link=>'N'
+,p_show_notify=>'Y'
+,p_download_formats=>'CSV:HTML:XLSX:PDF:RTF:EMAIL'
 ,p_owner=>'JKVETINA'
 ,p_internal_uid=>67910634236821335
 );

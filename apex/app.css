@@ -253,7 +253,7 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
  * NAVIGATION TOP BAR
  */
 #t_Header {
-    height: 4rem;
+    height: 4rem;  /* BAR_HEIGHT */
 }
 #t_Header > #top_header,
 #t_Header > #top_header * {
@@ -383,6 +383,7 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
  */
 #t_Header > #top_header > nav ul li {
     background:             #7A9867;
+    font-size:              1.3rem;
 }
 
 
@@ -391,9 +392,10 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
  * LOGO
  */
 #t_Header > #top_header > nav ul li.LOGO:first-child {
-    border-left:            1.6rem solid #5e5750;
+    /*border-left:            1.6rem solid #5e5750;*/
 }
-#t_Header > #top_header > nav ul li.LOGO {
+#t_Header > #top_header > nav ul li.LOGO,
+#t_Header > #top_header > nav ul li.LOGO.active {
     background:             #333;
 }
 #t_Header > #top_header > nav ul li.LOGO a:hover {
@@ -469,5 +471,32 @@ footer.t-Footer div.t-Footer-top a {  /* LINK TO TOP */
 }
 
 
+
+/**
+ * DATE PICKER
+ */
+input#DATE_PICKER,
+input#DATE_PICKER:active,
+input#DATE_PICKER:focus,
+input#DATE_PICKER:hover {
+    display:                block;
+    background:             transparent;
+    color:                  #fff;
+    width:                  12rem;
+    height:                 4rem;  /* BAR_HEIGHT */
+    font-family:            'Roboto Slab', serif;
+    font-style:             normal;
+    font-weight:            400;
+    font-size:              1.3rem;
+    padding:                0 1rem 0.1rem;
+    margin-bottom:          -0.1rem;
+    border:                 0;
+    text-align:             center;
+    outline:                none;
+}
+input#DATE_PICKER:focus,
+input#DATE_PICKER:hover {
+    background:             #444;
+}
 
 

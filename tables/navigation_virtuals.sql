@@ -3,7 +3,7 @@ CREATE TABLE navigation_virtuals (
     app_id              NUMBER(4)       NOT NULL,
     page_alias          VARCHAR2(30)    NOT NULL,
     --
-    page_name           VARCHAR2(64)    NOT NULL,
+    page_name           VARCHAR2(256)   NOT NULL,
     page_target         VARCHAR2(512),              -- html icon, anchor with javascript...
     --
     order#              NUMBER(4),

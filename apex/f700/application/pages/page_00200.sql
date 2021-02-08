@@ -14,7 +14,7 @@ wwv_flow_api.component_begin (
 wwv_flow_api.create_page(
  p_id=>200
 ,p_user_interface_id=>wwv_flow_api.id(63766922917014449)
-,p_name=>'First'
+,p_name=>'#fa-home First'
 ,p_alias=>'FIRST'
 ,p_step_title=>'First'
 ,p_autocomplete_on_off=>'OFF'
@@ -22,7 +22,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210207180940'
+,p_last_upd_yyyymmddhh24miss=>'20210208163636'
 );
 wwv_flow_api.component_end;
 end;
