@@ -188,13 +188,18 @@ div.a-IG-body div.a-GV-hdr.a-GV-hdr--fixed.js-stickyWidget-toggle {
  */
 div.a-IG-body table tr.a-GV-controlBreak,
 div.a-IG-body table tr.a-GV-controlBreak th.a-GV-controlBreakHeader {
-    background:         #e9e9e9                 !important;
-    font-family:        'Roboto', sans-serif;
-    font-weight:        bold;
+    background:             #F2F2F2                 !important;
+    font-family:            'Roboto', sans-serif;
+    font-weight:            bold;
 }
 div.a-IG-body table tr.a-GV-controlBreak th.a-GV-controlBreakHeader .a-GV-controlBreakLabel {
-    border-top:         0.4rem solid transparent;
-    color:              #333;
+    border-top:             0.4rem solid transparent;
+    color:                  #333;
+}
+
+/* REMOVE FUGLY OUTLINES IN GRID */
+div.a-IG-body *:focus {
+    outline:                none !important;
 }
 
 
