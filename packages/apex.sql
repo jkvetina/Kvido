@@ -190,7 +190,7 @@ CREATE OR REPLACE PACKAGE BODY apex AS
         --
         tree.log_module(in_page_id, in_names, in_values, target_url);
         --
-        OWA_UTIL.REDIRECT_URL(target_url);
+        APEX_UTIL.REDIRECT_URL(target_url);  -- OWA_UTIL not working on Cloud
         --
         APEX_APPLICATION.STOP_APEX_ENGINE;
         --
