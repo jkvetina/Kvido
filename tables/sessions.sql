@@ -10,8 +10,8 @@ CREATE TABLE sessions (
     --
     session_db          NUMBER          NOT NULL,
     --
-    created_at          TIMESTAMP       NOT NULL,
-    updated_at          TIMESTAMP       NOT NULL,
+    created_at          DATE            NOT NULL,
+    updated_at          DATE            NOT NULL,
     --
     CONSTRAINT pk_sessions PRIMARY KEY (session_id),
     --
@@ -34,6 +34,6 @@ COMMENT ON COLUMN sessions.apex_items       IS 'APEX global items';
 --
 COMMENT ON COLUMN sessions.session_db       IS 'Database session ID';
 --
-COMMENT ON COLUMN sessions.created_at       IS 'Timestamp of creation';
-COMMENT ON COLUMN sessions.updated_at       IS 'Timestamp of last update';
+COMMENT ON COLUMN sessions.created_at       IS 'Time of creation';
+COMMENT ON COLUMN sessions.updated_at       IS 'Time of last update';
 

@@ -20,8 +20,8 @@ SELECT
     s.created_at,
     s.updated_at,
     --
-    CASE WHEN (CAST(s.updated_at AS DATE) - CAST(s.created_at AS DATE)) >= 1 THEN '23:59'
-        ELSE TO_CHAR(TRUNC(SYSDATE) + (CAST(s.updated_at AS DATE) - CAST(s.created_at AS DATE)), 'HH24:MI')
+    CASE WHEN (s.updated_at - s.created_at) >= 1 THEN '23:59'
+        ELSE TO_CHAR(TRUNC(SYSDATE) + (s.updated_at - s.created_at), 'HH24:MI')
         END AS timer,
     --
     '<span class="fa fa-external-link" title="Open same page with same global items"></span>'   AS redirect_,
