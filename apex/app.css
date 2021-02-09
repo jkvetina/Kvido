@@ -394,21 +394,23 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
 
 
 /**
+ * TOP MENU BORDERS
+ */
+#t_Header > #top_header > nav.tabs > ul:first-child {
+    border-left:            1.6rem solid #5e5750;
+}
+#t_Header > #top_header > nav.tabs > ul:last-child {
+    border-right:           1.6rem solid #5e5750;
+}
+
+
+
+/**
  * LOGO
  */
-#t_Header > #top_header > nav ul li.LOGO:first-child {
-    /*border-left:            1.6rem solid #5e5750;*/
-}
 #t_Header > #top_header > nav ul li.LOGO,
 #t_Header > #top_header > nav ul li.LOGO.active {
     background:             #333;
-}
-#t_Header > #top_header > nav ul li.LOGO a:hover {
-    background:             #5e5750;
-}
-
-#t_Header > #top_header > nav ul li.ENV_NAME {
-    border-left:            1.6rem solid #5e5750;
 }
 #t_Header > #top_header > nav ul li.ENV_NAME,
 #t_Header > #top_header > nav ul li.ENV_NAME a,
@@ -422,14 +424,15 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
 /**
  * LOGOUT
  */
-#t_Header > #top_header > nav ul li.LOGOUT {
+#t_Header > #top_header > nav ul li.LOGOUT,
+#t_Header > #top_header > nav ul li.USER_NAME {
     background:             #7A7363;
-}
-#t_Header > #top_header > nav ul li.LOGOUT:last-child {
-    border-right:           1.6rem solid #5e5750;
 }
 #t_Header > #top_header > nav ul li.LOGOUT a:hover {
     background:             #5e5750;
+}
+#t_Header > #top_header > nav ul li.USER_NAME a:hover {
+    background:             #444;
 }
 
 
