@@ -434,6 +434,8 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
     PROCEDURE force_new_session AS
     BEGIN
+        tree.log_module();
+        --
         COMMIT;
         APEX_UTIL.REDIRECT_URL(APEX_PAGE.GET_URL(p_session => 0));  -- force new login
     --EXCEPTION

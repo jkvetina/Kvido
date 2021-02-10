@@ -25,7 +25,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_page_is_public_y_n=>'Y'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210207113228'
+,p_last_upd_yyyymmddhh24miss=>'20210210072719'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(66687575570800292)
@@ -176,8 +176,7 @@ wwv_flow_api.create_page_process(
 ') LOOP',
 '    tree.log_debug(''SESSION_EXISTS'');',
 '    --',
-'    OWA_UTIL.REDIRECT_URL(APEX_PAGE.GET_URL(p_session => 0));',
-'    APEX_APPLICATION.STOP_APEX_ENGINE;',
+'    force_new_session();',
 'END LOOP;',
 ''))
 ,p_process_clob_language=>'PLSQL'
