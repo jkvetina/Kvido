@@ -424,9 +424,12 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             END LOOP;
         END IF;
         --
-        DELETE FROM sessions s
-        WHERE s.session_id      = in_session_id
-            AND s.session_id    != sess.get_session_id();
+        IF in_session_id != sess.get_session_id() THEN
+            DELETE FROM sessions s
+            WHERE s.session_id = in_session_id;
+            --
+            APEX_SESSION.DELETE_SESSION(in_session_id);
+        END IF;
         --
         tree.update_timer();
     END;
