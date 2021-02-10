@@ -25,7 +25,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_page_is_public_y_n=>'Y'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210210072719'
+,p_last_upd_yyyymmddhh24miss=>'20210210213508'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(66687575570800292)
@@ -176,7 +176,7 @@ wwv_flow_api.create_page_process(
 ') LOOP',
 '    tree.log_debug(''SESSION_EXISTS'');',
 '    --',
-'    force_new_session();',
+'    sess.force_new_session();',
 'END LOOP;',
 ''))
 ,p_process_clob_language=>'PLSQL'
