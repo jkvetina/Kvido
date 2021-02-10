@@ -3,7 +3,7 @@ SELECT
     CASE WHEN t.parent_id IS NULL THEN 1 ELSE 2 END AS lvl,
     --
     CASE
-        WHEN t.page_id = 0 THEN '</li></ul><ul class="empty"></ul><ul><li>'
+        WHEN t.page_id = 0 THEN '</li></ul><ul class="empty"></ul><ul><li class="HIDDEN">'
         ELSE nav.get_page_label(t.page_name)
         END AS label,
     CASE WHEN t.page_id > 0 THEN
@@ -22,13 +22,16 @@ SELECT
     NULL                    AS image,
     NULL                    AS image_attribute,
     NULL                    AS image_alt_attribute,
-    NULL                    AS attribute01,
-    t.css_class             AS attribute02,             -- li.class
-    NULL                    AS attribute03,             -- a.class
+    --
+    t.css_class             AS attribute01,
+    NULL                    AS attribute02,
+    NULL                    AS attribute03,
     NULL                    AS attribute04,
     NULL                    AS attribute05,
-    NULL                    AS attribute06,
-    NULL                    AS attribute07,
+    --
+    NULL                    AS attribute06,  -- badge left
+    CASE WHEN t.page_id = 950 THEN '<span class="BADGE">1</span>' END AS attribute07,  -- badge right
+    --
     NULL                    AS attribute08,
     NULL                    AS attribute09,
     NULL                    AS attribute10
@@ -43,5 +46,14 @@ CONNECT BY t.app_id         = PRIOR t.app_id
 START WITH t.parent_id      IS NULL
 ORDER SIBLINGS BY t.order# NULLS LAST, t.page_id;
 --
-COMMENT ON TABLE nav_top    IS 'View for top menu, column names cant be changed, they are required by Oracle doc';
+COMMENT ON TABLE nav_top                IS 'View for top menu, column names cant be changed, they are required by Oracle doc';
+--
+COMMENT ON COLUMN nav_top.attribute01   IS '<li class="...">';
+COMMENT ON COLUMN nav_top.attribute02   IS '<li>...<a>';
+COMMENT ON COLUMN nav_top.attribute03   IS '<a class="..."';
+COMMENT ON COLUMN nav_top.attribute04   IS '<a title="..."';
+COMMENT ON COLUMN nav_top.attribute05   IS '<a ...>  // javascript onclick';
+COMMENT ON COLUMN nav_top.attribute06   IS '<a>... #TEXT</a>';
+COMMENT ON COLUMN nav_top.attribute07   IS '<a>#TEXT ...</a>';
+COMMENT ON COLUMN nav_top.attribute08   IS '</a>...';
 

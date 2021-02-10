@@ -409,7 +409,7 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
  * LOGO
  */
 #t_Header > #top_header > nav ul li.LOGO,
-#t_Header > #top_header > nav ul li.LOGO.active {
+#t_Header > #top_header > nav ul li.LOGO.ACTIVE {
     background:             #333;
 }
 #t_Header > #top_header > nav ul li.ENV_NAME,
@@ -440,15 +440,34 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
 /**
  * ACTIVE ITEMS OVERWRITE
  */
-#t_Header > #top_header > nav ul li.active {
+#t_Header > #top_header > nav ul li.ACTIVE {
     background:             #444;
 }
-#t_Header > #top_header > nav ul li.active_hover,  /* ASSIGN THIS CLASS WHEN HOVER OVER CALENDAR */
-#t_Header > #top_header > nav ul li.active:hover {
+#t_Header > #top_header > nav ul li.ACTIVE_HOVER,  /* ASSIGN THIS CLASS WHEN HOVER OVER CALENDAR */
+#t_Header > #top_header > nav ul li.ACTIVE:hover {
     background:             #444;
 }
 #t_Header > #top_header > nav ul li:hover {
     background:             #444;
+}
+
+
+
+/**
+ * BADGE IN TOP MENU
+ */
+span.BADGE {
+    display:            inline-block                !important;
+    float:              right;
+    padding:            0.6rem 0.5rem 0.5rem        !important;
+    margin:             0rem -0.75rem -2rem -0.5rem !important;
+    border-radius:      0.25rem;
+    background:         #E3C04D;
+    background:         #d32f2f;
+    background:         #000;
+    color:              #fff;
+    font-family:        'Roboto', sans-serif;
+    font-weight:        bold;
 }
 
 
