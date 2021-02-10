@@ -20,6 +20,8 @@ COMPOUND TRIGGER
     BEGIN
         root_log_id := tree.log_module();  -- to track all folowing events under one tree
     EXCEPTION
+    WHEN tree.app_exception THEN
+        RAISE;
     WHEN OTHERS THEN
         tree.raise_error();
     END BEFORE STATEMENT;
@@ -37,6 +39,8 @@ COMPOUND TRIGGER
             :NEW.updated_at     := in_updated_at;
         END IF;
     EXCEPTION
+    WHEN tree.app_exception THEN
+        RAISE;
     WHEN OTHERS THEN
         tree.raise_error();
     END BEFORE EACH ROW;
@@ -57,6 +61,8 @@ COMPOUND TRIGGER
             last_rowid          := :OLD.ROWID;
         END IF;
     EXCEPTION
+    WHEN tree.app_exception THEN
+        RAISE;
     WHEN OTHERS THEN
         tree.raise_error();
     END AFTER EACH ROW;
@@ -78,6 +84,8 @@ COMPOUND TRIGGER
         );
         tree.update_timer();
     EXCEPTION
+    WHEN tree.app_exception THEN
+        RAISE;
     WHEN OTHERS THEN
         tree.raise_error();
     END AFTER STATEMENT;
