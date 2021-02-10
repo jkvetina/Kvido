@@ -354,7 +354,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             rec.apex_items  := apex.get_global_items();
         END IF;
 
-        -- update record
+        -- update record, prevent app_id and user_id hijacking
         UPDATE sessions s
         SET s.page_id       = rec.page_id,
             s.apex_items    = COALESCE(rec.apex_items, s.apex_items),
@@ -362,7 +362,8 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             s.updated_at    = rec.updated_at
         WHERE s.session_id  = rec.session_id
             AND s.user_id   = rec.user_id
-            AND s.app_id    = rec.app_id;       -- prevent app_id and user_id hijacking
+            AND s.app_id    = rec.app_id
+        RETURNING s.created_at INTO rec.created_at;
         --
         IF SQL%ROWCOUNT = 0 THEN
             rec.created_at  := rec.updated_at;
@@ -373,6 +374,8 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             WHEN DUP_VAL_ON_INDEX THEN
                 NULL;  -- redirect to logout/login page
             END;
+        ELSIF TRUNC(rec.created_at) < TRUNC(rec.updated_at) THEN    -- avoid sessions thru multiple days
+            sess.force_new_session();
         END IF;
         --
         COMMIT;
@@ -386,6 +389,8 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             );
         END IF;
     EXCEPTION
+    WHEN APEX_APPLICATION.E_STOP_APEX_ENGINE THEN
+        NULL;
     WHEN OTHERS THEN
         ROLLBACK;
         RAISE_APPLICATION_ERROR(tree.app_exception_code, 'UPDATE_SESSION_FAILED', TRUE);
@@ -423,6 +428,16 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             AND s.session_id    != sess.get_session_id();
         --
         tree.update_timer();
+    END;
+
+
+
+    PROCEDURE force_new_session AS
+    BEGIN
+        COMMIT;
+        APEX_UTIL.REDIRECT_URL(APEX_PAGE.GET_URL(p_session => 0));  -- force new login
+    --EXCEPTION
+    --WHEN APEX_APPLICATION.E_STOP_APEX_ENGINE THEN  -- throws this exception
     END;
 
 

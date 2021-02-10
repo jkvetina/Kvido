@@ -214,6 +214,13 @@ CREATE OR REPLACE PACKAGE sess AS
 
 
     --
+    -- Force APEX to create new session
+    --
+    PROCEDURE force_new_session;
+
+
+
+    --
     -- Load session items from recent session
     --
     FUNCTION get_recent_items (
