@@ -175,22 +175,67 @@ CREATE OR REPLACE PACKAGE BODY apex AS
         in_names        VARCHAR2    := NULL,
         in_values       VARCHAR2    := NULL
     ) AS
-        target_url      VARCHAR2(32767);
+        out_target      VARCHAR2(32767);
     BEGIN
         -- commit otherwise anything before redirect will be rolled back
         COMMIT;
 
         -- check if we are in APEX or not
         HTP.INIT;
-        target_url := apex.get_page_link (
+        out_target := apex.get_page_link (
             in_page_id  => in_page_id,
             in_names    => in_names,
             in_values   => in_values
         );
         --
-        tree.log_module(in_page_id, in_names, in_values, target_url);
+        tree.log_module(in_page_id, in_names, in_values, out_target);
         --
-        APEX_UTIL.REDIRECT_URL(target_url);  -- OWA_UTIL not working on Cloud
+        APEX_UTIL.REDIRECT_URL(out_target);  -- OWA_UTIL not working on Cloud
+        --
+        APEX_APPLICATION.STOP_APEX_ENGINE;
+        --
+        -- EXCEPTION
+        -- WHEN APEX_APPLICATION.E_STOP_APEX_ENGINE THEN
+        --
+    END;
+
+
+
+    PROCEDURE redirect_with_items (
+        in_page_id      NUMBER      := NULL
+    ) AS
+        out_names       VARCHAR2(4000);
+        out_values      VARCHAR2(4000);
+        out_target      VARCHAR2(32767);
+    BEGIN
+        -- commit otherwise anything before redirect will be rolled back
+        COMMIT;
+
+        -- get page items with not null values
+        FOR c IN (
+            SELECT
+                p.item_name,
+                apex.get_item(p.item_name)      AS item_value
+            FROM apex_application_page_items p
+            WHERE p.application_id              = sess.get_app_id()
+                AND p.page_id                   = COALESCE(in_page_id, sess.get_page_id())
+                AND apex.get_item(p.item_name)  IS NOT NULL
+        ) LOOP
+            out_names   := out_names  || c.item_name  || ',';
+            out_values  := out_values || c.item_value || ',';
+        END LOOP;
+
+        -- check if we are in APEX or not
+        HTP.INIT;
+        out_target := apex.get_page_link (
+            in_page_id  => in_page_id,
+            in_names    => out_names,
+            in_values   => out_values
+        );
+        --
+        tree.log_module(in_page_id, out_names, out_values, out_target);
+        --
+        APEX_UTIL.REDIRECT_URL(out_target);  -- OWA_UTIL not working on Cloud
         --
         APEX_APPLICATION.STOP_APEX_ENGINE;
         --

@@ -143,6 +143,15 @@ CREATE OR REPLACE PACKAGE apex AS
 
 
     --
+    -- Redirect to page and set all items from page witn NOT NULL values
+    --
+    PROCEDURE redirect_with_items (
+        in_page_id      NUMBER      := NULL
+    );
+
+
+
+    --
     -- Get link to page with items
     --
     FUNCTION get_page_link (
