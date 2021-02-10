@@ -411,14 +411,15 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         BULK COLLECT INTO rows_to_delete
         FROM logs l
         WHERE l.session_id      = in_session_id
-            AND l.log_parent    IS NULL
-            AND l.created_at    >= TRUNC(in_created_at);
+            AND l.created_at    >= TRUNC(in_created_at)
+        CONNECT BY l.log_parent = PRIOR l.log_id
+        START WITH l.log_id     = tree.get_tree_id();
         --
         IF rows_to_delete.FIRST IS NOT NULL THEN
             FOR i IN rows_to_delete.FIRST .. rows_to_delete.LAST LOOP
                 IF keep_this != rows_to_delete(i) THEN
-                    tree.delete_tree(rows_to_delete(i));
-                    COMMIT;
+                    DELETE FROM logs_lobs   WHERE log_parent    = rows_to_delete(i);
+                    DELETE FROM logs        WHERE log_id        = rows_to_delete(i);
                 END IF;
             END LOOP;
         END IF;
