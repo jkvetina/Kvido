@@ -12,7 +12,7 @@ SELECT
     NULLIF(SUM(CASE WHEN l.flag = 'S' THEN 1 ELSE 0 END), 0)    AS schedulers,
     NULLIF(COUNT(b.log_id), 0)                                  AS lobs,
     NULLIF(COUNT(l.log_id), 0)                                  AS total,
-    'DELETE'                                                    AS action
+    apex.get_icon('fa-trash-o', 'Delete related logs')          AS action
 FROM logs l
 LEFT JOIN logs_lobs b
     ON b.log_parent     = l.log_id

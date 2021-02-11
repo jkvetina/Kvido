@@ -16,7 +16,7 @@ wwv_flow_api.create_page(
 ,p_user_interface_id=>wwv_flow_api.id(63766922917014449)
 ,p_name=>'${LOGOUT}'
 ,p_alias=>'LOGIN'
-,p_step_title=>'&LOGIN_PAGE.'
+,p_step_title=>'Welcome'
 ,p_warn_on_unsaved_changes=>'N'
 ,p_first_item=>'AUTO_FIRST_ITEM'
 ,p_autocomplete_on_off=>'OFF'
@@ -29,7 +29,7 @@ wwv_flow_api.create_page(
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(66687575570800292)
-,p_plug_name=>'&LOGIN_PAGE.'
+,p_plug_name=>'Welcome'
 ,p_region_template_options=>'#DEFAULT#'
 ,p_plug_template=>wwv_flow_api.id(47730758926833993)
 ,p_plug_display_sequence=>10

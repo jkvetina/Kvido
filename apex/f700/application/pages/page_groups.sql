@@ -20,6 +20,10 @@ wwv_flow_api.create_page_group(
 ,p_group_name=>'INTERNAL'
 );
 wwv_flow_api.create_page_group(
+ p_id=>wwv_flow_api.id(10896609966906033)
+,p_group_name=>'OBJECTS'
+);
+wwv_flow_api.create_page_group(
  p_id=>wwv_flow_api.id(9619968066909198)
 ,p_group_name=>'USER'
 );
