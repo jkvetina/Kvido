@@ -161,5 +161,26 @@ CREATE OR REPLACE PACKAGE apex AS
     )
     RETURN VARCHAR2;
 
+
+
+    --
+    -- Get link to APEX Developer to show requested page
+    --
+    FUNCTION get_developer_page_link (
+        in_page_id      NUMBER
+    )
+    RETURN VARCHAR2;
+
+
+
+    --
+    -- Get icon
+    --
+    FUNCTION get_icon (
+        in_name         VARCHAR2,
+        in_title        VARCHAR2    := NULL
+    )
+    RETURN VARCHAR2;
+
 END;
 /

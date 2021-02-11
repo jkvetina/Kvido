@@ -300,5 +300,39 @@ CREATE OR REPLACE PACKAGE BODY apex AS
         tree.raise_error();
     END;
 
+
+
+    FUNCTION get_developer_page_link (
+        in_page_id      NUMBER
+    )
+    RETURN VARCHAR2 AS
+        in_app_id       CONSTANT navigation.app_id%TYPE         := sess.get_app_id();
+    BEGIN
+        RETURN '<a href="' ||
+            APEX_PAGE.GET_URL (
+                p_application   => '4000',
+                p_page          => '4500',
+                p_session       => apex.get_developer_session_id(),
+                p_clear_cache   => '1,4150',
+                p_items         => 'FB_FLOW_ID,FB_FLOW_PAGE_ID,F4000_P1_FLOW,F4000_P4150_GOTO_PAGE,F4000_P1_PAGE',
+                p_values        => in_app_id || ',' || in_page_id || ',' || in_app_id || ',' || in_page_id || ',' || in_page_id
+            ) ||
+            '">' || apex.get_icon('fa-file-code-o', 'Open page in APEX') || '</a>';
+    EXCEPTION
+    WHEN OTHERS THEN
+        tree.raise_error();
+    END;
+
+
+
+    FUNCTION get_icon (
+        in_name         VARCHAR2,
+        in_title        VARCHAR2    := NULL
+    )
+    RETURN VARCHAR2 AS
+    BEGIN
+        RETURN '<span class="fa ' || in_name || '" title="' || in_title || '"></span>';
+    END;
+
 END;
 /
