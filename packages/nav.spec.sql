@@ -129,14 +129,18 @@ CREATE OR REPLACE PACKAGE nav AS
     --
     -- Remove pages from Navigation table if they dont exists as APEX pages
     --
-    PROCEDURE remove_missing_pages;
+    PROCEDURE remove_missing_pages (
+        in_page_id              navigation.page_id%TYPE         := NULL
+    );
 
 
 
     --
     -- Add pages to Navigation table if they exists as APEX pages
     --
-    PROCEDURE add_new_pages;
+    PROCEDURE add_new_pages (
+        in_page_id              navigation.page_id%TYPE         := NULL
+    );
 
 END;
 /

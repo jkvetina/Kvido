@@ -164,10 +164,12 @@ CREATE OR REPLACE PACKAGE BODY nav AS
 
 
 
-    PROCEDURE remove_missing_pages
+    PROCEDURE remove_missing_pages (
+        in_page_id              navigation.page_id%TYPE         := NULL
+    )
     AS
     BEGIN
-        tree.log_module();
+        tree.log_module(in_page_id);
 
         -- remove references
         FOR c IN (
@@ -176,6 +178,7 @@ CREATE OR REPLACE PACKAGE BODY nav AS
             JOIN navigation n
                 ON n.app_id         = p.app_id
                 AND n.parent_id     = p.page_id
+                AND n.page_id       = NVL(in_page_id, n.page_id)
         ) LOOP
             tree.log_debug('REMOVING_PARENT', c.page_id);
             --
@@ -189,6 +192,7 @@ CREATE OR REPLACE PACKAGE BODY nav AS
         FOR c IN (
             SELECT p.app_id, p.page_id
             FROM p910_nav_pages_to_remove p
+            WHERE p.page_id = NVL(in_page_id, p.page_id)
         ) LOOP
             tree.log_debug('DELETING', c.page_id);
             --
@@ -202,16 +206,19 @@ CREATE OR REPLACE PACKAGE BODY nav AS
 
 
 
-    PROCEDURE add_new_pages
+    PROCEDURE add_new_pages (
+        in_page_id              navigation.page_id%TYPE         := NULL
+    )
     AS
         rec         navigation%ROWTYPE;
     BEGIN
-        tree.log_module();
+        tree.log_module(in_page_id);
 
         -- add pages which are present in APEX but missing in Navigation table
         FOR c IN (
             SELECT n.*
             FROM p910_nav_pages_to_add n
+            WHERE n.page_id = NVL(in_page_id, n.page_id)
         ) LOOP
             tree.log_debug('ADDING', c.page_id);
             --
