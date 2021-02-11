@@ -1,0 +1,37 @@
+--DROP TABLE uploaded_files;
+CREATE TABLE uploaded_files (
+    file_name           VARCHAR2(255)   NOT NULL,
+    file_size           NUMBER          NOT NULL,
+    mime_type           VARCHAR2(4000)  NOT NULL,
+    blob_content        BLOB,
+    --
+    app_id              NUMBER(4)       NOT NULL,
+    session_id          NUMBER          NOT NULL,
+    uploader_id         VARCHAR2(30),
+    --
+    updated_by          VARCHAR2(30),
+    updated_at          DATE,
+    --
+    CONSTRAINT pk_uploaded_files
+        PRIMARY KEY (file_name),
+    --
+    CONSTRAINT fk_uploaded_files_session_id
+        FOREIGN KEY (session_id)
+        REFERENCES sessions (session_id),
+    --
+    CONSTRAINT fk_uploaded_files_uploader_id
+        FOREIGN KEY (app_id, uploader_id)
+        REFERENCES uploaders (app_id, uploader_id)
+);
+--
+COMMENT ON TABLE uploaded_files                 IS 'List of uploaded files';
+--
+COMMENT ON COLUMN uploaded_files.file_name      IS 'Unique file ID (folder/original_filename';
+COMMENT ON COLUMN uploaded_files.file_size      IS 'File size in bytes';
+COMMENT ON COLUMN uploaded_files.mime_type      IS 'Mime type of file';
+COMMENT ON COLUMN uploaded_files.blob_content   IS 'File content (binary)';
+--
+COMMENT ON COLUMN uploaded_files.app_id         IS 'APEX application ID';
+COMMENT ON COLUMN uploaded_files.session_id     IS 'Current session ID';
+COMMENT ON COLUMN uploaded_files.uploader_id    IS 'Uploader ID from Uploaders table';
+

@@ -24,6 +24,10 @@ wwv_flow_api.create_page_group(
 ,p_group_name=>'OBJECTS'
 );
 wwv_flow_api.create_page_group(
+ p_id=>wwv_flow_api.id(10819719419852508)
+,p_group_name=>'UPLOADER'
+);
+wwv_flow_api.create_page_group(
  p_id=>wwv_flow_api.id(9619968066909198)
 ,p_group_name=>'USER'
 );
