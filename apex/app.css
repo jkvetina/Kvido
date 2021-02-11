@@ -382,7 +382,7 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
 /**
  * BADGE IN TOP MENU
  */
- #t_Header > #top_header > nav ul li a > span.BADGE {
+#t_Header > #top_header > nav ul li a > span.BADGE {
     position:               relative;
     top:                    0.75rem;
     padding:                0 0 0 0.75rem;
@@ -514,15 +514,6 @@ footer.t-Footer div.t-Footer-top a {  /* LINK TO TOP */
 
 
 /**
- * SUCCESS MESSAGE
- */
-.t-Alert.t-Alert--success.t-Alert--horizontal {
-    background:             #518D54 !important;
-}
-
-
-
-/**
  * DATE PICKER
  */
 input#DATE_PICKER,
@@ -559,6 +550,43 @@ div.apex-item-filedrop {
     padding:                6rem 2rem;
 }
 
+
+
+/**
+ * SUCCESS NOTIFICATION
+ */
+.t-Alert.t-Alert--success.t-Alert--horizontal {
+    background:             #518D54 !important;
+}
+
+
+
+/**
+ * WARNING NOTIFICATION
+ */
+div.a-Notification.a-Notification--error {
+    color:                  #111;
+    font-family:            'Roboto', sans-serif;
+}
+button.a-Button.a-Button--notification.js-showDetails {
+    background:             transparent;
+    border:                 0;
+    outline:                none;
+}
+/** fa fa-info-circle */
+.t-Alert--colorBG.t-Alert--warning,
+.t-Alert--colorBG.t-Alert--yellow {
+    background:             #E3C04D;
+}
+.t-Alert--warning.t-Alert--horizontal .t-Alert-icon,
+.t-Alert--yellow.t-Alert--horizontal .t-Alert-icon {
+    background:             transparent;
+    color:                  #333;
+    padding:                3rem 1rem 3rem 4rem;
+}
+.t-Alert--horizontal .t-Alert-buttons {
+    align-items:            end;
+}
 
 
 
