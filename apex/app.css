@@ -110,8 +110,9 @@ table.a-GV-table a:hover {
     text-decoration:        underline   !important;
     color:                  #000      !important;
 }
+table.a-GV-table span.fa,
 table.a-GV-table a span.fa {
-    color:                  #333      !important;
+    color:                  #555      !important;
 }
 table.a-GV-table a span.fa:hover {
     color:                  #000      !important;
@@ -174,11 +175,11 @@ ul.a-IG-reportSummary span.a-IG-reportSummary-icon {
  * GRID HEADER
  */
 div.a-IG-body {
-    font-family:        'Roboto', sans-serif;
+    font-family:            'Roboto', sans-serif;
 }
 div.a-IG-body div.a-GV-hdr.a-GV-hdr--fixed.js-stickyWidget-toggle {
-    background:         #e9e9e9                 !important;
-    font-family:        'Roboto Slab', serif;
+    background:             #e9e9e9                 !important;
+    font-family:            'Roboto Slab', serif;
 }
 
 
@@ -201,6 +202,8 @@ div.a-IG-body table tr.a-GV-controlBreak th.a-GV-controlBreakHeader .a-GV-contro
 div.a-IG-body *:focus {
     outline:                none !important;
 }
+
+
 
 
 
@@ -287,7 +290,7 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
 #t_Header > #top_header nav > * {
     flex-grow:              0;
 }
-#t_Header > #top_header nav > .empty {
+#t_Header > #top_header nav > .EMPTY {  /* SPLITTER BETWEEN LEFT AND RIGHT */
     flex-grow:              1;
 }
 
@@ -332,8 +335,9 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
 }
 #t_Header > #top_header > nav ul li a {
     display:                block;
-    padding:                1.5rem 1.6rem !important;
+    padding:                1.5rem 1.6rem 0 !important;
     white-space:            nowrap;
+    height:                 4rem;  /* BAR_HEIGHT */
     line-height:            1rem;
 }
 #t_Header > #top_header > nav ul li ul {
@@ -365,9 +369,28 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
     clear:                  both;
     width:                  100%;
 }
-#t_Header > #top_header > nav ul li span.fa {
-    line-height:            1rem;
-    height:                 1rem;
+#t_Header > #top_header > nav ul li a > span {
+    display:                inline-block        !important;
+    vertical-align:         top;
+}
+#t_Header > #top_header > nav ul li a span.fa {  /* FIX OFFSET FOR ICONS */
+    line-height:            1.1rem;
+}
+
+
+
+/**
+ * BADGE IN TOP MENU
+ */
+ #t_Header > #top_header > nav ul li a > span.BADGE {
+    position:               relative;
+    top:                    0.75rem;
+    padding:                0 0 0 0.75rem;
+    margin-right:           -0.25rem;
+    color:                  #fff;
+    font-family:            'Roboto', sans-serif;
+    font-weight:            bold;
+    font-size:              1rem;
 }
 
 
@@ -438,6 +461,25 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
 
 
 /**
+ * CUSTOMIZED MENUS
+ */
+#t_Header > #top_header > nav ul li.DARK_BROWN {
+    background:             #5e5750;
+}
+#t_Header > #top_header > nav ul li.DARK_BROWN a:hover {
+    background:             #444;
+}
+
+#t_Header > #top_header > nav ul li.DARK_GREEN {
+    background:             #547B5F;
+}
+#t_Header > #top_header > nav ul li.DARK_GREEN a:hover {
+    background:             #444;
+}
+
+
+
+/**
  * ACTIVE ITEMS OVERWRITE
  */
 #t_Header > #top_header > nav ul li.ACTIVE {
@@ -449,25 +491,6 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
 }
 #t_Header > #top_header > nav ul li:hover {
     background:             #444;
-}
-
-
-
-/**
- * BADGE IN TOP MENU
- */
-span.BADGE {
-    display:            inline-block                !important;
-    float:              right;
-    padding:            0.6rem 0.5rem 0.5rem        !important;
-    margin:             0rem -0.75rem -2rem -0.5rem !important;
-    border-radius:      0.25rem;
-    background:         #E3C04D;
-    background:         #d32f2f;
-    background:         #000;
-    color:              #fff;
-    font-family:        'Roboto', sans-serif;
-    font-weight:        bold;
 }
 
 
@@ -507,7 +530,7 @@ input#DATE_PICKER:active,
 input#DATE_PICKER:focus,
 input#DATE_PICKER:hover {
     display:                block;
-    background:             transparent;
+    background:             #444;
     color:                  #fff;
     width:                  12rem;
     height:                 4rem;  /* BAR_HEIGHT */
@@ -521,9 +544,21 @@ input#DATE_PICKER:hover {
     text-align:             center;
     outline:                none;
 }
+input#DATE_PICKER:active,
 input#DATE_PICKER:focus,
 input#DATE_PICKER:hover {
-    background:             #444;
+    background:             #333;
 }
+
+
+
+/**
+ * UPLOADER DRAG AND DROP ZONE
+ */
+div.apex-item-filedrop {
+    padding:                6rem 2rem;
+}
+
+
 
 

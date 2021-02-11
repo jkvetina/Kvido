@@ -15,11 +15,11 @@ wwv_flow_api.create_list_template(
  p_id=>wwv_flow_api.id(64163400516768059)
 ,p_list_template_current=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<li class="ACTIVE #A01#">',
-'  #A02#<a href="#LINK#" class="#A03#" title="#A04#" #A05#>#A06##TEXT##A07#</a>#A08#',
+'  #A02#<a href="#LINK#" class="#A03#" title="#A04#" #A05#>#A06#<span class="TEXT">#TEXT#</span>#A07#</a>#A08#',
 '</li>'))
 ,p_list_template_noncurrent=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<li class="#A01#">',
-'  #A02#<a href="#LINK#" class="#A03#" title="#A04#" #A05#>#A06##TEXT##A07#</a>#A08#',
+'  #A02#<a href="#LINK#" class="#A03#" title="#A04#" #A05#>#A06#<span class="TEXT">#TEXT#</span>#A07#</a>#A08#',
 '</li>'))
 ,p_list_template_name=>'Navigation Bar Q'
 ,p_internal_name=>'NAVIGATION_BAR_Q'
@@ -31,27 +31,27 @@ wwv_flow_api.create_list_template(
 ,p_after_sub_list=>'</ul></li>'
 ,p_sub_list_item_current=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<li class="ACTIVE #A01#">',
-'  #A02#<a href="#LINK#" class="#A03#" title="#A04#" #A05#>#A06##TEXT##A07#</a>#A08#',
+'  #A02#<a href="#LINK#" class="#A03#" title="#A04#" #A05#>#A06#<span class="TEXT">#TEXT#</span>#A07#</a>#A08#',
 '</li>'))
 ,p_sub_list_item_noncurrent=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<li class="#A01#">',
-'  #A02#<a href="#LINK#" class="#A03#" title="#A04#" #A05#>#A06##TEXT##A07#</a>#A08#',
+'  #A02#<a href="#LINK#" class="#A03#" title="#A04#" #A05#>#A06#<span class="TEXT">#TEXT#</span>#A07#</a>#A08#',
 '</li>'))
 ,p_item_templ_curr_w_child=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<li class="ACTIVE #A01#">',
-'  #A02#<a href="#LINK#" class="#A03#" title="#A04#" #A05#>#A06##TEXT##A07#</a>#A08#',
+'  #A02#<a href="#LINK#" class="#A03#" title="#A04#" #A05#>#A06#<span class="TEXT">#TEXT#</span>#A07#</a>#A08#',
 ''))
 ,p_item_templ_noncurr_w_child=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<li class="#A01#">',
-'  #A02#<a href="#LINK#" class="#A03#" title="#A04#" #A05#>#A06##TEXT##A07#</a>#A08#',
+'  #A02#<a href="#LINK#" class="#A03#" title="#A04#" #A05#>#A06#<span class="TEXT">#TEXT#</span>#A07#</a>#A08#',
 ''))
 ,p_sub_templ_curr_w_child=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<li class="ACTIVE #A01#">',
-'  #A02#<a href="#LINK#" class="#A03#" title="#A04#" #A05#>#A06##TEXT##A07#</a>#A08#',
+'  #A02#<a href="#LINK#" class="#A03#" title="#A04#" #A05#>#A06#<span class="TEXT">#TEXT#</span>#A07#</a>#A08#',
 '</li>'))
 ,p_sub_templ_noncurr_w_child=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<li class="ACTIVE #A01#">',
-'  #A02#<a href="#LINK#" class="#A03#" title="#A04#" #A05#>#A06##TEXT##A07#</a>#A08#',
+'  #A02#<a href="#LINK#" class="#A03#" title="#A04#" #A05#>#A06#<span class="TEXT">#TEXT#</span>#A07#</a>#A08#',
 '</li>'))
 ,p_a01_label=>'<li class="...">'
 ,p_a02_label=>'<li>...<a>'
