@@ -16,7 +16,9 @@ SELECT
     n.parent_id,
     a.page_alias,
     a.page_name,
+    a.page_title,
     NULL                        AS page_target,
+    NULL                        AS page_onclick,
     a.page_group,
     a.authorization_scheme      AS auth_scheme,
     n.css_class,
@@ -48,7 +50,9 @@ SELECT
     NULL                        AS parent_id,
     n.page_alias,
     n.page_name,
+    n.page_title,
     n.page_target,
+    n.page_onclick,
     n.page_group,
     n.auth_scheme,
     n.css_class,
@@ -59,7 +63,7 @@ SELECT
     curr.page_id                AS curr_page_id,
     curr.parent_id              AS curr_parent_id,
     curr.root_id                AS curr_root_id
-FROM navigation_virtuals n
+FROM navigation_extras n
 JOIN curr
     ON curr.app_id              = n.app_id;
 --

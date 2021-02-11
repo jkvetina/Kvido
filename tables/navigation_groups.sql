@@ -8,7 +8,11 @@ CREATE TABLE navigation_groups (
     updated_at          DATE,
     --
     CONSTRAINT pk_navigation_groups
-        PRIMARY KEY (app_id, page_id)
+        PRIMARY KEY (app_id, page_id),
+    --
+    CONSTRAINT fk_navigation_page_id
+        FOREIGN KEY (app_id, page_id)
+        REFERENCES navigation (app_id, page_id)
 )
 STORAGE (BUFFER_POOL KEEP);
 --
