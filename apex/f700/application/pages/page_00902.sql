@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210210190658'
+,p_last_upd_yyyymmddhh24miss=>'20210211185046'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(54195600298789905)
@@ -75,13 +75,13 @@ wwv_flow_api.create_region_column(
 ,p_source_expression=>'LOGS_'
 ,p_data_type=>'NUMBER'
 ,p_is_query_only=>false
-,p_item_type=>'NATIVE_NUMBER_FIELD'
+,p_item_type=>'NATIVE_LINK'
 ,p_heading=>'Logs'
 ,p_heading_alignment=>'RIGHT'
 ,p_display_sequence=>70
 ,p_value_alignment=>'RIGHT'
-,p_attribute_03=>'right'
-,p_is_required=>false
+,p_link_target=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.::P901_TODAY,P901_SESSION_ID,P901_RESET:&TODAY.,&SESSION_ID.,Y'
+,p_link_text=>'&LOGS_.'
 ,p_enable_filter=>true
 ,p_filter_is_required=>false
 ,p_filter_lov_type=>'NONE'
@@ -92,6 +92,7 @@ wwv_flow_api.create_region_column(
 ,p_is_primary_key=>false
 ,p_duplicate_value=>true
 ,p_include_in_export=>true
+,p_escape_on_http_output=>true
 );
 wwv_flow_api.create_region_column(
  p_id=>wwv_flow_api.id(54447049012327316)
