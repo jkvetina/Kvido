@@ -590,3 +590,22 @@ button.a-Button.a-Button--notification.js-showDetails {
 
 
 
+
+/**
+ * HIDE DEFAULT ARROWS IN LIST VIEW
+ */
+div.NO_ARROWS li.a-ListView-item.has-link a.ui-btn span.fa-angle-right {
+    display:                none;
+}
+
+/**
+ * DONT ALIGN ICONS IN TEXT TO THE RIGHT
+ */
+div.FLOATING_ICONS li.a-ListView-item.has-link:not(.has-alt) span.fa {
+    margin:                 0.15rem 0 0 0;
+    position:               relative;
+}
+
+
+
+
