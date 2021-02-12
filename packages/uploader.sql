@@ -166,6 +166,12 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
     BEGIN
         tree.log_module(in_file_name);
         --
+        DELETE FROM uploaded_file_cols u
+        WHERE u.file_name = in_file_name;
+        --
+        DELETE FROM uploaded_file_sheets u
+        WHERE u.file_name = in_file_name;
+        --
         DELETE FROM uploaded_files u
         WHERE u.file_name = in_file_name;
         --
