@@ -255,6 +255,15 @@ div.a-IG div.a-IG-header.js-stickyWidget-toggle.is-stuck {
 
 
 
+/**
+ * GRID NO DATA FOUND MESSAGE
+ */
+div.a-GV-bdy div.a-GV-noDataMsg.a-GV-altMessage {
+    padding:                4rem        !important;
+}
+
+
+
 
 
 /**
