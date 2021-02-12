@@ -67,5 +67,66 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         tree.raise_error();
     END;
 
+
+
+    FUNCTION get_basename (
+        in_file_name        uploaded_files.file_name%TYPE
+    )
+    RETURN VARCHAR2 AS
+    BEGIN
+        RETURN REGEXP_SUBSTR(in_file_name, '([^/]*)$');
+    END;
+
+
+
+    PROCEDURE delete_file (
+        in_file_name        uploaded_files.file_name%TYPE
+    ) AS
+    BEGIN
+        tree.log_module(in_file_name);
+        --
+        DELETE FROM uploaded_files u
+        WHERE u.file_name = in_file_name;
+        --
+        tree.update_timer();
+    EXCEPTION
+    WHEN tree.app_exception THEN
+        RAISE;
+    WHEN OTHERS THEN
+        tree.raise_error();
+    END;
+
+
+
+    PROCEDURE download_file (
+        in_file_name        uploaded_files.file_name%TYPE
+    ) AS
+        out_blob_content    uploaded_files.blob_content%TYPE;
+        out_mime_type       uploaded_files.mime_type%TYPE;
+    BEGIN
+        tree.log_module(in_file_name);
+        --
+        SELECT f.blob_content, f.mime_type
+        INTO out_blob_content, out_mime_type
+        FROM uploaded_files f
+        WHERE f.file_name = in_file_name;
+        --
+        HTP.INIT;
+        OWA_UTIL.MIME_HEADER(out_mime_type, FALSE);
+        HTP.P('Content-Type: application/octet-stream');
+        HTP.P('Content-Length: ' || DBMS_LOB.GETLENGTH(out_blob_content));
+        HTP.P('Content-Disposition: attachment; filename="' || uploader.get_basename(in_file_name) || '"');
+        HTP.P('Cache-Control: max-age=0');
+        --
+        OWA_UTIL.HTTP_HEADER_CLOSE;
+        WPG_DOCLOAD.DOWNLOAD_FILE(out_blob_content);
+        APEX_APPLICATION.STOP_APEX_ENGINE;              -- throws ORA-20876 Stop APEX Engine
+    EXCEPTION
+    WHEN APEX_APPLICATION.E_STOP_APEX_ENGINE THEN
+        NULL;
+    WHEN OTHERS THEN
+        tree.raise_error();
+    END;
+
 END;
 /
