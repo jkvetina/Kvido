@@ -1,5 +1,5 @@
-CREATE OR REPLACE TRIGGER uploaders__
-FOR UPDATE OR INSERT OR DELETE ON uploaders
+CREATE OR REPLACE TRIGGER uploaders_mapping__
+FOR UPDATE OR INSERT OR DELETE ON uploaders_mapping
 COMPOUND TRIGGER
 
     in_updated_by       CONSTANT users.updated_by%TYPE  := sess.get_user_id();
@@ -33,7 +33,7 @@ COMPOUND TRIGGER
         IF NOT DELETING THEN
             -- overwrite some values
             :NEW.app_id         := COALESCE(:NEW.app_id, sess.get_app_id());
-            :NEW.is_active      := NULLIF(:NEW.is_active, 'N');
+            :NEW.is_mandatory   := NULLIF(:NEW.is_mandatory, 'N');
             --
             :NEW.updated_by     := COALESCE(in_updated_by, :NEW.updated_by);
             :NEW.updated_at     := in_updated_at;
