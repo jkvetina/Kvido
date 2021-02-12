@@ -15,6 +15,9 @@ CREATE TABLE uploaded_files (
     CONSTRAINT pk_uploaded_files
         PRIMARY KEY (file_name),
     --
+    CONSTRAINT uq_uploaded_files
+        UNIQUE (app_id, session_id, updated_at, file_name),
+    --
     CONSTRAINT fk_uploaded_files_session_id
         FOREIGN KEY (session_id)
         REFERENCES sessions (session_id),
