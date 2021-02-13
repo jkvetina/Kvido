@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210213185707'
+,p_last_upd_yyyymmddhh24miss=>'20210213222407'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(9544386426654050)
@@ -43,6 +43,8 @@ wwv_flow_api.create_page_plug(
 ''))
 ,p_plug_source_type=>'NATIVE_IG'
 ,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_plug_display_condition_type=>'ITEM_IS_NULL'
+,p_plug_display_when_condition=>'P910_TREE_MODE'
 ,p_prn_units=>'MILLIMETERS'
 ,p_prn_paper_size=>'A4'
 ,p_prn_width=>297
@@ -1673,7 +1675,7 @@ wwv_flow_api.create_region_column(
 ,p_data_type=>'VARCHAR2'
 ,p_is_query_only=>true
 ,p_item_type=>'NATIVE_LINK'
-,p_heading=>'Status'
+,p_heading=>'Action'
 ,p_heading_alignment=>'CENTER'
 ,p_display_sequence=>70
 ,p_value_alignment=>'CENTER'

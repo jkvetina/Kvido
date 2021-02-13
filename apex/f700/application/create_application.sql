@@ -60,7 +60,7 @@ wwv_flow_api.create_flow(
 ,p_substitution_string_01=>'CLEAR_FILTERS'
 ,p_substitution_value_01=>'<span class="fa fa-refresh fa-flip-horizontal" title="Clear filters"></span>'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210213215724'
+,p_last_upd_yyyymmddhh24miss=>'20210213224343'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>298
 ,p_ui_type_name => null

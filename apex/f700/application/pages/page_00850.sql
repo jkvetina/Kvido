@@ -19,11 +19,26 @@ wwv_flow_api.create_page(
 ,p_step_title=>'Uploader'
 ,p_autocomplete_on_off=>'OFF'
 ,p_group_id=>wwv_flow_api.id(10819719419852508)
+,p_javascript_code_onload=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'// move submit button to better place',
+'$(''#SUBMIT_UPLOAD'').appendTo($(''#P850_UPLOAD_DROPZONE span.apex-item-filedrop-action'').parent());',
+'',
+'// prevent another file popup on submit',
+'$(''#SUBMIT_UPLOAD'').on(''click'', function(event) {',
+'    event.preventDefault();',
+'    return false;',
+'});',
+''))
+,p_inline_css=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'#SUBMIT_UPLOAD {',
+'    margin: -3.2rem 0 0 18rem;',
+'}',
+''))
 ,p_step_template=>wwv_flow_api.id(64127379571157916)
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210213185510'
+,p_last_upd_yyyymmddhh24miss=>'20210213224343'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(21951343639206968)
@@ -318,6 +333,7 @@ wwv_flow_api.create_page_button(
 ,p_button_sequence=>30
 ,p_button_plug_id=>wwv_flow_api.id(32992687922291120)
 ,p_button_name=>'SUBMIT'
+,p_button_static_id=>'SUBMIT_UPLOAD'
 ,p_button_action=>'SUBMIT'
 ,p_button_template_options=>'#DEFAULT#'
 ,p_button_template_id=>wwv_flow_api.id(63744470351014400)
