@@ -1,4 +1,15 @@
 CREATE OR REPLACE VIEW p860_uploaders_possible AS
+WITH u AS (
+    SELECT
+        u.uploader_id,
+        MAX(m.updated_at)   AS updated_at
+    FROM uploaders u
+    LEFT JOIN uploaders_mapping m
+        ON m.app_id         = u.app_id
+        AND m.uploader_id   = u.uploader_id
+    WHERE u.app_id          = sess.get_app_id()
+    GROUP BY u.uploader_id
+)
 SELECT
     u.uploader_id,
     t.object_name           AS table_name,
@@ -12,10 +23,16 @@ SELECT
     --t.last_ddl_time         AS table_changed_at,
     --r.last_updated_on       AS region_changed_at,
     --
+    CASE WHEN (u.updated_at IS NULL OR t.last_ddl_time > u.updated_at)
+        THEN apex.get_icon('fa-warning', 'Synchronize columns Column Mappings')
+        END AS mappings_check,
+    --
     CASE
         WHEN t.last_ddl_time > r.last_updated_on
             THEN apex.get_icon('fa-warning', 'Synchronize columns in APEX region')
         END AS region_check,
+    --
+    apex.get_developer_page_link(r.page_id, r.region_id) AS region_check_link,
     --
     CASE
         WHEN e.table_name IS NULL
@@ -39,9 +56,8 @@ JOIN apex_application_page_regions r
 JOIN apex_application_pages p
     ON p.application_id     = r.application_id
     AND p.page_id           = r.page_id
-LEFT JOIN uploaders u
-    ON u.app_id             = r.application_id
-    AND u.uploader_id       = r.static_id
+LEFT JOIN u
+    ON u.uploader_id        = r.static_id
 WHERE t.object_type         IN ('TABLE', 'VIEW');
 
 

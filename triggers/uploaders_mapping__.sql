@@ -33,7 +33,8 @@ COMPOUND TRIGGER
         IF NOT DELETING THEN
             -- overwrite some values
             :NEW.app_id         := COALESCE(:NEW.app_id, sess.get_app_id());
-            :NEW.is_mandatory   := NULLIF(:NEW.is_mandatory, 'N');
+            :NEW.is_key         := NULLIF(:NEW.is_key, 'N');
+            :NEW.is_nn          := NULLIF(:NEW.is_nn,  'N');
             --
             :NEW.updated_by     := COALESCE(in_updated_by, :NEW.updated_by);
             :NEW.updated_at     := in_updated_at;

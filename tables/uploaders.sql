@@ -8,7 +8,6 @@ CREATE TABLE uploaders (
     --
     pre_procedure       VARCHAR2(61),
     post_procedure      VARCHAR2(61),
-    post_redirect       VARCHAR2(1),
     is_active           VARCHAR2(1),
     --
     updated_by          VARCHAR2(30),
@@ -41,6 +40,5 @@ COMMENT ON COLUMN uploaders.target_page_id      IS 'APEX page ID with grid/repor
 --
 COMMENT ON COLUMN uploaders.pre_procedure       IS 'Procedure called before upload';
 COMMENT ON COLUMN uploaders.post_procedure      IS 'Procedure called after upload';
-COMMENT ON COLUMN uploaders.post_redirect       IS 'Flag for redirect to target_page after successful upload';
 COMMENT ON COLUMN uploaders.is_active           IS 'Flag to enable/disable uploader';
 

@@ -215,5 +215,101 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         tree.raise_error();
     END;
 
+
+
+    PROCEDURE create_uploader (
+        in_uploader_id      uploaders.uploader_id%TYPE
+    ) AS
+        rec                 uploaders%ROWTYPE;
+    BEGIN
+        tree.log_module(in_uploader_id);
+        --
+        SELECT p.table_name, p.page_id
+        INTO rec.target_table, rec.target_page_id
+        FROM p860_uploaders_possible p
+        WHERE p.table_name      = in_uploader_id
+            AND p.uploader_id   IS NULL;
+        --        
+        rec.app_id              := sess.get_app_id();
+        rec.uploader_id         := in_uploader_id;
+        --
+        INSERT INTO uploaders VALUES rec;
+        --
+        tree.update_timer();
+    EXCEPTION
+    WHEN tree.app_exception THEN
+        RAISE;
+    WHEN OTHERS THEN
+        tree.raise_error();
+    END;
+
+
+
+    PROCEDURE create_uploader_mappings (
+        in_uploader_id      uploaders_mapping.uploader_id%TYPE,
+        in_clear_current    BOOLEAN                                 := FALSE
+    ) AS
+        TYPE list_mappings  IS TABLE OF uploaders_mapping%ROWTYPE INDEX BY PLS_INTEGER;
+        curr_mappings       list_mappings;
+    BEGIN
+        tree.log_module(in_uploader_id, CASE WHEN in_clear_current THEN 'Y' END);
+
+        -- store current mappings
+        IF NOT in_clear_current THEN
+            SELECT m.*
+            BULK COLLECT INTO curr_mappings
+            FROM uploaders_mapping m
+            WHERE m.app_id          = sess.get_app_id()
+                AND m.uploader_id   = in_uploader_id;
+        END IF;
+
+        -- delete not existing columns
+        DELETE FROM uploaders_mapping m
+        WHERE m.app_id          = sess.get_app_id()
+            AND m.uploader_id   = in_uploader_id;
+
+        -- merge existing columns
+        FOR c IN (
+            SELECT m.*
+            FROM p860_uploaders_mapping m
+            WHERE m.uploader_id = in_uploader_id
+        ) LOOP
+            INSERT INTO uploaders_mapping (
+                app_id, uploader_id, target_column,
+                is_key, is_nn, source_column, overwrite_value
+            )
+            VALUES (
+                c.app_id,
+                c.uploader_id,
+                c.target_column,
+                c.is_key,
+                c.is_nn,
+                c.source_column,
+                c.overwrite_value
+            );
+        END LOOP;
+
+        -- set previous values (for some columns)
+        IF NOT in_clear_current AND curr_mappings.FIRST IS NOT NULL THEN
+            FOR i IN curr_mappings.FIRST .. curr_mappings.LAST LOOP
+                UPDATE uploaders_mapping m
+                SET m.is_key                = curr_mappings(i).is_key,
+                    m.is_nn                 = curr_mappings(i).is_nn,
+                    m.source_column         = curr_mappings(i).source_column,
+                    m.overwrite_value       = curr_mappings(i).overwrite_value
+                WHERE m.app_id              = curr_mappings(i).app_id
+                    AND m.uploader_id       = curr_mappings(i).uploader_id
+                    AND m.target_column     = curr_mappings(i).target_column;
+            END LOOP;
+        END IF;
+        --
+        tree.update_timer();
+    EXCEPTION
+    WHEN tree.app_exception THEN
+        RAISE;
+    WHEN OTHERS THEN
+        tree.raise_error();
+    END;
+
 END;
 /

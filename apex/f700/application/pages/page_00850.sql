@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210212195834'
+,p_last_upd_yyyymmddhh24miss=>'20210213185510'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(21951343639206968)
@@ -367,7 +367,9 @@ wwv_flow_api.create_page_item(
 ,p_name=>'P850_RESET'
 ,p_item_sequence=>10
 ,p_item_plug_id=>wwv_flow_api.id(21951343639206968)
+,p_use_cache_before_default=>'NO'
 ,p_display_as=>'NATIVE_HIDDEN'
+,p_is_persistent=>'N'
 ,p_attribute_01=>'Y'
 );
 wwv_flow_api.create_page_item(
@@ -513,24 +515,40 @@ wwv_flow_api.create_page_da_action(
 ,p_attribute_02=>'Y'
 );
 wwv_flow_api.create_page_process(
- p_id=>wwv_flow_api.id(11133270371172887)
+ p_id=>wwv_flow_api.id(11209892581964043)
 ,p_process_sequence=>10
 ,p_process_point=>'AFTER_HEADER'
 ,p_process_type=>'NATIVE_PLSQL'
-,p_process_name=>'SET_ITEMS'
+,p_process_name=>'SET_SESSION'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '-- pass session_id to upload/submit',
 'apex.set_item(''$SESSION'', sess.get_session_id());',
-'',
+''))
+,p_process_clob_language=>'PLSQL'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
+);
+wwv_flow_api.create_page_process(
+ p_id=>wwv_flow_api.id(11133270371172887)
+,p_process_sequence=>20
+,p_process_point=>'AFTER_HEADER'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'SET_SHEET_AFTER_UPLOAD'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '-- retrieve first uploaded file',
 'IF apex.get_item(''$UPLOADED'') = ''Y'' THEN',
-'    apex.set_item(''$FILE'',  uploader.get_uploaded_file());',
-'    apex.set_item(''$SHEET'', uploader.get_uploaded_file_sheet());',
-'END IF;',
-'',
-'--',
-'IF apex.get_item(''$SHEET'') IS NOT NULL AND apex.get_item(''$TARGET'') IS NOT NULL THEN',
-'    apex.set_item(''$PREVIEW'', ''Y'');',
+'    FOR c IN (',
+'        SELECT file_name',
+'        FROM (',
+'            SELECT f.file_name',
+'            FROM uploaded_files f',
+'            WHERE f.session_id = sess.get_session_id()',
+'            ORDER BY updated_at DESC',
+'        )',
+'        WHERE ROWNUM = 1',
+'    ) LOOP',
+'        apex.set_item(''$FILE'', c.file_name);',
+'        apex.set_item(''$SHEET'', 1);',
+'    END LOOP;',
 'END IF;',
 ''))
 ,p_process_clob_language=>'PLSQL'
@@ -538,7 +556,7 @@ wwv_flow_api.create_page_process(
 );
 wwv_flow_api.create_page_process(
  p_id=>wwv_flow_api.id(11132423551172885)
-,p_process_sequence=>20
+,p_process_sequence=>30
 ,p_process_point=>'AFTER_HEADER'
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'DELETE_FILE'
@@ -555,7 +573,7 @@ wwv_flow_api.create_page_process(
 );
 wwv_flow_api.create_page_process(
  p_id=>wwv_flow_api.id(11132858305172886)
-,p_process_sequence=>30
+,p_process_sequence=>40
 ,p_process_point=>'AFTER_HEADER'
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'DOWNLOAD_FILE'
@@ -570,7 +588,7 @@ wwv_flow_api.create_page_process(
 );
 wwv_flow_api.create_page_process(
  p_id=>wwv_flow_api.id(11028738049764218)
-,p_process_sequence=>40
+,p_process_sequence=>50
 ,p_process_point=>'AFTER_HEADER'
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'PROCESS_SHEET'
@@ -583,6 +601,21 @@ wwv_flow_api.create_page_process(
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
 ,p_process_when=>'P850_TARGET'
 ,p_process_when_type=>'ITEM_IS_NOT_NULL'
+);
+wwv_flow_api.create_page_process(
+ p_id=>wwv_flow_api.id(11209942202964044)
+,p_process_sequence=>60
+,p_process_point=>'AFTER_HEADER'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'SHOW_PREVIEW'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'-- show preview if target is known',
+'IF apex.get_item(''$SHEET'') IS NOT NULL AND apex.get_item(''$TARGET'') IS NOT NULL THEN',
+'    apex.set_item(''$PREVIEW'', ''Y'');',
+'END IF;',
+''))
+,p_process_clob_language=>'PLSQL'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
 );
 wwv_flow_api.create_page_process(
  p_id=>wwv_flow_api.id(11133616379172887)

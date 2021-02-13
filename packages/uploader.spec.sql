@@ -38,5 +38,18 @@ CREATE OR REPLACE PACKAGE uploader AS
         in_file_name        uploaded_files.file_name%TYPE
     );
 
+
+
+    PROCEDURE create_uploader (
+        in_uploader_id      uploaders.uploader_id%TYPE
+    );
+
+
+
+    PROCEDURE create_uploader_mappings (
+        in_uploader_id      uploaders_mapping.uploader_id%TYPE,
+        in_clear_current    BOOLEAN                                 := FALSE
+    );
+
 END;
 /
