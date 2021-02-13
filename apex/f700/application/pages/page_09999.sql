@@ -25,7 +25,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_page_is_public_y_n=>'Y'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210210213508'
+,p_last_upd_yyyymmddhh24miss=>'20210213132102'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(66687575570800292)
@@ -168,16 +168,7 @@ wwv_flow_api.create_page_process(
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'DELETE_SESSION'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'FOR c IN (',
-'    SELECT s.session_id',
-'    FROM sessions s',
-'    WHERE s.app_id          = sess.get_app_id()',
-'        AND s.session_id    = sess.get_session_id()',
-') LOOP',
-'    tree.log_debug(''SESSION_EXISTS'');',
-'    --',
-'    sess.force_new_session();',
-'END LOOP;',
+'sess.force_new_session();',
 ''))
 ,p_process_clob_language=>'PLSQL'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'

@@ -438,10 +438,17 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
     PROCEDURE force_new_session AS
     BEGIN
-        tree.log_module();
-        --
-        COMMIT;
-        APEX_UTIL.REDIRECT_URL(APEX_PAGE.GET_URL(p_session => 0));  -- force new login
+        FOR c IN (
+            SELECT s.session_id
+            FROM sessions s
+            WHERE s.app_id          = sess.get_app_id()
+                AND s.session_id    = sess.get_session_id()
+        ) LOOP
+            tree.log_module();
+            --
+            COMMIT;
+            APEX_UTIL.REDIRECT_URL(APEX_PAGE.GET_URL(p_session => 0));  -- force new login
+        END LOOP;
     --EXCEPTION
     --WHEN APEX_APPLICATION.E_STOP_APEX_ENGINE THEN  -- throws this exception
     END;
