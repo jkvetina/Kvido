@@ -3,6 +3,7 @@ SELECT
     t.table_name,
     r.page_id,
     p.page_title            AS page_name,
+    r.region_id,
     r.region_name,
     NVL(r.authorization_scheme, p.authorization_scheme) AS auth_scheme,
     u.uploader_id

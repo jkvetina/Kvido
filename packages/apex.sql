@@ -303,7 +303,8 @@ CREATE OR REPLACE PACKAGE BODY apex AS
 
 
     FUNCTION get_developer_page_link (
-        in_page_id      NUMBER
+        in_page_id      NUMBER,
+        in_region_id    NUMBER          := NULL
     )
     RETURN VARCHAR2 AS
         in_app_id       CONSTANT navigation.app_id%TYPE         := sess.get_app_id();
@@ -317,6 +318,7 @@ CREATE OR REPLACE PACKAGE BODY apex AS
                 p_items         => 'FB_FLOW_ID,FB_FLOW_PAGE_ID,F4000_P1_FLOW,F4000_P4150_GOTO_PAGE,F4000_P1_PAGE',
                 p_values        => in_app_id || ',' || in_page_id || ',' || in_app_id || ',' || in_page_id || ',' || in_page_id
             ) ||
+            CASE WHEN in_region_id IS NOT NULL THEN '::#5110:' || in_region_id END ||  -- focus region
             '">' || apex.get_icon('fa-file-code-o', 'Open page in APEX') || '</a>';
     EXCEPTION
     WHEN OTHERS THEN

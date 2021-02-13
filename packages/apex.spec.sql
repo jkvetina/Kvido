@@ -167,7 +167,8 @@ CREATE OR REPLACE PACKAGE apex AS
     -- Get link to APEX Developer to show requested page
     --
     FUNCTION get_developer_page_link (
-        in_page_id      NUMBER
+        in_page_id      NUMBER,
+        in_region_id    NUMBER          := NULL
     )
     RETURN VARCHAR2;
 

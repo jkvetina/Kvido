@@ -11,10 +11,14 @@ SELECT
     p.region_name,
     p.auth_scheme,
     --
+    apex.get_page_link(u.target_page_id) AS page_link,
+    --
     CASE
         WHEN p.auth_scheme IS NOT NULL
             THEN apex.get_icon('fa-check-square', 'Uploader valid')
-        END AS status
+        END AS status,
+    --
+    apex.get_developer_page_link(u.target_page_id, p.region_id) AS apex_
 FROM uploaders u
 LEFT JOIN p860_uploaders_possible p
     ON p.uploader_id    = u.uploader_id
@@ -32,7 +36,9 @@ SELECT
     p.region_name,
     p.auth_scheme,
     --
-    apex.get_icon('fa-plus-square', 'Add record to Uploaders') AS status
+    apex.get_page_link(p.page_id)                                   AS page_link,
+    apex.get_icon('fa-plus-square', 'Add record to Uploaders')      AS status,
+    apex.get_developer_page_link(p.page_id, p.region_id)            AS apex_
 FROM p860_uploaders_possible p
 WHERE p.uploader_id IS NULL;
 
