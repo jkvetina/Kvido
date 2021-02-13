@@ -38,6 +38,13 @@ COMPOUND TRIGGER
             :NEW.updated_by     := COALESCE(in_updated_by, :NEW.updated_by);
             :NEW.updated_at     := in_updated_at;
         END IF;
+
+        -- remove mappings
+        IF DELETING THEN
+            DELETE FROM uploaders_mapping m
+            WHERE m.app_id          = :OLD.app_id
+                AND m.uploader_id   = :OLD.uploader_id;
+        END IF;
     EXCEPTION
     WHEN tree.app_exception THEN
         RAISE;
