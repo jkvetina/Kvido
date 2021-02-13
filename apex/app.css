@@ -121,14 +121,23 @@ table.a-GV-table a span.fa:hover {
 /**
  * BACKGROUND ON SELECTED ROW IN GRID + SHADOW
  */
-.a-GV-table tr.is-selected .a-GV-cell {
+.a-GV-table tr.is-selected .a-GV-cell,
+.a-GV-table tr.is-updated .a-GV-cell {  /* CHANGED ROW */
     background-color:       #efefef   !important;
 }
 .a-GV-table .a-GV-cell.is-focused,
 .a-GV-table .a-GV-controlBreakHeader.is-focused,
 .a-GV-table .a-GV-header.is-focused,
 .a-GV-table .a-GV-headerGroup.is-focused {
-    box-shadow:             inset 0 0 0 1px #547B5F;
+    box-shadow:             inset 0 0 0 2px #7A9867 !important;
+}
+
+/**
+ * BACKGROUND ON SELECTED ROW IN GRID DURING EDIT
+ */
+.a-GV-table tr.is-selected td.is-active.is-focused,
+.a-GV-table tr.is-selected td.is-active.is-focused input {
+    box-shadow:             inset 0 0 0 2px #7A7363 !important;
 }
 
 
