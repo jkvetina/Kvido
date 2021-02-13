@@ -4,7 +4,7 @@ SELECT
     CASE WHEN n.parent_id IS NOT NULL
         THEN '&' || 'nbsp; ' || '&' || 'nbsp; ' || '&' || 'nbsp; '
         END ||
-    CASE WHEN n.page_id = apex.get_item('P910_PEEK_PAGE')  -- nav.*
+    CASE WHEN n.page_id = apex.get_item('$PEEK_PAGE')  -- nav.*
         THEN '<b>' || nav.get_page_label(n.page_name) || '</b>'
         ELSE nav.get_page_label(n.page_name)
         END AS page_name__

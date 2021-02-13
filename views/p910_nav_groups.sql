@@ -5,7 +5,7 @@ SELECT
     g.page_group,
     --
     CASE WHEN MAX(s.procedure_name) IS NOT NULL
-        THEN '<span class="fa fa-check-square" style="" title="Auth procedure exists"></span>'
+        THEN apex.get_icon('fa-check-square', 'Auth procedure exists')
         END AS status,
     --
     NULLIF(COUNT(p.page_id), 0)         AS pages,
