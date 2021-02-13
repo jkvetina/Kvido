@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210130142236'
+,p_last_upd_yyyymmddhh24miss=>'20210213185652'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(64451420967403434)
@@ -272,7 +272,9 @@ wwv_flow_api.create_page_item(
 ,p_name=>'P907_RESET'
 ,p_item_sequence=>10
 ,p_item_plug_id=>wwv_flow_api.id(64451420967403434)
+,p_use_cache_before_default=>'NO'
 ,p_display_as=>'NATIVE_HIDDEN'
+,p_is_persistent=>'N'
 ,p_attribute_01=>'Y'
 );
 wwv_flow_api.create_page_item(

@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210213143251'
+,p_last_upd_yyyymmddhh24miss=>'20210213185620'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(11209131278964036)
@@ -1544,12 +1544,12 @@ wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(11209781214964042)
 ,p_button_sequence=>30
 ,p_button_plug_id=>wwv_flow_api.id(74737587071256293)
-,p_button_name=>'SHOW_NEW'
+,p_button_name=>'SHOW_INCREMENT'
 ,p_button_action=>'REDIRECT_PAGE'
 ,p_button_template_options=>'#DEFAULT#'
 ,p_button_template_id=>wwv_flow_api.id(63744470351014400)
 ,p_button_is_hot=>'Y'
-,p_button_image_alt=>'<span class="fa fa-trigger" title="Show only rows from last reload"></span>'
+,p_button_image_alt=>'<span class="fa fa-trigger fa-rotate-270" title="Show only rows from last reload"></span>'
 ,p_button_position=>'RIGHT_OF_TITLE'
 ,p_button_redirect_url=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.::P901_VIEW_NEW_ONLY:Y'
 );
@@ -1616,8 +1616,7 @@ wwv_flow_api.create_page_item(
 ,p_name=>'P901_RESET'
 ,p_item_sequence=>10
 ,p_item_plug_id=>wwv_flow_api.id(74737587071256293)
-,p_source=>'N'
-,p_source_type=>'STATIC'
+,p_use_cache_before_default=>'NO'
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_is_persistent=>'N'
 ,p_attribute_01=>'Y'

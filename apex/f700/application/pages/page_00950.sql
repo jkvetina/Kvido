@@ -18,12 +18,12 @@ wwv_flow_api.create_page(
 ,p_alias=>'OBJECTS'
 ,p_step_title=>'Database Objects'
 ,p_autocomplete_on_off=>'OFF'
-,p_group_id=>wwv_flow_api.id(64766608684607384)
+,p_group_id=>wwv_flow_api.id(10896609966906033)
 ,p_step_template=>wwv_flow_api.id(64127379571157916)
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210210190416'
+,p_last_upd_yyyymmddhh24miss=>'20210213185745'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(78630282701194274)
@@ -327,7 +327,7 @@ wwv_flow_api.create_page_button(
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(10723333309372988)
 ,p_name=>'P950_RECOMPILE'
-,p_item_sequence=>10
+,p_item_sequence=>20
 ,p_item_plug_id=>wwv_flow_api.id(78630282701194274)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
@@ -335,9 +335,19 @@ wwv_flow_api.create_page_item(
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(10723776396372991)
 ,p_name=>'P950_FORCE'
-,p_item_sequence=>20
+,p_item_sequence=>30
 ,p_item_plug_id=>wwv_flow_api.id(78630282701194274)
 ,p_display_as=>'NATIVE_HIDDEN'
+,p_attribute_01=>'Y'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(11630826122387402)
+,p_name=>'P950_RESET'
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_api.id(78630282701194274)
+,p_use_cache_before_default=>'NO'
+,p_display_as=>'NATIVE_HIDDEN'
+,p_is_persistent=>'N'
 ,p_attribute_01=>'Y'
 );
 wwv_flow_api.create_page_process(

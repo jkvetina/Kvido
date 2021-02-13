@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210211185046'
+,p_last_upd_yyyymmddhh24miss=>'20210213185641'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(54195600298789905)
@@ -559,13 +559,22 @@ wwv_flow_api.create_page_button(
 ,p_button_position=>'RIGHT_OF_TITLE'
 ,p_button_redirect_url=>'f?p=&APP_ID.:902:&SESSION.::&DEBUG.:RP:P902_RESET:Y'
 );
+wwv_flow_api.create_page_button(
+ p_id=>wwv_flow_api.id(11327268964291089)
+,p_button_sequence=>20
+,p_button_plug_id=>wwv_flow_api.id(54195600298789905)
+,p_button_name=>'SWITCH_TO_CHARTS'
+,p_button_action=>'SUBMIT'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>wwv_flow_api.id(63744470351014400)
+,p_button_image_alt=>'<span class="fa fa-bar-chart" title=""></span>'
+,p_button_position=>'RIGHT_OF_TITLE'
+);
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(31286339758817510)
 ,p_name=>'P902_RESET'
 ,p_item_sequence=>10
 ,p_item_plug_id=>wwv_flow_api.id(54195600298789905)
-,p_source=>'N'
-,p_source_type=>'STATIC'
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_is_persistent=>'N'
 ,p_attribute_01=>'Y'
