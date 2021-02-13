@@ -13,14 +13,9 @@ SELECT
     --r.last_updated_on       AS region_changed_at,
     --
     CASE
-        WHEN r.last_updated_on > r.last_updated_on
+        WHEN t.last_ddl_time > r.last_updated_on
             THEN apex.get_icon('fa-warning', 'Synchronize columns in APEX region')
         END AS region_check,
-    --
-    CASE
-        WHEN r.last_updated_on > r.last_updated_on
-            THEN apex.get_developer_page_link(r.page_id, r.region_id)
-        END AS region_check_link,  -- compare just timestamps, region can have view instead of real target
     --
     CASE
         WHEN e.table_name IS NULL
