@@ -118,6 +118,22 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
                 )) p
             WHERE f.file_name           = in_file_name
                 AND in_file_name        LIKE '%.xlsx'
+            UNION ALL
+            SELECT
+                f.file_name,
+                f.blob_content,
+                --
+                1                       AS sheet_id,
+                '-'                     AS sheet_xml_id,
+                '-'                     AS sheet_name,
+                --
+                APEX_DATA_PARSER.DISCOVER (
+                    p_content           => f.blob_content,
+                    p_file_name         => f.file_name
+                )                       AS profile_json
+            FROM uploaded_files f
+            WHERE f.file_name           = in_file_name
+                AND in_file_name        LIKE '%.csv'
         ) LOOP
             -- create sheet record
             INSERT INTO uploaded_file_sheets (
