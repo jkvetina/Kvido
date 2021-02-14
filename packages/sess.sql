@@ -232,8 +232,20 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         in_page_id          sessions.page_id%TYPE       := 0
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
+        --
+        is_active           CHAR(1);
     BEGIN
         sess.init_session(in_user_id);
+
+        -- check app existance
+        BEGIN
+            SELECT 'Y' INTO is_active
+            FROM apps a
+            WHERE a.app_id = in_app_id;
+        EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(tree.app_exception_code, 'APPLICATION_MISSING');
+        END;
 
         -- find and setup workspace
         FOR a IN (
@@ -270,11 +282,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     WHEN OTHERS THEN
         ROLLBACK;
         --
-        IF SQLCODE = -20987 THEN
-            RAISE_APPLICATION_ERROR(tree.app_exception_code, 'APP_MISSING', TRUE);
-            RETURN;
-        END IF;
-        --
         RAISE_APPLICATION_ERROR(tree.app_exception_code, 'CREATE_SESSION_FAILED', TRUE);
     END;
 
@@ -287,6 +294,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
         in_user_id          CONSTANT users.user_id%TYPE := sess.get_user_id();
+        is_developer        CONSTANT CHAR(1)            := CASE WHEN apex.is_developer() THEN 'Y' END;
         --
         is_active           CHAR(1);
         rec                 sessions%ROWTYPE;
@@ -298,6 +306,17 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         IF UPPER(in_user_id) = sess.anonymous_user THEN
             RETURN;
         END IF;
+
+        -- check app availability
+        BEGIN
+            SELECT 'Y' INTO is_active
+            FROM apps a
+            WHERE a.app_id          = sess.get_app_id()
+                AND (a.is_active    = 'Y' OR is_developer = 'Y');
+        EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(tree.app_exception_code, 'APPLICATION_OFFLINE');
+        END;
 
         -- make sure user exists (after successful authentication)
         BEGIN

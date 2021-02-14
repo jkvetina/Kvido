@@ -11,6 +11,10 @@ CREATE TABLE user_roles (
     --
     CONSTRAINT fk_users_roles_role_id FOREIGN KEY (role_id)
         REFERENCES roles (role_id)
+    CONSTRAINT fk_users_roles_role_id
+        FOREIGN KEY (app_id, role_id)
+        REFERENCES roles (app_id, role_id),
+    --
 )
 STORAGE (BUFFER_POOL KEEP);
 --
