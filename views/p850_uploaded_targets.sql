@@ -15,8 +15,8 @@ SELECT
     --
     apex.get_page_link (
         in_page_id      => sess.get_page_id(),
-        in_names        => 'P850_FILE,P850_SHEET,P850_TARGET',
-        in_values       => s.file_name || ',' || s.sheet_id || ',' || u.uploader_id
+        in_names        => 'P850_RESET,P850_TARGET',
+        in_values       => ',' || u.uploader_id
     ) AS target_url
 FROM p860_uploaders_possible u
 CROSS JOIN s

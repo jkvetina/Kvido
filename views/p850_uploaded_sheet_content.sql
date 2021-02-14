@@ -12,8 +12,8 @@ SELECT
     --
     apex.get_page_link (
         in_page_id      => sess.get_page_id(),
-        in_names        => 'P850_FILE,P850_SHEET,P850_SHOW_COLS',
-        in_values       => s.file_name || ',' || s.sheet_id || ',Y'
+        in_names        => 'P850_RESET,P850_SHOW_COLS,P850_TARGET',
+        in_values       => ',Y,' || NVL(apex.get_item('$TARGET'), s.uploader_id)
     ) AS target_url
 FROM s
 UNION ALL
@@ -24,8 +24,8 @@ SELECT
     --
     apex.get_page_link (
         in_page_id      => sess.get_page_id(),
-        in_names        => 'P850_FILE,P850_SHEET,P850_SHOW_DATA',
-        in_values       => s.file_name || ',' || s.sheet_id || ',Y'
+        in_names        => 'P850_RESET,P850_SHOW_COLS,P850_TARGET',
+        in_values       => ',Y,' || NVL(apex.get_item('$TARGET'), s.uploader_id)
     ) AS target_url
 FROM s;
 
