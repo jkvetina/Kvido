@@ -311,5 +311,15 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         tree.raise_error();
     END;
 
+
+
+    FUNCTION get_dml_err_table_name (
+        in_table_name       VARCHAR2
+    )
+    RETURN VARCHAR2 AS
+    BEGIN
+        RETURN in_table_name || '_ERR';
+    END;
+
 END;
 /

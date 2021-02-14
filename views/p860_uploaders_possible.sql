@@ -2,17 +2,18 @@ CREATE OR REPLACE VIEW p860_uploaders_possible AS
 WITH u AS (
     SELECT
         u.uploader_id,
+        MAX(u.is_active)    AS is_active,
         MAX(m.updated_at)   AS updated_at
     FROM uploaders u
     LEFT JOIN uploaders_mapping m
         ON m.app_id         = u.app_id
         AND m.uploader_id   = u.uploader_id
     WHERE u.app_id          = sess.get_app_id()
-        AND u.is_active     = 'Y'
     GROUP BY u.uploader_id
 )
 SELECT
     u.uploader_id,
+    u.is_active,
     t.object_name           AS table_name,
     --
     r.page_id,
@@ -50,7 +51,7 @@ SELECT
         END AS err_table_link
 FROM user_objects t
 LEFT JOIN user_tables e
-    ON e.table_name         = t.object_name || '_ERR'   -- @TODO: fix hardcoded value
+    ON e.table_name         = uploader.get_dml_err_table_name(t.object_name)
 JOIN apex_application_page_regions r
     ON r.application_id     = sess.get_app_id()
     AND r.static_id         = t.object_name

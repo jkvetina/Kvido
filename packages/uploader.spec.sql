@@ -51,5 +51,12 @@ CREATE OR REPLACE PACKAGE uploader AS
         in_clear_current    BOOLEAN                                 := FALSE
     );
 
+
+
+    FUNCTION get_dml_err_table_name (
+        in_table_name       VARCHAR2
+    )
+    RETURN VARCHAR2;
+
 END;
 /

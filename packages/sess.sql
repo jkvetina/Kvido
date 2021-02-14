@@ -474,8 +474,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             COMMIT;
             APEX_UTIL.REDIRECT_URL(APEX_PAGE.GET_URL(p_session => 0));  -- force new login
         END LOOP;
-    --EXCEPTION
-    --WHEN APEX_APPLICATION.E_STOP_APEX_ENGINE THEN  -- throws this exception
     EXCEPTION
     WHEN tree.app_exception THEN
         RAISE;
