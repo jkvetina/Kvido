@@ -6,6 +6,7 @@ CREATE TABLE uploaders_mapping (
     --
     is_key              CHAR(1),
     is_nn               CHAR(1),
+    is_hidden           CHAR(1),
     --
     source_column       VARCHAR2(64),
     overwrite_value     VARCHAR2(256),
@@ -39,6 +40,7 @@ COMMENT ON COLUMN uploaders_mapping.target_column       IS 'Real database column
 --
 COMMENT ON COLUMN uploaders_mapping.is_key              IS 'Flag to use column as key (primary key, unique)';
 COMMENT ON COLUMN uploaders_mapping.is_nn               IS 'Flag to require value on upload';
+COMMENT ON COLUMN uploaders_mapping.is_hidden           IS 'Flag to hide column in target evaluation';
 --
 COMMENT ON COLUMN uploaders_mapping.source_column       IS 'Source column name from uploaded file';
 COMMENT ON COLUMN uploaders_mapping.overwrite_value     IS 'Overwrite uploaded value with this';

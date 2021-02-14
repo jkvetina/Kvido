@@ -7,6 +7,7 @@ SELECT
     --
     CASE WHEN p.column_name IS NOT NULL THEN 'Y' END AS is_key,
     CASE WHEN c.nullable = 'N'          THEN 'Y' END AS is_nn,
+    m.is_hidden,
     --
     NULL AS data_type,
     --
@@ -26,5 +27,4 @@ LEFT JOIN uploaders_mapping m
     ON m.app_id             = sess.get_app_id()
     AND m.uploader_id       = u.uploader_id
     AND m.target_column     = c.column_name;
-
 
