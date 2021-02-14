@@ -334,7 +334,51 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
     )
     RETURN VARCHAR2 AS
     BEGIN
-        RETURN in_table_name || '_ERR';
+        RETURN in_table_name || uploader.dml_tables_postfix;
+    END;
+
+
+
+    PROCEDURE rebuild_dml_err_table (
+        in_table_name       uploaders.target_table%TYPE
+    ) AS
+    BEGIN
+        tree.log_module(in_table_name);
+
+        -- drop table if exists
+        BEGIN
+            EXECUTE IMMEDIATE
+                'DROP TABLE ' || uploader.get_dml_err_table_name(in_table_name) || ' PURGE';
+        EXCEPTION
+        WHEN OTHERS THEN
+            NULL;
+        END;
+
+        -- recreate as empty table
+        DBMS_ERRLOG.CREATE_ERROR_LOG (
+            dml_table_name          => 'DUAL',
+            err_log_table_owner     => uploader.dml_tables_owner,
+            err_log_table_name      => uploader.get_dml_err_table_name(in_table_name),
+            skip_unsupported        => TRUE
+        );
+        --
+        EXECUTE IMMEDIATE
+            'ALTER TABLE ' || uploader.get_dml_err_table_name(in_table_name) ||
+            ' DROP COLUMN DUMMY';
+
+        -- add numbered columns
+        FOR col IN 1 .. uploader.dml_tables_cols LOOP
+            EXECUTE IMMEDIATE
+                'ALTER TABLE ' || uploader.get_dml_err_table_name(in_table_name) ||
+                ' ADD COL' || LPAD(col, 3, '0') || ' VARCHAR2(4000)';
+        END LOOP;
+        --
+        tree.update_timer();
+    EXCEPTION
+    WHEN tree.app_exception THEN
+        RAISE;
+    WHEN OTHERS THEN
+        tree.raise_error();
     END;
 
 END;

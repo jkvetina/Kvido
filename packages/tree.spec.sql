@@ -80,7 +80,7 @@ CREATE OR REPLACE PACKAGE tree AS
     PRAGMA EXCEPTION_INIT(app_exception, app_exception_code);
 
     -- owner of DML error tables
-    dml_tables_owner        CONSTANT VARCHAR2(30)       := USER;
+    dml_tables_owner        CONSTANT VARCHAR2(30)       := 'DEV';
     dml_tables_postfix      CONSTANT VARCHAR2(30)       := '_E$';
 
     -- arrays to specify adhoc requests

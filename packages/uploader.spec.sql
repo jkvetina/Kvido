@@ -1,5 +1,12 @@
 CREATE OR REPLACE PACKAGE uploader AS
 
+    -- DML ERR tables just for Uploder to investigate failed rows
+    dml_tables_owner        CONSTANT VARCHAR2(30)       := 'DEV';
+    dml_tables_postfix      CONSTANT VARCHAR2(30)       := '_U$';
+    dml_tables_cols         CONSTANT NUMBER(4)          := 60;
+
+
+
     PROCEDURE upload_file (
         in_session_id       sessions.session_id%TYPE,
         in_file_name        uploaded_files.file_name%TYPE,
@@ -57,6 +64,12 @@ CREATE OR REPLACE PACKAGE uploader AS
         in_table_name       VARCHAR2
     )
     RETURN VARCHAR2;
+
+
+
+    PROCEDURE rebuild_dml_err_table (
+        in_table_name       uploaders.target_table%TYPE
+    );
 
 END;
 /

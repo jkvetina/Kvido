@@ -34,21 +34,10 @@ SELECT
             THEN apex.get_icon('fa-warning', 'Synchronize columns in APEX region')
         END AS region_check,
     --
-    apex.get_developer_page_link(r.page_id, r.region_id) AS region_check_link,
-    --
     CASE
         WHEN e.table_name IS NULL
             THEN apex.get_icon('fa-plus-square', 'Create table to catch DML errors')
-        END AS err_table,
-    --
-    CASE
-        WHEN e.table_name IS NULL
-            THEN apex.get_page_link (
-                in_page_id      => sess.get_page_id(),
-                in_names        => '$ERR_CREATE',
-                in_values       => 'Y'
-            )
-        END AS err_table_link
+        END AS err_table
 FROM user_objects t
 LEFT JOIN user_tables e
     ON e.table_name         = uploader.get_dml_err_table_name(t.object_name)

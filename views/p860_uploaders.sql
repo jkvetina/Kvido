@@ -20,9 +20,7 @@ SELECT
     --
     p.mappings_check,
     p.region_check,
-    p.region_check_link,
-    p.err_table,
-    p.err_table_link
+    p.err_table
 FROM uploaders u
 LEFT JOIN p860_uploaders_possible p
     ON p.uploader_id    = u.uploader_id
@@ -57,9 +55,7 @@ SELECT
     --
     p.mappings_check,
     p.region_check,
-    p.region_check_link,
-    p.err_table,
-    p.err_table_link
+    p.err_table
 FROM p860_uploaders_possible p
 WHERE p.uploader_id IS NULL;
 

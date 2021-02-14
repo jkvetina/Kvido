@@ -12,6 +12,7 @@ GRANT EXECUTE ON DBMS_SESSION           TO dev;
 GRANT EXECUTE ON DBMS_SCHEDULER         TO dev;
 GRANT EXECUTE ON DBMS_PROFILER          TO dev;
 GRANT EXECUTE ON DBMS_HPROF             TO dev;
+GRANT EXECUTE ON DBMS_ERRLOG            TO dev;
 --
 GRANT SELECT ON v$sql                   TO dev;
 GRANT SELECT ON v$sql_cursor            TO dev;
