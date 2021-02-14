@@ -156,6 +156,8 @@ BEGIN
     END LOOP;
 END;
 /
+--
+PURGE RECYCLEBIN;
 
 
 
