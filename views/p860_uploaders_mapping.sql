@@ -7,8 +7,13 @@ SELECT
     --
     CASE WHEN p.column_name IS NOT NULL THEN 'Y' END AS is_key,
     CASE WHEN c.nullable = 'N'          THEN 'Y' END AS is_nn,
-    m.is_hidden,
     --
+    CASE WHEN m.target_column IS NULL AND c.column_name IN (
+            'UPDATED_BY', 'UPDATED_AT',
+            'CREATED_BY', 'CREATED_AT'
+        ) THEN 'Y'
+        ELSE m.is_hidden
+        END AS is_hidden,
     --
     c.data_type ||
     CASE
