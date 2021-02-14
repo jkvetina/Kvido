@@ -13,26 +13,14 @@ SELECT
         in_values       => u.file_name || ',1'
     ) AS target_url,
     --
+    uploader.get_basename(u.file_name) AS file_basename,
+    --
     u.file_name,
     u.file_size,
     u.mime_type,
     u.uploader_id,
     u.updated_by,
-    u.updated_at,
-    r.files
+    u.updated_at
 FROM uploaded_files u
-JOIN (
-    SELECT
-        u.app_id,
-        u.session_id,
-        MAX(u.updated_at)   AS updated_at,
-        COUNT(*)            AS files
-    FROM uploaded_files u
-    WHERE u.app_id          = sess.get_app_id()
-        AND u.session_id    = sess.get_session_id()
-    GROUP BY u.app_id, u.session_id
-) r
-    ON r.app_id             = u.app_id
-    AND r.session_id        = u.session_id
-    AND r.updated_at        = u.updated_at;
+WHERE u.app_id          = sess.get_app_id();
 
