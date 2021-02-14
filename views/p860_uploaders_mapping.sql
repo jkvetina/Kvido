@@ -9,7 +9,20 @@ SELECT
     CASE WHEN c.nullable = 'N'          THEN 'Y' END AS is_nn,
     m.is_hidden,
     --
-    NULL AS data_type,
+    --
+    c.data_type ||
+    CASE
+        WHEN c.data_type LIKE '%CHAR%' OR c.data_type = 'RAW' THEN
+            DECODE(NVL(c.char_length, 0), 0, '',
+                '(' || c.char_length || DECODE(c.char_used, 'C', ' CHAR', '') || ')'
+            )
+        WHEN c.data_type = 'NUMBER' THEN
+            DECODE(NVL(c.data_precision || c.data_scale, 0), 0, '',
+                DECODE(NVL(c.data_scale, 0), 0, '(' || c.data_precision || ')',
+                    '(' || c.data_precision || ',' || c.data_scale || ')'
+                )
+            )
+        END AS data_type,
     --
     c.column_name AS source_column,
     --
