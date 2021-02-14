@@ -8,7 +8,7 @@ CREATE TABLE logs (
     log_parent          INTEGER,                    -- DONT PUT FK ON IT TO AVOID DEADLOCKS
     --
     user_id             VARCHAR2(30)    NOT NULL,   -- reference to users table
-    app_id              NUMBER(4)       NOT NULL,
+    app_id              NUMBER(4)       NOT NULL,   -- reference to apps table
     page_id             NUMBER(6)       NOT NULL,
     flag                CHAR(1)         NOT NULL,
     --
@@ -24,7 +24,8 @@ CREATE TABLE logs (
     timer               VARCHAR2(15),
     created_at          TIMESTAMP       NOT NULL,
     --
-    CONSTRAINT pk_logs PRIMARY KEY (log_id)
+    CONSTRAINT pk_logs
+        PRIMARY KEY (log_id)
     --
     -- NO MORE CONSTRAINTS TO KEEP THIS AS FAST AS POSSIBLE
     --

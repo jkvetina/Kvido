@@ -1,4 +1,4 @@
---DROP TABLE uploaded_files;
+--DROP TABLE uploaded_files CASCADE CONSTRAINTS;
 CREATE TABLE uploaded_files (
     file_name           VARCHAR2(255)   NOT NULL,
     file_size           NUMBER          NOT NULL,

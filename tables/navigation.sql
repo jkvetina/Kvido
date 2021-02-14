@@ -15,6 +15,10 @@ CREATE TABLE navigation (
     CONSTRAINT pk_navigation
         PRIMARY KEY (app_id, page_id),
     --
+    CONSTRAINT fk_navigation_app_id
+        FOREIGN KEY (app_id)
+        REFERENCES apps (app_id),
+    --
     CONSTRAINT fk_navigation_parent
         FOREIGN KEY (app_id, parent_id)
         REFERENCES navigation (app_id, page_id),

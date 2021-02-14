@@ -21,6 +21,10 @@ CREATE TABLE navigation_extras (
     CONSTRAINT pk_navigation_extras
         PRIMARY KEY (app_id, page_alias),
     --
+    CONSTRAINT fk_navigation_extras_app_id
+        FOREIGN KEY (app_id)
+        REFERENCES apps (app_id),
+    --
     CONSTRAINT ch_navigation_extras_is_hidden
         CHECK (is_hidden = 'Y' OR is_hidden IS NULL)
 )
@@ -30,6 +34,7 @@ COMMENT ON TABLE  navigation_extras                 IS 'Virtual pages (most like
 --
 COMMENT ON COLUMN navigation_extras.app_id          IS 'APEX application ID';
 COMMENT ON COLUMN navigation_extras.page_alias      IS 'APEX page alias';
+--
 COMMENT ON COLUMN navigation_extras.page_name       IS 'Page name (incl. icons)';
 COMMENT ON COLUMN navigation_extras.page_title      IS 'Title for bubble tips';
 COMMENT ON COLUMN navigation_extras.page_target     IS 'Overload target';

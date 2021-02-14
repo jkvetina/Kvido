@@ -11,12 +11,15 @@ CREATE TABLE logs_lobs (
     payload_xml         XMLTYPE,
     payload_json        CLOB,
     --
-    CONSTRAINT pk_logs_lobs PRIMARY KEY (log_id),
+    CONSTRAINT pk_logs_lobs
+        PRIMARY KEY (log_id),
     --
-    CONSTRAINT fk_logs_lobs_logs FOREIGN KEY (log_parent)
+    CONSTRAINT fk_logs_lobs_logs
+        FOREIGN KEY (log_parent)
         REFERENCES logs (log_id),
     --
-    CONSTRAINT ch_logs_lobs_json CHECK (payload_json IS JSON)
+    CONSTRAINT ch_logs_lobs_json
+        CHECK (payload_json IS JSON)
 );
 --
 -- STORE INLINE OF POSSIBLE -> ENABLE STORAGE IN ROW, DB_BLOCK_SIZE 8K

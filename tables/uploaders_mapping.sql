@@ -24,8 +24,12 @@ CREATE TABLE uploaders_mapping (
         CHECK (is_key = 'Y' OR is_key IS NULL),
     --
     CONSTRAINT ch_uploaders_mapping_is_nn
-        CHECK (is_nn = 'Y' OR is_nn IS NULL)
-);
+        CHECK (is_nn = 'Y' OR is_nn IS NULL),
+    --
+    CONSTRAINT ch_uploaders_mapping_is_hidden
+        CHECK (is_hidden = 'Y' OR is_hidden IS NULL)
+)
+STORAGE (BUFFER_POOL KEEP);
 --
 COMMENT ON TABLE uploaders_mapping                      IS 'Transformations from source to target columns';
 --

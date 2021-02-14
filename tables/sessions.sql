@@ -13,13 +13,21 @@ CREATE TABLE sessions (
     created_at          DATE            NOT NULL,
     updated_at          DATE            NOT NULL,
     --
-    CONSTRAINT pk_sessions PRIMARY KEY (session_id),
+    CONSTRAINT pk_sessions
+        PRIMARY KEY (session_id),
     --
-    CONSTRAINT fk_sessions_users FOREIGN KEY (user_id)
+    CONSTRAINT fk_sessions_users
+        FOREIGN KEY (user_id)
         REFERENCES users (user_id),
     --
-    CONSTRAINT ch_sessions_apex_items_json CHECK (apex_items IS JSON)
-);
+    CONSTRAINT fk_sessions_app_id
+        FOREIGN KEY (app_id)
+        REFERENCES apps (app_id),
+
+    CONSTRAINT ch_sessions_apex_items_json
+        CHECK (apex_items IS JSON)
+)
+STORAGE (BUFFER_POOL KEEP);
 --
 CREATE INDEX fk_sessions_users ON sessions (user_id) COMPUTE STATISTICS;
 --

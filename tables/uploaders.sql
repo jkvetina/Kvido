@@ -1,4 +1,4 @@
---DROP TABLE uploaders;
+--DROP TABLE uploaders CASCADE CONSTRAINTS;
 CREATE TABLE uploaders (
     app_id              NUMBER(4)       NOT NULL,
     uploader_id         VARCHAR2(30)    NOT NULL,
@@ -8,7 +8,7 @@ CREATE TABLE uploaders (
     --
     pre_procedure       VARCHAR2(61),
     post_procedure      VARCHAR2(61),
-    is_active           VARCHAR2(1),
+    is_active           CHAR(1),
     --
     updated_by          VARCHAR2(30),
     updated_at          DATE,
@@ -23,12 +23,10 @@ CREATE TABLE uploaders (
         FOREIGN KEY (app_id, target_page_id)
         REFERENCES navigation (app_id, page_id),
     --
-    CONSTRAINT ch_uploaders_post_redirect
-        CHECK (post_redirect = 'Y' OR post_redirect IS NULL),
-    --
     CONSTRAINT ch_uploaders_is_active
         CHECK (is_active = 'Y' OR is_active IS NULL)
-);
+)
+STORAGE (BUFFER_POOL KEEP);
 --
 COMMENT ON TABLE uploaders                      IS 'List of tables available to users for upload';
 --
