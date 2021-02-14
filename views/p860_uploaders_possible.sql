@@ -8,6 +8,7 @@ WITH u AS (
         ON m.app_id         = u.app_id
         AND m.uploader_id   = u.uploader_id
     WHERE u.app_id          = sess.get_app_id()
+        AND u.is_active     = 'Y'
     GROUP BY u.uploader_id
 )
 SELECT

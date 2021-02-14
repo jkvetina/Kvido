@@ -27,6 +27,7 @@ FROM uploaders u
 LEFT JOIN p860_uploaders_possible p
     ON p.uploader_id    = u.uploader_id
 WHERE u.app_id          = sess.get_app_id()
+    AND u.is_active     = 'Y'
 UNION ALL
 SELECT
     p.table_name        AS uploader_id,

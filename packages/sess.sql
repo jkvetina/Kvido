@@ -288,6 +288,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         --
         in_user_id          CONSTANT users.user_id%TYPE := sess.get_user_id();
         --
+        is_active           CHAR(1);
         rec                 sessions%ROWTYPE;
         req                 VARCHAR2(4000);
         --
@@ -300,13 +301,19 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
         -- make sure user exists (after successful authentication)
         BEGIN
-            SELECT u.user_id INTO rec.user_id
+            SELECT u.user_id, u.is_active
+            INTO rec.user_id, is_active
             FROM users u
             WHERE u.user_id = in_user_id;
+            --
+            IF is_active IS NULL THEN
+                RAISE_APPLICATION_ERROR(tree.app_exception_code, 'ACCOUNT_DISABLED');
+            END IF;
         EXCEPTION
         WHEN NO_DATA_FOUND THEN
             BEGIN
                 sess_create_user(in_user_id);
+                --
                 rec.user_id := in_user_id;
             EXCEPTION
             WHEN OTHERS THEN
