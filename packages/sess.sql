@@ -219,9 +219,12 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         --
         COMMIT;
     EXCEPTION
+    WHEN tree.app_exception THEN
+        RAISE;
     WHEN OTHERS THEN
         ROLLBACK;
-        RAISE_APPLICATION_ERROR(tree.app_exception_code, 'CREATE_SESSION_FAILED', TRUE);
+        --
+        tree.raise_error('CREATE_SESSION_FAILED');
     END;
 
 
@@ -279,10 +282,14 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         --
         COMMIT;
     EXCEPTION
+    WHEN tree.app_exception THEN
+        RAISE;
+    WHEN APEX_APPLICATION.E_STOP_APEX_ENGINE THEN
+        NULL;
     WHEN OTHERS THEN
         ROLLBACK;
         --
-        RAISE_APPLICATION_ERROR(tree.app_exception_code, 'CREATE_SESSION_FAILED', TRUE);
+        tree.raise_error('CREATE_SESSION_FAILED');
     END;
 
 
@@ -348,25 +355,9 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         rec.updated_at      := SYSDATE;
         --
         IF rec.page_id BETWEEN sess.app_min_page AND sess.app_max_page THEN
-            -- check for global items change requests
-            req := SUBSTR(sess.get_request(), 1, 4000);
-            FOR c IN (
-                SELECT t.item_name, t.item_value
-                FROM (
-                    SELECT
-                        REPLACE(REGEXP_SUBSTR(req, '[^&' || ']+[=]', 1, LEVEL), '=', '')                                            AS item_name,
-                        REPLACE(REGEXP_SUBSTR(req, '[^&' || ']+',    1, LEVEL), REGEXP_SUBSTR(req, '[^&' || ']+[=]', 1, LEVEL), '') AS item_value
-                    FROM DUAL
-                    CONNECT BY LEVEL <= REGEXP_COUNT(req, '&' || 'G') + 1
-                ) t
-                JOIN apex_application_items a
-                    ON a.application_id     = rec.app_id
-                    AND a.item_name         = t.item_name
-            ) LOOP
-                apex.set_item(c.item_name, c.item_value);
-            END LOOP;
-
             -- automatic items reset, co no need for reset page process
+            req := SUBSTR(sess.get_request(), 1, 4000);
+            --
             IF REGEXP_LIKE(req, '[:,]' || 'P' || rec.page_id || '_RESET' || '[,:]') THEN  -- @TODO: should check also Y value
                 apex.clear_items();
             ELSIF req LIKE '%p' || rec.page_id || '_reset=Y%' THEN  -- for friendly url
@@ -415,11 +406,14 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             );
         END IF;
     EXCEPTION
+    WHEN tree.app_exception THEN
+        RAISE;
     WHEN APEX_APPLICATION.E_STOP_APEX_ENGINE THEN
         NULL;
     WHEN OTHERS THEN
         ROLLBACK;
-        RAISE_APPLICATION_ERROR(tree.app_exception_code, 'UPDATE_SESSION_FAILED', TRUE);
+        --
+        tree.raise_error('UPDATE_SESSION_FAILED');
     END;
 
 
@@ -458,6 +452,11 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         END IF;
         --
         tree.update_timer();
+    EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        --
+        tree.raise_error('DELETE_SESSION_FAILED');
     END;
 
 
@@ -477,6 +476,13 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         END LOOP;
     --EXCEPTION
     --WHEN APEX_APPLICATION.E_STOP_APEX_ENGINE THEN  -- throws this exception
+    EXCEPTION
+    WHEN tree.app_exception THEN
+        RAISE;
+    WHEN APEX_APPLICATION.E_STOP_APEX_ENGINE THEN
+        NULL;
+    WHEN OTHERS THEN
+        tree.raise_error('FORCE_NEW_SESSION_FAILED');
     END;
 
 
