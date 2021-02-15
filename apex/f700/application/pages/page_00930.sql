@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210214155148'
+,p_last_upd_yyyymmddhh24miss=>'20210215214453'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(11632469671387418)
@@ -1011,6 +1011,14 @@ wwv_flow_api.create_page_item(
 ,p_use_cache_before_default=>'NO'
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_is_persistent=>'N'
+,p_attribute_01=>'Y'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(12477527831064814)
+,p_name=>'P930_USER_ID'
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_api.id(11633635501387430)
+,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
 );
 wwv_flow_api.create_page_process(
