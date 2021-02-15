@@ -5,12 +5,12 @@ WITH r AS (
         COUNT(*)            AS logs_
     FROM logs l
     WHERE l.app_id          = sess.get_app_id()
+        AND l.created_at    >= app.get_date()
+        AND l.created_at    <  app.get_date() + 1
     GROUP BY l.session_id
 )
 SELECT
     s.app_id,
-    TO_CHAR(s.updated_at, 'YYYY-MM-DD') AS today,
-    --
     s.session_id,
     s.user_id,
     s.page_id,
@@ -30,5 +30,8 @@ FROM sessions s
 LEFT JOIN r
     ON r.session_id     = s.session_id
 WHERE s.app_id          = sess.get_app_id()
-    AND s.session_id    = NVL(apex.get_item('P902_SESSION_ID'), s.session_id)
-    AND s.user_id       = NVL(apex.get_item('P902_USER_ID'),    s.user_id);
+    AND s.session_id    = NVL(apex.get_item('$SESSION_ID'), s.session_id)
+    AND s.user_id       = NVL(apex.get_item('$USER_ID'),    s.user_id)
+    AND s.updated_at    >= app.get_date()
+    AND s.updated_at    <  app.get_date() + 1;
+

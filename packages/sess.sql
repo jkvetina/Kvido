@@ -508,5 +508,32 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         RETURN NULL;
     END;
 
+
+
+    FUNCTION get_time_bucket (
+        in_date             DATE,
+        in_interval         NUMBER
+    )
+    RETURN NUMBER
+    RESULT_CACHE
+    AS
+        out_group_id        NUMBER;
+    BEGIN
+        WITH x AS (
+            SELECT
+                LEVEL AS group_id,
+                TRUNC(in_date) + NUMTODSINTERVAL((LEVEL - 1) * in_interval, 'MINUTE') AS start_at,
+                TRUNC(in_date) + NUMTODSINTERVAL( LEVEL      * in_interval, 'MINUTE') AS end_at
+            FROM DUAL
+            CONNECT BY LEVEL <= (1440 / in_interval)
+        )
+        SELECT x.group_id INTO out_group_id
+        FROM x
+        WHERE in_date       >= x.start_at
+            AND in_date     <  x.end_at;
+        --
+        RETURN out_group_id;
+    END;
+
 END;
 /

@@ -229,5 +229,17 @@ CREATE OR REPLACE PACKAGE sess AS
     )
     RETURN sessions.apex_items%TYPE;
 
+
+
+    --
+    -- Convert date or timestamp into time bucket
+    --
+    FUNCTION get_time_bucket (
+        in_date             DATE,
+        in_interval         NUMBER
+    )
+    RETURN NUMBER
+    RESULT_CACHE;
+
 END;
 /
