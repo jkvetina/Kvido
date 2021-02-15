@@ -1522,9 +1522,11 @@ wwv_flow_api.create_page_button(
 ,p_button_action=>'REDIRECT_PAGE'
 ,p_button_template_options=>'#DEFAULT#'
 ,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_image_alt=>'<span class="fa fa-bar-chart" title=""></span>'
+,p_button_image_alt=>'<span class="fa fa-bar-chart" title="Switch to Charts"></span>'
 ,p_button_position=>'RIGHT_OF_TITLE'
 ,p_button_redirect_url=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.::P901_VIEW_CHARTS:Y'
+,p_button_condition=>'P901_VIEW_CHARTS'
+,p_button_condition_type=>'ITEM_IS_NULL'
 );
 wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(31299006846840701)
@@ -1541,8 +1543,22 @@ wwv_flow_api.create_page_button(
 ,p_button_condition_type=>'ITEM_IS_NOT_NULL'
 );
 wwv_flow_api.create_page_button(
- p_id=>wwv_flow_api.id(11209781214964042)
+ p_id=>wwv_flow_api.id(12341209859558318)
 ,p_button_sequence=>30
+,p_button_plug_id=>wwv_flow_api.id(74737587071256293)
+,p_button_name=>'SWITCH_TO_GRID'
+,p_button_action=>'REDIRECT_PAGE'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>wwv_flow_api.id(63744470351014400)
+,p_button_image_alt=>'<span class="fa fa-table-search" title="Switch to Grid view"></span>'
+,p_button_position=>'RIGHT_OF_TITLE'
+,p_button_redirect_url=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.::P901_VIEW_CHARTS:'
+,p_button_condition=>'P901_VIEW_CHARTS'
+,p_button_condition_type=>'ITEM_IS_NOT_NULL'
+);
+wwv_flow_api.create_page_button(
+ p_id=>wwv_flow_api.id(11209781214964042)
+,p_button_sequence=>40
 ,p_button_plug_id=>wwv_flow_api.id(74737587071256293)
 ,p_button_name=>'SHOW_INCREMENT'
 ,p_button_action=>'REDIRECT_PAGE'
