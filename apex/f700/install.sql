@@ -10,6 +10,7 @@ prompt --install
 @@application/shared_components/navigation/lists/access_control.sql
 @@application/shared_components/navigation/lists/nav_top.sql
 @@application/shared_components/files/app_css.sql
+@@application/shared_components/files/app_js.sql
 @@application/shared_components/files/fonts_css.sql
 @@application/plugin_settings.sql
 @@application/shared_components/security/authorizations/nobody_hidden.sql
@@ -20,6 +21,7 @@ prompt --install
 @@application/shared_components/logic/application_processes/on_ajax_callback.sql
 @@application/shared_components/logic/application_processes/on_new_instance.sql
 @@application/shared_components/logic/application_processes/on_submit_before_validation.sql
+@@application/shared_components/logic/application_items/g_date.sql
 @@application/shared_components/logic/application_settings.sql
 @@application/shared_components/navigation/tabs/standard.sql
 @@application/shared_components/navigation/tabs/parent.sql

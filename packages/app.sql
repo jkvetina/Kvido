@@ -41,7 +41,11 @@ CREATE OR REPLACE PACKAGE BODY app AS
     FUNCTION get_date
     RETURN DATE AS
     BEGIN
-        RETURN TO_DATE(COALESCE(apex.get_item('G_DATE'), SYSDATE), sess.format_date);
+        IF apex.get_item('G_DATE') IS NOT NULL THEN
+            RETURN TO_DATE(apex.get_item('G_DATE'), sess.format_date);
+        END IF;
+        --
+        RETURN TRUNC(SYSDATE);
     EXCEPTION
     WHEN OTHERS THEN
         --IF SQLCODE = -1858 THEN  -- alternative format
@@ -53,7 +57,7 @@ CREATE OR REPLACE PACKAGE BODY app AS
     FUNCTION get_date_str
     RETURN VARCHAR2 AS
     BEGIN
-        RETURN COALESCE(apex.get_item('G_DATE'), TO_CHAR(SYSDATE, sess.format_date));
+        RETURN COALESCE(apex.get_item('G_DATE'), TO_CHAR(TRUNC(SYSDATE), sess.format_date));
     END;
 
 

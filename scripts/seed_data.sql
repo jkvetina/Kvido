@@ -68,7 +68,7 @@ BEGIN
     -- CALENDAR
     --
     INSERT INTO navigation_extras (app_id, page_alias, page_name, order#, css_class)
-    VALUES (in_app_id, 'CALENDAR', '<input value="${DATE}" id="DATE_PICKER" class="DATE_PICKER" />', 851, 'CALENDAR');
+    VALUES (in_app_id, 'CALENDAR', '<input value="${DATE}" id="NAV_CALENDAR" />', 851, 'CALENDAR');
     --
     COMMIT;
 END;

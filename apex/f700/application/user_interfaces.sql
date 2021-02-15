@@ -30,6 +30,7 @@ wwv_flow_api.create_user_interface(
 ,p_css_file_urls=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '#APP_IMAGES#fonts.css?version=#APP_VERSION#',
 '#APP_IMAGES#app.css?version=#APP_VERSION#'))
+,p_javascript_file_urls=>'#APP_IMAGES#app.js?version=#APP_VERSION#'
 ,p_nav_bar_type=>'LIST'
 ,p_nav_bar_list_id=>wwv_flow_api.id(63766650152014448)
 ,p_nav_bar_list_template_id=>wwv_flow_api.id(64163400516768059)

@@ -534,10 +534,10 @@ footer.t-Footer div.t-Footer-top a {  /* LINK TO TOP */
 /**
  * DATE PICKER
  */
-input#DATE_PICKER,
-input#DATE_PICKER:active,
-input#DATE_PICKER:focus,
-input#DATE_PICKER:hover {
+input#NAV_CALENDAR,
+input#NAV_CALENDAR:active,
+input#NAV_CALENDAR:focus,
+input#NAV_CALENDAR:hover {
     display:                block;
     background:             #444;
     color:                  #fff;
@@ -553,9 +553,9 @@ input#DATE_PICKER:hover {
     text-align:             center;
     outline:                none;
 }
-input#DATE_PICKER:active,
-input#DATE_PICKER:focus,
-input#DATE_PICKER:hover {
+input#NAV_CALENDAR:active,
+input#NAV_CALENDAR:focus,
+input#NAV_CALENDAR:hover {
     background:             #333;
 }
 
