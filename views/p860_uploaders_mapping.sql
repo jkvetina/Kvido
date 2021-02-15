@@ -5,15 +5,19 @@ SELECT
     c.column_id,
     c.column_name           AS target_column,
     --
-    CASE WHEN p.column_name IS NOT NULL THEN 'Y' END AS is_key,
-    CASE WHEN c.nullable = 'N'          THEN 'Y' END AS is_nn,
+    m.is_key,
+    m.is_nn,
+    m.is_hidden,
+    --
+    CASE WHEN p.column_name IS NOT NULL THEN 'Y' END AS is_key_def,
+    CASE WHEN c.nullable = 'N'          THEN 'Y' END AS is_nn_def,
     --
     CASE WHEN m.target_column IS NULL AND c.column_name IN (
             'UPDATED_BY', 'UPDATED_AT',
             'CREATED_BY', 'CREATED_AT'
         ) THEN 'Y'
         ELSE m.is_hidden
-        END AS is_hidden,
+        END AS is_hidden_def,
     --
     c.data_type ||
     CASE

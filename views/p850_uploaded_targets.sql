@@ -20,5 +20,9 @@ SELECT
     ) AS target_url
 FROM p860_uploaders_possible u
 CROSS JOIN s
-WHERE u.is_active = 'Y';
+WHERE u.is_active = 'Y'
+    AND 1 = CASE
+        WHEN u.uploader_id IS NOT NULL AND u.uploader_id != apex.get_item('$TARGET')
+            THEN 0
+        ELSE 1 END;
 

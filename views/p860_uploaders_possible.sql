@@ -51,5 +51,3 @@ LEFT JOIN u
     ON u.uploader_id        = r.static_id
 WHERE t.object_type         IN ('TABLE', 'VIEW');
 
-
-

@@ -292,14 +292,15 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         ) LOOP
             INSERT INTO uploaders_mapping (
                 app_id, uploader_id, target_column,
-                is_key, is_nn, source_column, overwrite_value
+                is_key, is_nn, is_hidden, source_column, overwrite_value
             )
             VALUES (
                 c.app_id,
                 c.uploader_id,
                 c.target_column,
-                c.is_key,
-                c.is_nn,
+                c.is_key_def,
+                c.is_nn_def,
+                c.is_hidden_def,
                 c.source_column,
                 c.overwrite_value
             );
@@ -311,6 +312,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
                 UPDATE uploaders_mapping m
                 SET m.is_key                = curr_mappings(i).is_key,
                     m.is_nn                 = curr_mappings(i).is_nn,
+                    m.is_hidden             = curr_mappings(i).is_hidden,
                     m.source_column         = curr_mappings(i).source_column,
                     m.overwrite_value       = curr_mappings(i).overwrite_value
                 WHERE m.app_id              = curr_mappings(i).app_id

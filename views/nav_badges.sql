@@ -33,21 +33,7 @@ SELECT
     TO_CHAR(COUNT(l.log_id))    AS badge
 FROM logs l
 WHERE l.created_at              >= TRUNC(SYSDATE)
-    AND auth.is_developer       = 'Y'
-UNION ALL
---
-SELECT
-    851                         AS page_id,
-    NULL                        AS page_alias,
-    TO_CHAR(COUNT(*))           AS badge
-FROM uploaded_files u
-WHERE (u.app_id, u.session_id, u.updated_at) IN (
-    SELECT u.app_id, u.session_id, MAX(u.updated_at) AS updated_at
-    FROM uploaded_files u
-    WHERE u.app_id          = sess.get_app_id()
-        AND u.session_id    = sess.get_session_id()
-    GROUP BY u.app_id, u.session_id
-);
+    AND auth.is_developer       = 'Y';
 --
 COMMENT ON TABLE nav_badges                 IS 'View with current badges in top menu';
 --

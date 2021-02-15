@@ -5,7 +5,7 @@ SELECT
         ELSE          uploader.get_basename(u.file_name)
         END AS list_label,
     --
-    u.updated_at AS supplemental,
+    u.updated_at || ' ' || u.uploader_id AS supplemental,
     --
     apex.get_page_link (
         in_page_id      => sess.get_page_id(),

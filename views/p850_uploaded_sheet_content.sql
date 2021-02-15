@@ -1,31 +1,51 @@
 CREATE OR REPLACE VIEW p850_uploaded_sheet_content AS
 WITH s AS (
-    SELECT s.*
+    SELECT
+        s.*,
+        NVL(apex.get_item('$TARGET'), s.uploader_id) AS target
     FROM uploaded_file_sheets s
     WHERE s.file_name   = apex.get_item('$FILE')
         AND s.sheet_id  = apex.get_item('$SHEET')
+),
+m AS (
+    SELECT
+        SUM(CASE WHEN m.target_column IS NOT NULL   AND m.source_column IS NOT NULL THEN 1 ELSE 0 END)                      AS mapped_cols,
+        SUM(CASE WHEN m.source_column IS NULL       AND (m.is_key IS NOT NULL OR m.is_nn IS NOT NULL) THEN 1 ELSE 0 END)    AS missing_cols
+    FROM p850_sheet_columns_mapping m
 )
 SELECT
-    'Columns'           AS list_label,
-    NULL                AS supplemental,
+    CASE WHEN apex.get_item('$SHOW_COLS') IS NOT NULL
+        THEN '<b>Columns</b>'
+        ELSE    'Columns'
+        END AS list_label,
+    --
+    'Mapped: ' || m.mapped_cols ||
+        CASE WHEN m.missing_cols > 0 THEN ', Missing: ' || m.missing_cols END
+        AS supplemental,
     s.sheet_cols        AS count_,
     --
     apex.get_page_link (
         in_page_id      => sess.get_page_id(),
-        in_names        => 'P850_RESET,P850_SHOW_COLS,P850_TARGET',
-        in_values       => ',Y,' || NVL(apex.get_item('$TARGET'), s.uploader_id)
+        in_names        => 'P850_FILE,P850_SHEET,P850_TARGET,P850_SHOW_COLS,P850_RESET',
+        in_values       => s.file_name || ',' || s.sheet_id || ',' || s.target || ',Y,Y'
     ) AS target_url
 FROM s
+CROSS JOIN m
 UNION ALL
+--
 SELECT
-    'Rows'              AS list_label,
+    CASE WHEN apex.get_item('$SHOW_DATA') IS NOT NULL
+        THEN '<b>Rows</b>'
+        ELSE    'Rows'
+        END AS list_label,
+    --
     NULL                AS supplemental,
     s.sheet_rows        AS count_,
     --
     apex.get_page_link (
         in_page_id      => sess.get_page_id(),
-        in_names        => 'P850_RESET,P850_SHOW_COLS,P850_TARGET',
-        in_values       => ',Y,' || NVL(apex.get_item('$TARGET'), s.uploader_id)
+        in_names        => 'P850_FILE,P850_SHEET,P850_TARGET,P850_SHOW_DATA,P850_RESET',
+        in_values       => s.file_name || ',' || s.sheet_id || ',' || s.target || ',Y,Y'
     ) AS target_url
 FROM s;
 
