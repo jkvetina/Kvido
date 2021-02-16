@@ -43,6 +43,7 @@ LEFT JOIN navigation_groups g
     ON g.app_id                 = n.app_id
     AND g.page_id               = n.page_id
     AND g.page_group            = sess.get_page_group(curr.page_id)
+--
 UNION ALL
 SELECT
     n.app_id,
@@ -65,7 +66,44 @@ SELECT
     curr.root_id                AS curr_root_id
 FROM navigation_extras n
 JOIN curr
-    ON curr.app_id              = n.app_id;
+    ON curr.app_id              = n.app_id
+--
+UNION ALL
+SELECT
+    p.application_id        AS app_id,
+    NULL                    AS page_id,
+    NULL                    AS parent_id,
+    NULL                    AS page_alias,
+    --
+    'ADD MISSING PAGE TO NAVIGATION: ' || p.page_id || ' &' || 'ndash; ' || p.page_title AS page_name,
+    --
+    NULL                    AS page_title,
+    --
+    apex.get_page_link (
+        in_page_id          => 910,
+        in_names            => 'P910_RESET,P910_AUTO_UPDATE,P910_AUTO_ID',
+        in_values           => 'Y,Y,' || p.page_id
+    )                       AS page_target,
+    --
+    NULL                    AS page_onclick,
+    NULL                    AS page_group,
+    NULL                    AS auth_scheme,
+    'ACTIVE'                AS css_class,
+    NULL                    AS reset_item,
+    NULL                    AS group_id,
+    NULL                    AS order#,
+    NULL                    AS is_hidden,
+    sess.get_page_id()      AS curr_page_id,
+    NULL                    AS curr_parent_id,
+    NULL                    AS curr_root_id
+FROM apex_application_pages p
+LEFT JOIN navigation n
+    ON n.app_id             = p.application_id
+    AND n.page_id           = p.page_id
+WHERE p.application_id      = sess.get_app_id()
+    AND p.page_id           = sess.get_page_id()
+    AND n.page_id           IS NULL
+    AND auth.is_developer() = 'Y';
 --
 COMMENT ON TABLE nav_top_src    IS 'Source data for top menu and for Navigation page';
 
