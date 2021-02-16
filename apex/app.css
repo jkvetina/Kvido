@@ -559,6 +559,29 @@ input#NAV_CALENDAR:hover {
     background:             #333;
 }
 
+#ui-datepicker-div * {
+    font-family:            'Roboto', sans-serif !important;
+}
+#ui-datepicker-div div.ui-datepicker-title span {
+    font-family:            'Roboto Slab', serif !important;
+}
+#ui-datepicker-div a.ui-datepicker-prev.ui-corner-all:hover,
+#ui-datepicker-div a.ui-datepicker-next.ui-corner-all:hover {
+    color:                  #000;
+}
+#ui-datepicker-div table.ui-datepicker-calendar * {
+    font-size:              1.2rem;
+}
+#ui-datepicker-div table.ui-datepicker-calendar thead th span {
+    font-family:            'Roboto Slab', serif !important;
+    font-size:              1.1rem;
+}
+#ui-datepicker-div table.ui-datepicker-calendar tbody td.ui-datepicker-other-month a {
+    color:                  #888;
+}
+
+
+
 
 
 /**
