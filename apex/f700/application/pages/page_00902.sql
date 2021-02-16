@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210215201619'
+,p_last_upd_yyyymmddhh24miss=>'20210216195535'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(12341489114558320)
@@ -242,7 +242,7 @@ wwv_flow_api.create_region_column(
 ,p_heading_alignment=>'RIGHT'
 ,p_display_sequence=>70
 ,p_value_alignment=>'RIGHT'
-,p_link_target=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.::P901_TODAY,P901_SESSION_ID,P901_RESET:&TODAY.,&SESSION_ID.,Y'
+,p_link_target=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.::P901_SESSION_ID,P901_RESET:&SESSION_ID.,Y'
 ,p_link_text=>'&LOGS_.'
 ,p_enable_filter=>true
 ,p_filter_is_required=>false
@@ -268,7 +268,7 @@ wwv_flow_api.create_region_column(
 ,p_heading_alignment=>'RIGHT'
 ,p_display_sequence=>20
 ,p_value_alignment=>'RIGHT'
-,p_link_target=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.:RP:P901_TODAY,P901_SESSION_ID,P901_RESET:&TODAY.,&SESSION_ID.,Y'
+,p_link_target=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.:RP,:P901_SESSION_ID,P901_RESET:&SESSION_ID.,Y'
 ,p_link_text=>'&SESSION_ID.'
 ,p_enable_filter=>true
 ,p_filter_is_required=>false
@@ -503,7 +503,7 @@ wwv_flow_api.create_region_column(
 ,p_heading_alignment=>'CENTER'
 ,p_display_sequence=>130
 ,p_value_alignment=>'CENTER'
-,p_link_target=>'f?p=&APP_ID.:902:&SESSION.::&DEBUG.:RP:P902_DELETE,P902_TODAY:&SESSION_ID.,&TODAY.'
+,p_link_target=>'f?p=&APP_ID.:902:&SESSION.::&DEBUG.:RP,:P902_DELETE:&SESSION_ID.'
 ,p_link_text=>'&DELETE_.'
 ,p_enable_filter=>true
 ,p_filter_operators=>'C:S:CASE_INSENSITIVE:REGEXP'
@@ -694,7 +694,7 @@ wwv_flow_api.create_page_button(
 ,p_button_template_id=>wwv_flow_api.id(63744470351014400)
 ,p_button_image_alt=>'&CLEAR_FILTERS.'
 ,p_button_position=>'RIGHT_OF_TITLE'
-,p_button_redirect_url=>'f?p=&APP_ID.:902:&SESSION.::&DEBUG.:RP:P902_RESET:Y'
+,p_button_redirect_url=>'f?p=&APP_ID.:902:&SESSION.::&DEBUG.:RP,:P902_RESET:Y'
 );
 wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(11327268964291089)
@@ -744,17 +744,9 @@ wwv_flow_api.create_page_item(
 ,p_attribute_01=>'Y'
 );
 wwv_flow_api.create_page_item(
- p_id=>wwv_flow_api.id(31287500745817512)
-,p_name=>'P902_TODAY'
-,p_item_sequence=>50
-,p_item_plug_id=>wwv_flow_api.id(54195600298789905)
-,p_display_as=>'NATIVE_HIDDEN'
-,p_attribute_01=>'Y'
-);
-wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(31287874142817513)
 ,p_name=>'P902_DELETE'
-,p_item_sequence=>60
+,p_item_sequence=>50
 ,p_item_plug_id=>wwv_flow_api.id(54195600298789905)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
@@ -768,7 +760,7 @@ wwv_flow_api.create_page_process(
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
 'sess.delete_session (',
 '    in_session_id => apex.get_item(''$DELETE''),',
-'    in_created_at => TO_DATE(apex.get_item(''$TODAY''), ''YYYY-MM-DD'')',
+'    in_created_at => app.get_date()',
 ');',
 '--',
 'apex.set_item(''$DELETE'', NULL);',
@@ -781,6 +773,18 @@ wwv_flow_api.create_page_process(
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
 ,p_process_when=>'P902_DELETE'
 ,p_process_when_type=>'ITEM_IS_NOT_NULL'
+);
+wwv_flow_api.create_page_process(
+ p_id=>wwv_flow_api.id(12715802519683256)
+,p_process_sequence=>20
+,p_process_point=>'AFTER_HEADER'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'FIX_LOGS'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'tree_logs_fix();',
+''))
+,p_process_clob_language=>'PLSQL'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
 );
 wwv_flow_api.component_end;
 end;
