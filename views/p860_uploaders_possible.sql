@@ -18,6 +18,7 @@ SELECT
     --
     r.page_id,
     p.page_title            AS page_name,
+    p.page_group,
     r.region_id,
     r.region_name,
     NVL(r.authorization_scheme, p.authorization_scheme) AS auth_scheme,

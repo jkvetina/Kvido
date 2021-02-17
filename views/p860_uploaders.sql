@@ -9,6 +9,7 @@ SELECT
     --
     p.page_name,
     p.region_name,
+    p.page_group,
     p.auth_scheme,
     --
     apex.get_page_link(u.target_page_id) AS page_link,
@@ -36,6 +37,7 @@ SELECT
     --
     p.page_name,
     p.region_name,
+    p.page_group,
     p.auth_scheme,
     --
     apex.get_page_link(p.page_id)                                   AS page_link,
