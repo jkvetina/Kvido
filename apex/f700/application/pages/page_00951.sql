@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210217200252'
+,p_last_upd_yyyymmddhh24miss=>'20210217201121'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(11205893952964003)
@@ -255,13 +255,13 @@ wwv_flow_api.create_region_column(
 ,p_source_expression=>'TRG_'
 ,p_data_type=>'NUMBER'
 ,p_is_query_only=>false
-,p_item_type=>'NATIVE_NUMBER_FIELD'
+,p_item_type=>'NATIVE_LINK'
 ,p_heading=>'Trg'
 ,p_heading_alignment=>'RIGHT'
 ,p_display_sequence=>60
 ,p_value_alignment=>'RIGHT'
-,p_attribute_03=>'right'
-,p_is_required=>false
+,p_link_target=>'f?p=&APP_ID.:952:&SESSION.::&DEBUG.::P952_TABLE,P952_RESET:&TABLE_NAME.,Y'
+,p_link_text=>'&TRG_.'
 ,p_enable_filter=>true
 ,p_filter_is_required=>false
 ,p_filter_lov_type=>'NONE'
@@ -272,6 +272,7 @@ wwv_flow_api.create_region_column(
 ,p_is_primary_key=>false
 ,p_duplicate_value=>true
 ,p_include_in_export=>true
+,p_escape_on_http_output=>true
 );
 wwv_flow_api.create_region_column(
  p_id=>wwv_flow_api.id(12776056167713313)

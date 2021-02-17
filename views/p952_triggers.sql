@@ -11,6 +11,7 @@ WITH r AS (
         AND l.created_at    <  app.get_date() + 1
         AND l.flag          = 'R'
         AND l.action_name   = 'TRIGGER'
+        AND l.module_name   = CASE WHEN apex.get_item('$TABLE') IS NOT NULL THEN apex.get_item('$TABLE') || '__' ELSE l.module_name END
         AND l.arguments     IS NOT NULL
     GROUP BY l.module_name
 ),
@@ -24,6 +25,7 @@ m AS (
         AND l.created_at    <  app.get_date() + 1
         AND l.flag          = 'M'
         AND l.action_name   = 'TRIGGER'
+        AND l.module_name   = CASE WHEN apex.get_item('$TABLE') IS NOT NULL THEN apex.get_item('$TABLE') || '__' ELSE l.module_name END
     GROUP BY l.module_name
 )
 SELECT
@@ -68,5 +70,6 @@ WHERE t.table_name      NOT LIKE '%\_%$' ESCAPE '\'
         'LOGS_SETUP',
         'SESSIONS'
     )
+    AND t.table_name    = NVL(apex.get_item('$TABLE'), t.table_name)
     AND v.mview_name    IS NULL;
 
