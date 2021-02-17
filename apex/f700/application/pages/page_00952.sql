@@ -28,6 +28,7 @@ wwv_flow_api.create_page(
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(12477710673064816)
 ,p_plug_name=>'Triggers'
+,p_region_name=>'TRIGGERS'
 ,p_region_template_options=>'#DEFAULT#'
 ,p_component_template_options=>'#DEFAULT#'
 ,p_plug_template=>wwv_flow_api.id(64142195941700285)
@@ -290,7 +291,7 @@ wwv_flow_api.create_region_column(
 ,p_heading_alignment=>'RIGHT'
 ,p_display_sequence=>50
 ,p_value_alignment=>'RIGHT'
-,p_link_target=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.::P901_FLAG,P901_ACTION,P901_MODULE,P901_RESET:M,TRIGGER,&TRIGGER_NAME.,Y'
+,p_link_target=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.::P901_FLAG,P901_ACTION,P901_MODULE,P901_RESET:,TRIGGER,&TRIGGER_NAME.,Y'
 ,p_link_text=>'&CALLS_.'
 ,p_enable_filter=>true
 ,p_filter_is_required=>false
