@@ -7,7 +7,8 @@ WITH c AS (
         NULLIF(SUM(CASE WHEN c.constraint_type = 'U' THEN 1 ELSE 0 END), 0) AS uq_,
         NULLIF(SUM(CASE WHEN c.constraint_type = 'R' THEN 1 ELSE 0 END), 0) AS fk_
     FROM user_constraints c
-    WHERE c.constraint_type IN ('P', 'U', 'R')
+    WHERE c.constraint_type     IN ('P', 'U', 'R')
+        AND c.table_name        = NVL(apex.get_item('$TABLE'), c.table_name)
     GROUP BY c.table_name
 ),
 x AS (
@@ -16,7 +17,8 @@ x AS (
         x.table_name,
         COUNT(x.table_name) AS ix_
     FROM user_indexes x
-    WHERE x.index_type != 'LOB'
+    WHERE x.index_type          != 'LOB'
+        AND x.table_name        = NVL(apex.get_item('$TABLE'), x.table_name)
     GROUP BY x.table_name
 ),
 g AS (
@@ -25,6 +27,7 @@ g AS (
         g.table_name,
         COUNT(g.table_name) AS trg_
     FROM user_triggers g
+    WHERE g.table_name          = NVL(apex.get_item('$TABLE'), g.table_name)
     GROUP BY g.table_name
 )
 SELECT
@@ -74,6 +77,7 @@ LEFT JOIN x
     ON x.table_name     = t.table_name
 LEFT JOIN g
     ON g.table_name     = t.table_name
-WHERE m.mview_name      IS NULL
-    AND t.table_name    NOT LIKE '%\__$' ESCAPE '\';
+WHERE t.table_name      = NVL(apex.get_item('$TABLE'), t.table_name)
+    AND t.table_name    NOT LIKE '%\__$' ESCAPE '\'
+    AND m.mview_name    IS NULL;
 

@@ -53,7 +53,9 @@ SELECT
     r.updated_,
     r.deleted_,
     0 AS error_,
-    0 AS not_mapped_
+    0 AS not_mapped_,
+    --
+    apex.get_icon('fa-database', 'Show table details') AS table_
 FROM user_tables t
 LEFT JOIN user_triggers g
     ON g.table_name     = t.table_name
