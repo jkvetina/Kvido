@@ -23,11 +23,12 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210217185448'
+,p_last_upd_yyyymmddhh24miss=>'20210217223924'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(71819787564897425)
 ,p_plug_name=>'Dashboard'
+,p_region_name=>'DASHBOARD'
 ,p_region_template_options=>'#DEFAULT#'
 ,p_plug_template=>wwv_flow_api.id(64142195941700285)
 ,p_plug_display_sequence=>10
@@ -54,7 +55,7 @@ wwv_flow_api.create_region_column(
 ,p_heading_alignment=>'CENTER'
 ,p_display_sequence=>10
 ,p_value_alignment=>'CENTER'
-,p_link_target=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.:RP:P901_TODAY,P901_RESET:&TODAY.,Y'
+,p_link_target=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.:RP,:P901_RESET,G_DATE:Y,&TODAY.'
 ,p_link_text=>'&TODAY.'
 ,p_enable_filter=>true
 ,p_filter_operators=>'C:S:CASE_INSENSITIVE:REGEXP'
@@ -404,6 +405,11 @@ wwv_flow_api.create_interactive_grid(
 ,p_fixed_header=>'PAGE'
 ,p_show_icon_view=>false
 ,p_show_detail_view=>false
+,p_javascript_code=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'function(config) {',
+'    return unified_ig_toolbar(config, '''');',
+'}',
+''))
 );
 wwv_flow_api.create_ig_report(
  p_id=>wwv_flow_api.id(54490058517386856)

@@ -1,3 +1,55 @@
+// common toolbar for all grids
+// just put following code in Region - Attributes - JavaScript Initialization Code
+// and assign Static ID to region
+/**
+function(config) {
+    return unified_ig_toolbar(config, 'REGION_STATIC_ID');
+}
+ */
+var unified_ig_toolbar = function(config, grid_id) {
+    var $ = apex.jQuery;
+    var toolbarData = $.apex.interactiveGrid.copyDefaultToolbar();
+    var toolbarGroup = toolbarData.toolbarFind('actions4');
+
+    // only for developers
+    // add a filter button after the actions menu
+    toolbarGroup.controls.push({
+        type            : 'BUTTON',
+        action          : 'save-report',
+        label           : 'Save as Default',
+        icon            : ''  // no icon
+    });
+    config.toolbarData = toolbarData;
+
+    // add upload button
+    if (grid_id != '') {
+        toolbarGroup = toolbarData.toolbarFind('actions3');
+        toolbarGroup.controls.push( {
+            type: 'BUTTON',
+            action: 'upload_button'
+        });
+        config.toolbarData = toolbarData;
+        config.initActions = function(actions) {
+            actions.add({
+                name    : 'upload_button',
+                label   : 'Upload',
+                action  : function(event, focusElement) {
+                    //console.log(this, event, focusElement);
+                    location.href = apex.util.makeApplicationUrl({
+                        pageId      : 850,
+                        itemNames   : ['P850_RESET', 'P850_TARGET'],
+                        itemValues  : ['Y', grid_id]
+                    });
+                }
+            });
+        }
+    }
+
+    return config;
+};
+
+
+
 // date picker for G_DATE item
 $(function() {
     var g_date      = 'G_DATE';
