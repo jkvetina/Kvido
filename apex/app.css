@@ -652,4 +652,12 @@ div.FLOATING_ICONS li.a-ListView-item.has-link:not(.has-alt) span.fa {
 
 
 
+/**
+ * Style <span class="timing">#TIMING#s</span> added to region footer
+ */
+span.timing {
+    color:                  #999;
+    margin:                 0.5rem;
+    line-height:            2.5rem;
+}
 
