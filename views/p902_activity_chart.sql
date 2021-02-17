@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p900_activity_chart AS
+CREATE OR REPLACE VIEW p902_activity_chart AS
 WITH x AS (
     SELECT
         LEVEL AS bucket_id,
@@ -13,6 +13,9 @@ d AS (
         l.*
     FROM logs l
     WHERE l.app_id          = sess.get_app_id()
+        AND l.user_id       = NVL(apex.get_item('$USER_ID'),    l.user_id)
+        AND l.page_id       = NVL(apex.get_item('$PAGE_ID'),    l.page_id)
+        AND l.session_id    = NVL(apex.get_item('$SESSION_ID'), l.session_id)
         AND l.created_at    >= app.get_date()
         AND l.created_at    <  app.get_date() + 1
 ),
