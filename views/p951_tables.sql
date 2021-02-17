@@ -31,15 +31,28 @@ g AS (
     GROUP BY g.table_name
 ),
 p AS (
+    -- partitions count
     SELECT
         p.table_name,
         COUNT(*) AS partitions
     FROM user_tab_partitions p
     WHERE p.table_name          = NVL(apex.get_item('$TABLE'), p.table_name)
     GROUP BY p.table_name
+),
+o AS (
+    -- columns count
+    SELECT
+        o.table_name,
+        COUNT(*) AS cols_
+    FROM user_tab_cols o
+    WHERE o.table_name          = NVL(apex.get_item('$TABLE'), o.table_name)
+    GROUP BY o.table_name
 )
 SELECT
     t.table_name,
+    --
+    o.cols_,
+    t.num_rows          AS rows_,
     --
     CASE WHEN c.pk_ IS NOT NULL
         THEN apex.get_icon('fa-check-square', 'Table has Primary key')
@@ -70,8 +83,6 @@ SELECT
             THEN apex.get_icon('fa-check-square', 'Row Movement enabled')
         END AS row_mov,
     --
-    t.num_rows          AS rows_,
-    --
     ROUND(t.num_rows * t.avg_row_len / 1024, 2) AS size_,
     CASE WHEN ROUND(t.blocks * 8, 2) > 0 THEN
         ROUND(t.blocks * 8, 2) - ROUND(t.num_rows * t.avg_row_len / 1024, 2) END AS wasted,
@@ -91,6 +102,8 @@ LEFT JOIN g
     ON g.table_name     = t.table_name
 LEFT JOIN p
     ON p.table_name     = t.table_name
+LEFT JOIN o
+    ON o.table_name     = t.table_name
 WHERE t.table_name      = NVL(apex.get_item('$TABLE'), t.table_name)
     AND t.table_name    NOT LIKE '%\__$' ESCAPE '\'
     AND m.mview_name    IS NULL;

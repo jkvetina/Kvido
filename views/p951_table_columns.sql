@@ -37,7 +37,7 @@ SELECT
 FROM user_tab_columns c
 JOIN user_tables t
     ON t.table_name     = c.table_name
-JOIN (
+LEFT JOIN (
     SELECT
         m.table_name,
         m.column_name,
