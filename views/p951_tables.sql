@@ -29,19 +29,31 @@ g AS (
     FROM user_triggers g
     WHERE g.table_name          = NVL(apex.get_item('$TABLE'), g.table_name)
     GROUP BY g.table_name
+),
+p AS (
+    SELECT
+        p.table_name,
+        COUNT(*) AS partitions
+    FROM user_tab_partitions p
+    WHERE p.table_name          = NVL(apex.get_item('$TABLE'), p.table_name)
+    GROUP BY p.table_name
 )
 SELECT
     t.table_name,
-    c.pk_,
-    c.uq_,
+    --
+    CASE WHEN c.pk_ IS NOT NULL
+        THEN apex.get_icon('fa-check-square', 'Table has Primary key')
+        END AS pk_,
+    --
+    CASE WHEN c.uq_ IS NOT NULL
+        THEN apex.get_icon('fa-check-square', 'Table has Unique key/index')
+        END AS uq_,
+    --
     c.fk_,
     x.ix_,
     g.trg_,
     --
-    CASE
-        WHEN t.partitioned = 'YES'
-            THEN apex.get_icon('fa-check-square', 'Table has partitions')
-        END AS is_part,
+    p.partitions,
     --
     CASE
         WHEN t.temporary = 'Y'
@@ -77,6 +89,8 @@ LEFT JOIN x
     ON x.table_name     = t.table_name
 LEFT JOIN g
     ON g.table_name     = t.table_name
+LEFT JOIN p
+    ON p.table_name     = t.table_name
 WHERE t.table_name      = NVL(apex.get_item('$TABLE'), t.table_name)
     AND t.table_name    NOT LIKE '%\__$' ESCAPE '\'
     AND m.mview_name    IS NULL;
