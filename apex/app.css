@@ -521,6 +521,9 @@ footer.t-Footer {
     color:                  #fff;
     height:                 10rem;
 }
+footer.t-Footer {
+    align-items:            start;
+}
 footer.t-Footer div.t-Footer-top a {  /* LINK TO TOP */
     color:                  #666;
 }
