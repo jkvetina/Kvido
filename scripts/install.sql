@@ -96,23 +96,26 @@ EXEC DBMS_PLSQL_CODE_COVERAGE.CREATE_COVERAGE_TABLES(force_it => TRUE);
 --
 -- CREATE TRIGGERS
 --
-@../triggers/navigation_def.sql
-@../triggers/navigation_groups_def.sql
-@../triggers/users_def.sql
-
 @../triggers/apps__.sql
-@../triggers/roles__.sql
-@../triggers/users__.sql
-@../triggers/user_roles__.sql
+@../triggers/events__.sql
+@../triggers/languages__.sql
+--@../triggers/logs__.sql
+--@../triggers/logs_events__.sql
+--@../triggers/logs_lobs__.sql
+--@../triggers/logs_modules__.sql
 @../triggers/logs_setup__.sql
 @../triggers/navigation__.sql
-@../triggers/navigation_groups__.sql
 @../triggers/navigation_extras__.sql
+@../triggers/navigation_groups__.sql
+@../triggers/roles__.sql
+--@../triggers/sessions__.sql
+@../triggers/uploaded_file_cols__.sql
+@../triggers/uploaded_file_sheets__.sql
+@../triggers/uploaded_files__.sql
 @../triggers/uploaders__.sql
 @../triggers/uploaders_mapping__.sql
-@../triggers/uploaded_files__.sql
-@../triggers/uploaded_file_sheets__.sql
-@../triggers/uploaded_file_cols__.sql
+@../triggers/user_roles__.sql
+@../triggers/users__.sql
 
 
 
