@@ -1,11 +1,11 @@
 --DROP TABLE uploaded_files CASCADE CONSTRAINTS;
 CREATE TABLE uploaded_files (
-    file_name           VARCHAR2(255)   NOT NULL,
-    file_size           NUMBER          NOT NULL,
-    mime_type           VARCHAR2(4000)  NOT NULL,
+    file_name           VARCHAR2(255)   CONSTRAINT nn_uploaded_files_file_name      NOT NULL,
+    file_size           NUMBER          CONSTRAINT nn_uploaded_files_file_size      NOT NULL,
+    mime_type           VARCHAR2(4000)  CONSTRAINT nn_uploaded_files_mime_type      NOT NULL,
     blob_content        BLOB,
     --
-    app_id              NUMBER(4)       NOT NULL,
+    app_id              NUMBER(4)       CONSTRAINT nn_uploaded_files_app_id         NOT NULL,
     uploader_id         VARCHAR2(30),
     --
     updated_by          VARCHAR2(30),

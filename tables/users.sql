@@ -12,7 +12,7 @@ DROP TABLE users        CASCADE CONSTRAINTS PURGE;
 SELECT * FROM user_constraints WHERE table_name = 'SESSIONS' AND constraint_type = 'R';
 */
 CREATE TABLE users (
-    user_id             VARCHAR2(30)    NOT NULL,
+    user_id             VARCHAR2(30)    CONSTRAINT nn_users_user_id     NOT NULL,
     user_login          VARCHAR2(128),
     user_name           VARCHAR2(64),
     --

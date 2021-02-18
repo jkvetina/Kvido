@@ -1,6 +1,6 @@
 --DROP TABLE uploaders_mapping;
 CREATE TABLE uploaders_mapping (
-    app_id              NUMBER(4)       NOT NULL,
+    app_id              NUMBER(4)       CONSTRAINT nn_uploaders_mapping_app_id  NOT NULL,
     uploader_id         VARCHAR2(30)    NOT NULL,
     target_column       VARCHAR2(30)    NOT NULL,
     --

@@ -1,6 +1,6 @@
 --DROP TABLE apps CASCADE CONSTRAINTS;
 CREATE TABLE apps (
-    app_id              NUMBER(4)       NOT NULL,
+    app_id              NUMBER(4)       CONSTRAINT nn_apps_app_id NOT NULL,
     --
     app_name            VARCHAR2(32),
     is_active           CHAR(1),

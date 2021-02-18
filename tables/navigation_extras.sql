@@ -1,9 +1,9 @@
 --DROP TABLE navigation_extras;
 CREATE TABLE navigation_extras (
-    app_id              NUMBER(4)       NOT NULL,
-    page_alias          VARCHAR2(30)    NOT NULL,
+    app_id              NUMBER(4)       CONSTRAINT nn_navigation_extras_app_id      NOT NULL,
+    page_alias          VARCHAR2(30)    CONSTRAINT nn_navigation_extras_page_alias  NOT NULL,
     --
-    page_name           VARCHAR2(256)   NOT NULL,
+    page_name           VARCHAR2(256)   CONSTRAINT nn_navigation_extras_page_name   NOT NULL,
     page_title          VARCHAR2(256),
     page_target         VARCHAR2(256),
     page_onclick        VARCHAR2(256),

@@ -1,10 +1,10 @@
 --DROP TABLE uploaders CASCADE CONSTRAINTS;
 CREATE TABLE uploaders (
-    app_id              NUMBER(4)       NOT NULL,
-    uploader_id         VARCHAR2(30)    NOT NULL,
+    app_id              NUMBER(4)       CONSTRAINT nn_uploaders_app_id              NOT NULL,
+    uploader_id         VARCHAR2(30)    CONSTRAINT nn_uploaders_uploader_id         NOT NULL,
     --
-    target_table        VARCHAR2(30)    NOT NULL,
-    target_page_id      NUMBER(4)       NOT NULL,
+    target_table        VARCHAR2(30)    CONSTRAINT nn_uploaders_target_table        NOT NULL,
+    target_page_id      NUMBER(4)       CONSTRAINT nn_uploaders_target_page_id      NOT NULL,
     --
     pre_procedure       VARCHAR2(61),
     post_procedure      VARCHAR2(61),

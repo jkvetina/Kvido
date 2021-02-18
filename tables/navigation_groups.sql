@@ -1,8 +1,8 @@
 --DROP TABLE navigation_groups;
 CREATE TABLE navigation_groups (
-    app_id              NUMBER(4)       NOT NULL,
-    page_id             NUMBER(6)       NOT NULL,
-    page_group          VARCHAR2(30)    NOT NULL,
+    app_id              NUMBER(4)       CONSTRAINT nn_navigation_groups_app_id      NOT NULL,
+    page_id             NUMBER(6)       CONSTRAINT nn_navigation_groups_page_id     NOT NULL,
+    page_group          VARCHAR2(30)    CONSTRAINT nn_navigation_groups_page_group  NOT NULL,
     --
     updated_by          VARCHAR2(30),
     updated_at          DATE,

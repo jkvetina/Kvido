@@ -1,14 +1,14 @@
 --DROP TABLE uploaded_file_sheets CASCADE CONSTRAINTS;
 CREATE TABLE uploaded_file_sheets (
-    file_name           VARCHAR2(255)   NOT NULL,
-    sheet_id            NUMBER(4)       NOT NULL,
+    file_name           VARCHAR2(255)   CONSTRAINT nn_uploaded_file_sheets_file     NOT NULL,
+    sheet_id            NUMBER(4)       CONSTRAINT nn_uploaded_file_sheets_sheet    NOT NULL,
     --
-    sheet_xml_id        VARCHAR2(256)   NOT NULL,
+    sheet_xml_id        VARCHAR2(256)   CONSTRAINT nn_uploaded_file_sheets_xml_id   NOT NULL,
     sheet_name          VARCHAR2(256),
     sheet_cols          NUMBER(4),
     sheet_rows          NUMBER(8),
     --
-    app_id              NUMBER(4)       NOT NULL,
+    app_id              NUMBER(4)       CONSTRAINT nn_uploaded_file_sheets_app_id   NOT NULL,
     uploader_id         VARCHAR2(30),
     --
     profile_json        CLOB,

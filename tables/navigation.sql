@@ -1,7 +1,7 @@
 --DROP TABLE navigation;
 CREATE TABLE navigation (
-    app_id              NUMBER(4)       NOT NULL,
-    page_id             NUMBER(6)       NOT NULL,
+    app_id              NUMBER(4)       CONSTRAINT nn_navigation_app_id     NOT NULL,
+    page_id             NUMBER(6)       CONSTRAINT nn_navigation_page_id    NOT NULL,
     --
     parent_id           NUMBER(6),
     order#              NUMBER(4),
