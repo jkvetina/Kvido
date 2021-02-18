@@ -4,7 +4,8 @@ SELECT
     ' '                             AS page_alias,
     TO_CHAR(NULLIF(COUNT(*), 0))    AS badge
 FROM logs l
-WHERE l.created_at          >= TRUNC(SYSDATE)
+WHERE l.created_at          >= app.get_date()
+    AND l.created_at        <  app.get_date() + 1
     AND l.flag              = 'E'
     AND auth.is_developer   = 'Y'
 UNION ALL
@@ -23,7 +24,8 @@ SELECT
     'sessions'                              AS page_alias,
     TO_CHAR(COUNT(DISTINCT s.session_id))   AS badge
 FROM sessions s
-WHERE s.updated_at          >= TRUNC(SYSDATE)
+WHERE s.updated_at          >= app.get_date()
+    AND s.updated_at        <  app.get_date() + 1
     AND auth.is_developer   = 'Y'
 UNION ALL
 --
@@ -32,8 +34,9 @@ SELECT
     NULL                        AS page_alias,
     TO_CHAR(COUNT(l.log_id))    AS badge
 FROM logs l
-WHERE l.created_at              >= TRUNC(SYSDATE)
-    AND auth.is_developer       = 'Y';
+WHERE l.created_at          >= app.get_date()
+    AND l.created_at        <  app.get_date() + 1
+    AND auth.is_developer   = 'Y';
 --
 COMMENT ON TABLE nav_badges                 IS 'View with current badges in top menu';
 --
