@@ -1,20 +1,25 @@
 --DROP TABLE sessions PURGE;
 CREATE TABLE sessions (
-    session_id          NUMBER          NOT NULL,
+    session_id          NUMBER          CONSTRAINT nn_sessions_session_id   NOT NULL,
     --
-    user_id             VARCHAR2(30)    NOT NULL,
-    app_id              NUMBER(4)       NOT NULL,       -- FK to apps
-    page_id             NUMBER(6)       NOT NULL,       -- FK to app_pages
+    user_id             VARCHAR2(30)    CONSTRAINT nn_sessions_user_id      NOT NULL,
+    app_id              NUMBER(4)       CONSTRAINT nn_sessions_app_id       NOT NULL,       -- FK to apps
+    page_id             NUMBER(6)       CONSTRAINT nn_sessions_page_id      NOT NULL,       -- FK to app_pages
     --
     apex_items          VARCHAR2(4000),
     --
-    session_db          NUMBER          NOT NULL,
+    session_db          NUMBER          CONSTRAINT nn_sessions_session_db   NOT NULL,
     --
-    created_at          DATE            NOT NULL,
-    updated_at          DATE            NOT NULL,
+    created_at          DATE            CONSTRAINT nn_sessions_created_at   NOT NULL,
+    updated_at          DATE            CONSTRAINT nn_sessions_updated_at   NOT NULL,
     --
     CONSTRAINT pk_sessions
         PRIMARY KEY (session_id),
+    /**
+    SELECT n.table_name, n.constraint_name
+    FROM user_constraints n
+    WHERE n.r_constraint_name = 'PK_SESSIONS';
+    */
     --
     CONSTRAINT fk_sessions_users
         FOREIGN KEY (user_id)

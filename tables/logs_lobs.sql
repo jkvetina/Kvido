@@ -1,7 +1,7 @@
 --DROP TABLE logs_lobs PURGE;
 CREATE TABLE logs_lobs (
-    log_id              INTEGER         NOT NULL,
-    log_parent          INTEGER         NOT NULL,
+    log_id              INTEGER         CONSTRAINT nn_logs_lobs_log_id      NOT NULL,
+    log_parent          INTEGER         CONSTRAINT nn_logs_lobs_log_parent  NOT NULL,
     --
     lob_name            VARCHAR2(255),
     lob_length          NUMBER,
