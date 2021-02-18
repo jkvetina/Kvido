@@ -1746,6 +1746,46 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
 
 
+    FUNCTION log_event (
+        in_event_id         logs_events.event_id%TYPE,
+        in_event_value      logs_events.event_value%TYPE    := NULL
+    )
+    RETURN logs_events.log_id%TYPE
+    AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+        --
+        rec                 logs_events%ROWTYPE;
+    BEGIN
+        rec.log_id          := log_id.NEXTVAL;
+        rec.log_parent      := NULL;        ------------- current log_id
+        rec.app_id          := sess.get_app_id();
+        rec.event_id        := in_event_id;
+        rec.event_value     := in_event_value;
+        rec.user_id         := sess.get_user_id();
+        rec.page_id         := sess.get_page_id();
+        rec.session_id      := sess.get_session_id();
+        rec.created_at      := SYSDATE;
+        --
+        INSERT INTO logs_events VALUES rec;
+        COMMIT;
+    END;
+
+
+
+    PROCEDURE log_event (
+        in_event_id         logs_events.event_id%TYPE,
+        in_event_value      logs_events.event_value%TYPE    := NULL
+    ) AS
+        out_log_id          logs_events.log_id%TYPE;
+    BEGIN
+        out_log_id := tree.log_event (
+            in_event_id     => in_event_id,
+            in_event_value  => in_event_value
+        );
+    END;
+
+
+
     PROCEDURE init AS
     BEGIN
         -- clear maps
