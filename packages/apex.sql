@@ -284,7 +284,7 @@ CREATE OR REPLACE PACKAGE BODY apex AS
         END IF;
 
         -- auto add reset item to args if not passed already
-        IF NVL(INSTR(out_names, reset_item), 0) = 0 THEN
+        IF reset_item IS NOT NULL AND NVL(INSTR(out_names, reset_item), 0) = 0 THEN
             out_names   := reset_item || ',' || out_names;
             out_values  := 'Y,' || out_values;
         END IF;
@@ -297,7 +297,7 @@ CREATE OR REPLACE PACKAGE BODY apex AS
         );
     EXCEPTION
     WHEN OTHERS THEN
-        tree.raise_error();
+        tree.raise_error('INTERNAL_ERROR', in_page_id, in_names, in_values);
     END;
 
 
@@ -322,7 +322,7 @@ CREATE OR REPLACE PACKAGE BODY apex AS
             '">' || apex.get_icon('fa-file-code-o', 'Open page in APEX') || '</a>';
     EXCEPTION
     WHEN OTHERS THEN
-        tree.raise_error();
+        tree.raise_error('INTERNAL_ERROR', in_page_id, in_region_id);
     END;
 
 
