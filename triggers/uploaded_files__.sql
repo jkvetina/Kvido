@@ -34,8 +34,8 @@ COMPOUND TRIGGER
             -- overwrite some values
             :NEW.app_id         := COALESCE(:NEW.app_id,        sess.get_app_id());
             --
-            :NEW.updated_by     := COALESCE(in_updated_by, :NEW.updated_by);
-            :NEW.updated_at     := in_updated_at;
+            :NEW.created_by     := COALESCE(in_updated_by, :NEW.created_by);
+            :NEW.created_at     := in_updated_at;
         END IF;
     EXCEPTION
     WHEN tree.app_exception THEN

@@ -38,7 +38,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210214224414'
+,p_last_upd_yyyymmddhh24miss=>'20210218221247'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(11634777975387441)
@@ -80,8 +80,8 @@ wwv_flow_api.create_page_plug(
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
 'SELECT f.*',
 'FROM p850_uploaded_files f',
-'WHERE f.updated_at >= TRUNC(SYSDATE)',
-'ORDER BY f.updated_at DESC, f.file_basename;',
+'WHERE f.created_at >= TRUNC(SYSDATE)',
+'ORDER BY f.created_at DESC, f.file_basename;',
 ''))
 ,p_plug_source_type=>'NATIVE_JQM_LIST_VIEW'
 ,p_plug_query_num_rows=>15
@@ -1060,10 +1060,10 @@ wwv_flow_api.create_page_process(
 'FOR c IN (',
 '    SELECT file_name, 1 AS sheet_id, uploader_id',
 '    FROM (',
-'        SELECT f.file_name, f.uploader_id',
+'        SELECT f.*',
 '        FROM uploaded_files f',
-'        WHERE f.session_id = sess.get_session_id()',
-'        ORDER BY updated_at DESC',
+'        WHERE f.created_by = sess.get_user_id()',
+'        ORDER BY f.created_at DESC',
 '    )',
 '    WHERE ROWNUM = 1',
 ') LOOP',

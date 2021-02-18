@@ -1,4 +1,6 @@
---DROP TABLE uploaded_files CASCADE CONSTRAINTS;
+--DROP TABLE uploaded_file_cols;
+--DROP TABLE uploaded_file_sheets;
+--DROP TABLE uploaded_files;
 CREATE TABLE uploaded_files (
     file_name           VARCHAR2(255)   CONSTRAINT nn_uploaded_files_file_name      NOT NULL,
     file_size           NUMBER          CONSTRAINT nn_uploaded_files_file_size      NOT NULL,
@@ -8,18 +10,14 @@ CREATE TABLE uploaded_files (
     app_id              NUMBER(4)       CONSTRAINT nn_uploaded_files_app_id         NOT NULL,
     uploader_id         VARCHAR2(30),
     --
-    updated_by          VARCHAR2(30),
-    updated_at          DATE,
+    created_by          VARCHAR2(30),
+    created_at          DATE,
     --
     CONSTRAINT pk_uploaded_files
         PRIMARY KEY (file_name),
     --
     CONSTRAINT uq_uploaded_files
-        UNIQUE (app_id, session_id, updated_at, file_name),
-    --
-    CONSTRAINT fk_uploaded_files_session_id
-        FOREIGN KEY (session_id)
-        REFERENCES sessions (session_id),
+        UNIQUE (app_id, created_at, file_name),
     --
     CONSTRAINT fk_uploaded_files_uploader_id
         FOREIGN KEY (app_id, uploader_id)

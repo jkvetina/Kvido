@@ -5,7 +5,7 @@ SELECT
         ELSE          uploader.get_basename(u.file_name)
         END AS list_label,
     --
-    u.updated_at || ' ' || u.uploader_id AS supplemental,
+    u.created_at || ' ' || u.uploader_id AS supplemental,
     --
     apex.get_page_link (
         in_page_id      => sess.get_page_id(),
@@ -19,8 +19,8 @@ SELECT
     u.file_size,
     u.mime_type,
     u.uploader_id,
-    u.updated_by,
-    u.updated_at
+    u.created_by,
+    u.created_at
 FROM uploaded_files u
 WHERE u.app_id          = sess.get_app_id();
 
