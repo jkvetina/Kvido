@@ -265,7 +265,7 @@ wwv_flow_api.create_region_column(
 ,p_name=>'SUPPLEMENTAL'
 ,p_source_type=>'DB_COLUMN'
 ,p_source_expression=>'SUPPLEMENTAL'
-,p_data_type=>'DATE'
+,p_data_type=>'VARCHAR2'
 ,p_is_query_only=>false
 ,p_item_type=>'NATIVE_HIDDEN'
 ,p_display_sequence=>110
