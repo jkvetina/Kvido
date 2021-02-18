@@ -14,7 +14,7 @@ wwv_flow_api.component_begin (
 wwv_flow_api.create_page(
  p_id=>900
 ,p_user_interface_id=>wwv_flow_api.id(63766922917014449)
-,p_name=>'#fa-server-chart'
+,p_name=>'#fa-gears'
 ,p_alias=>'DASHBOARD'
 ,p_step_title=>'Dashboard'
 ,p_autocomplete_on_off=>'OFF'
