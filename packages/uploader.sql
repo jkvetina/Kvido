@@ -17,14 +17,13 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             WHERE f.name = in_file_name
         ) LOOP
             INSERT INTO uploaded_files (
-                file_name, file_size, mime_type, blob_content, session_id, uploader_id
+                file_name, file_size, mime_type, blob_content, uploader_id
             )
             VALUES (
                 c.name,
                 DBMS_LOB.GETLENGTH(c.blob_content),
                 c.mime_type,
                 c.blob_content,
-                in_session_id,
                 in_target
             );
         END LOOP;

@@ -6,7 +6,6 @@ CREATE TABLE uploaded_files (
     blob_content        BLOB,
     --
     app_id              NUMBER(4)       NOT NULL,
-    session_id          NUMBER          NOT NULL,
     uploader_id         VARCHAR2(30),
     --
     updated_by          VARCHAR2(30),
@@ -35,6 +34,5 @@ COMMENT ON COLUMN uploaded_files.mime_type      IS 'Mime type of file';
 COMMENT ON COLUMN uploaded_files.blob_content   IS 'File content (binary)';
 --
 COMMENT ON COLUMN uploaded_files.app_id         IS 'APEX application ID';
-COMMENT ON COLUMN uploaded_files.session_id     IS 'Current session ID';
 COMMENT ON COLUMN uploaded_files.uploader_id    IS 'Uploader ID from Uploaders table';
 
