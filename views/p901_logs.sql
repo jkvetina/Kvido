@@ -18,8 +18,5 @@ WHERE l.app_id          = sess.get_app_id()
                 AND l.created_at    <  app.get_date() + 1
                 THEN 1 END
         ) END
-    AND l.log_id > CASE
-        WHEN apex.get_item('$VIEW_NEW_ONLY') = 'Y'
-            THEN NVL(TO_NUMBER(apex.get_item('$MAX_LOG_ID')), 0)
-        ELSE 0 END;
+    AND l.log_id > NVL(TO_NUMBER(apex.get_item('$MAX_LOG_ID')), 0);
 
