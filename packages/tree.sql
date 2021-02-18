@@ -962,10 +962,10 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
         -- calculate time spend since start
         rec.timer :=
-            LPAD(EXTRACT(HOUR   FROM LOCALTIMESTAMP - rec.created_at), 2, '0') || ':' ||
-            LPAD(EXTRACT(MINUTE FROM LOCALTIMESTAMP - rec.created_at), 2, '0') || ':' ||
+            LPAD(EXTRACT(HOUR   FROM SYSTIMESTAMP - rec.created_at), 2, '0') || ':' ||
+            LPAD(EXTRACT(MINUTE FROM SYSTIMESTAMP - rec.created_at), 2, '0') || ':' ||
             RPAD(REGEXP_REPLACE(
-                REGEXP_REPLACE(EXTRACT(SECOND FROM LOCALTIMESTAMP - rec.created_at), '^[\.,]', '00,'),
+                REGEXP_REPLACE(EXTRACT(SECOND FROM SYSTIMESTAMP - rec.created_at), '^[\.,]', '00,'),
                 '^(\d)[\.,]', '0\1,'
             ), 9, '0');
 
@@ -1082,7 +1082,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         rec.arguments       := SUBSTR(in_arguments, 1, tree.length_arguments);
         rec.message         := SUBSTR(in_message,   1, tree.length_message);  -- may be overwritten later
         rec.session_id      := sess.get_session_id();
-        rec.created_at      := LOCALTIMESTAMP;
+        rec.created_at      := SYSTIMESTAMP;
 
         -- add call stack
         IF SQLCODE != 0 OR INSTR(tree.track_callstack, rec.flag) > 0 OR tree.track_callstack = '%' OR in_parent_id IS NOT NULL THEN
@@ -1314,10 +1314,10 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         -- update timer
         UPDATE logs e
         SET e.timer =
-            LPAD(EXTRACT(HOUR   FROM LOCALTIMESTAMP - e.created_at), 2, '0') || ':' ||
-            LPAD(EXTRACT(MINUTE FROM LOCALTIMESTAMP - e.created_at), 2, '0') || ':' ||
+            LPAD(EXTRACT(HOUR   FROM SYSTIMESTAMP - e.created_at), 2, '0') || ':' ||
+            LPAD(EXTRACT(MINUTE FROM SYSTIMESTAMP - e.created_at), 2, '0') || ':' ||
             RPAD(REGEXP_REPLACE(
-                REGEXP_REPLACE(EXTRACT(SECOND FROM LOCALTIMESTAMP - e.created_at), '^[\.,]', '00,'),
+                REGEXP_REPLACE(EXTRACT(SECOND FROM SYSTIMESTAMP - e.created_at), '^[\.,]', '00,'),
                 '^(\d)[\.,]', '0\1,'
             ), 9, '0')
         WHERE e.log_id = COALESCE(in_log_id, rec.log_parent);
