@@ -242,6 +242,8 @@ div.a-Toolbar-group [data-action="edit"] {
     display:                none !important;
 }
 
+
+
 /**
  * HAMBURGER MENU IN GRID
  */
@@ -481,9 +483,15 @@ div.a-GV-bdy div.a-GV-noDataMsg.a-GV-altMessage {
 /**
  * CUSTOMIZED MENUS
  */
+#t_Header > #top_header > nav ul li.DASHBOARD,
+#t_Header > #top_header > nav ul li.OBJECTS,
+#t_Header > #top_header > nav ul li.APEX,
 #t_Header > #top_header > nav ul li.DARK_BROWN {
     background:             #5e5750;
 }
+#t_Header > #top_header > nav ul li.DASHBOARD a:hover,
+#t_Header > #top_header > nav ul li.OBJECTS a:hover,
+#t_Header > #top_header > nav ul li.APEX a:hover,
 #t_Header > #top_header > nav ul li.DARK_BROWN a:hover {
     background:             #444;
 }

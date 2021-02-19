@@ -19,9 +19,10 @@ wwv_flow_api.create_page(
 ,p_step_title=>'GLOBAL'
 ,p_autocomplete_on_off=>'OFF'
 ,p_group_id=>wwv_flow_api.id(63772249988014549)
+,p_page_css_classes=>'HIDDEN'
 ,p_protection_level=>'D'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210207113216'
+,p_last_upd_yyyymmddhh24miss=>'20210219164807'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(55550650812191942)

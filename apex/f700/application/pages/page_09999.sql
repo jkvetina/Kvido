@@ -22,10 +22,11 @@ wwv_flow_api.create_page(
 ,p_autocomplete_on_off=>'OFF'
 ,p_group_id=>wwv_flow_api.id(63772249988014549)
 ,p_step_template=>wwv_flow_api.id(63643432606014288)
+,p_page_css_classes=>'LOGOUT'
 ,p_page_template_options=>'#DEFAULT#'
 ,p_page_is_public_y_n=>'Y'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210213132102'
+,p_last_upd_yyyymmddhh24miss=>'20210219164937'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(66687575570800292)

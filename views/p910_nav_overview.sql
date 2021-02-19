@@ -1,5 +1,6 @@
 CREATE OR REPLACE VIEW p910_nav_overview AS
 WITH q AS (
+    -- to get correct (hierarchic) order
     SELECT
         ROWNUM AS seq#,
         q.page_id
@@ -32,7 +33,7 @@ SELECT
         END AS status,
     --
     n.order#,
-    n.css_class,
+    p.page_css_classes AS css_class,
     n.is_hidden,
     p.page_group,
     --
@@ -57,27 +58,27 @@ LEFT JOIN q
 WHERE n.app_id                  = sess.get_app_id()
 UNION ALL
 SELECT
-    a.app_id,
-    a.page_id,
-    a.parent_id,
-    a.page_alias,
-    a.page_name,
-    a.page_title,
+    p.app_id,
+    p.page_id,
+    p.parent_id,
+    p.page_alias,
+    p.page_name,
+    p.page_title,
     --
     apex.get_icon('fa-plus-square', 'Create record in Navigation table') AS status,
     --
-    a.order#,
-    a.css_class,
-    a.is_hidden,
-    a.page_group,
+    p.order#,
+    p.css_class,
+    p.is_hidden,
+    p.page_group,
     --
-    apex.get_developer_page_link(a.page_id) AS page_link,
+    apex.get_developer_page_link(p.page_id) AS page_link,
     --
-    CASE WHEN a.auth_scheme LIKE '%MUST_NOT_BE_PUBLIC_USER%'
+    CASE WHEN p.auth_scheme LIKE '%MUST_NOT_BE_PUBLIC_USER%'
         THEN apex.get_icon('fa-check-square', 'MUST_NOT_BE_PUBLIC_USER')
-        ELSE a.auth_scheme
+        ELSE p.auth_scheme
         END AS auth_scheme,
     NULL AS seq#
-FROM p910_nav_pages_to_add a
-WHERE a.app_id          = sess.get_app_id();
+FROM p910_nav_pages_to_add p
+WHERE p.app_id          = sess.get_app_id();
 

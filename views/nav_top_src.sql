@@ -14,14 +14,16 @@ SELECT
     n.app_id,
     n.page_id,
     n.parent_id,
-    a.page_alias,
-    a.page_name,
-    a.page_title,
+    p.page_alias,
+    p.page_name,
+    p.page_title,
     NULL                        AS page_target,
     NULL                        AS page_onclick,
-    a.page_group,
-    a.authorization_scheme      AS auth_scheme,
-    n.css_class,
+    p.page_group,
+    p.authorization_scheme      AS auth_scheme,
+    --
+    p.page_group || ' ' || p.page_css_classes AS css_class,
+    --
     i.item_name                 AS reset_item,
     g.page_id                   AS group_id,
     n.order#,
@@ -32,13 +34,13 @@ SELECT
 FROM navigation n
 JOIN curr
     ON curr.app_id              = n.app_id
-JOIN apex_application_pages a
-    ON a.application_id         = n.app_id
-    AND a.page_id               = n.page_id
+JOIN apex_application_pages p
+    ON p.application_id         = n.app_id
+    AND p.page_id               = n.page_id
 LEFT JOIN apex_application_page_items i
-    ON i.application_id         = a.application_id
-    AND i.page_id               = a.page_id
-    AND i.item_name             = 'P' || TO_CHAR(a.page_id) || '_RESET'
+    ON i.application_id         = p.application_id
+    AND i.page_id               = p.page_id
+    AND i.item_name             = 'P' || TO_CHAR(p.page_id) || '_RESET'
 LEFT JOIN navigation_groups g
     ON g.app_id                 = n.app_id
     AND g.page_id               = n.page_id
@@ -88,7 +90,9 @@ SELECT
     NULL                    AS page_onclick,
     NULL                    AS page_group,
     NULL                    AS auth_scheme,
-    'ACTIVE'                AS css_class,
+    --
+    p.page_group || ' ' || p.page_css_classes || ' ACTIVE' AS css_class,
+    --
     NULL                    AS reset_item,
     NULL                    AS group_id,
     NULL                    AS order#,
