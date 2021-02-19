@@ -241,7 +241,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         --
         SELECT p.table_name, p.page_id
         INTO rec.target_table, rec.target_page_id
-        FROM p860_uploaders_possible p
+        FROM p805_uploaders_possible p
         WHERE p.table_name      = in_uploader_id
             AND p.uploader_id   IS NULL;
         --        
@@ -286,7 +286,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         -- merge existing columns
         FOR c IN (
             SELECT m.*
-            FROM p860_uploaders_mapping m
+            FROM p805_uploaders_mapping m
             WHERE m.uploader_id = in_uploader_id
         ) LOOP
             INSERT INTO uploaders_mapping (
@@ -344,6 +344,9 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         in_table_name       uploaders.target_table%TYPE
     ) AS
     BEGIN
+        --
+        -- @TODO: create this as PTT (private temp table) just for current user and transaction
+        --
         tree.log_module(in_table_name);
 
         -- drop table if exists

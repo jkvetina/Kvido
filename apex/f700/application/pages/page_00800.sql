@@ -38,7 +38,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210219175501'
+,p_last_upd_yyyymmddhh24miss=>'20210219195651'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(25071177918009654)
@@ -776,7 +776,7 @@ wwv_flow_api.create_jet_chart_series(
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(46429087864913333)
-,p_plug_name=>'Upload File'
+,p_plug_name=>'Upload File &P800_TARGET_NAME.'
 ,p_region_template_options=>'#DEFAULT#'
 ,p_plug_template=>wwv_flow_api.id(64142195941700285)
 ,p_plug_display_sequence=>10
@@ -874,6 +874,14 @@ wwv_flow_api.create_page_button(
 ,p_button_redirect_url=>'f?p=&APP_ID.:800:&SESSION.::&DEBUG.::P800_DELETE:&P800_FILE.'
 );
 wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(13048640589981119)
+,p_name=>'P800_TARGET_NAME'
+,p_item_sequence=>40
+,p_item_plug_id=>wwv_flow_api.id(46429087864913333)
+,p_display_as=>'NATIVE_HIDDEN'
+,p_attribute_01=>'Y'
+);
+wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13438053898622261)
 ,p_name=>'P800_RESET'
 ,p_item_sequence=>10
@@ -953,7 +961,7 @@ wwv_flow_api.create_page_item(
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13442507960622273)
 ,p_name=>'P800_SESSION'
-,p_item_sequence=>40
+,p_item_sequence=>50
 ,p_item_plug_id=>wwv_flow_api.id(46429087864913333)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
@@ -1113,8 +1121,28 @@ wwv_flow_api.create_page_process(
 ,p_process_when_type=>'ITEM_IS_NOT_NULL'
 );
 wwv_flow_api.create_page_process(
- p_id=>wwv_flow_api.id(13455605711622330)
+ p_id=>wwv_flow_api.id(13048714910981120)
 ,p_process_sequence=>40
+,p_process_point=>'AFTER_HEADER'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'SET_TARGET_NAME'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'FOR c IN (',
+'    SELECT CASE WHEN u.region_name IS NOT NULL THEN '' to '' || u.region_name END AS uploader_name',
+'    FROM p805_uploaders u',
+'    WHERE u.uploader_id = apex.get_item(''$TARGET'')',
+') LOOP',
+'    apex.set_item(''$TARGET_NAME'', c.uploader_name);',
+'END LOOP;',
+''))
+,p_process_clob_language=>'PLSQL'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
+,p_process_when=>'P800_TARGET'
+,p_process_when_type=>'ITEM_IS_NOT_NULL'
+);
+wwv_flow_api.create_page_process(
+ p_id=>wwv_flow_api.id(13455605711622330)
+,p_process_sequence=>50
 ,p_process_point=>'AFTER_HEADER'
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'DELETE_FILE'
@@ -1131,7 +1159,7 @@ wwv_flow_api.create_page_process(
 );
 wwv_flow_api.create_page_process(
  p_id=>wwv_flow_api.id(13456041840622331)
-,p_process_sequence=>50
+,p_process_sequence=>60
 ,p_process_point=>'AFTER_HEADER'
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'DOWNLOAD_FILE'
@@ -1146,7 +1174,7 @@ wwv_flow_api.create_page_process(
 );
 wwv_flow_api.create_page_process(
  p_id=>wwv_flow_api.id(13455219708622328)
-,p_process_sequence=>60
+,p_process_sequence=>70
 ,p_process_point=>'AFTER_HEADER'
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'PROCESS_SHEET'
@@ -1162,7 +1190,7 @@ wwv_flow_api.create_page_process(
 );
 wwv_flow_api.create_page_process(
  p_id=>wwv_flow_api.id(13457683701622333)
-,p_process_sequence=>70
+,p_process_sequence=>80
 ,p_process_point=>'AFTER_HEADER'
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'SHOW_PREVIEW'

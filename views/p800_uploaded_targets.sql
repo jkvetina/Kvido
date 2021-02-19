@@ -18,7 +18,7 @@ SELECT
         in_names        => 'P800_RESET,P800_TARGET',
         in_values       => ',' || u.uploader_id
     ) AS target_url
-FROM p860_uploaders_possible u
+FROM p805_uploaders_possible u
 CROSS JOIN s
 WHERE u.is_active = 'Y'
     AND 1 = CASE

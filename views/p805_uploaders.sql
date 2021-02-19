@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p860_uploaders AS
+CREATE OR REPLACE VIEW p805_uploaders AS
 SELECT
     u.uploader_id,
     u.target_table,
@@ -23,7 +23,7 @@ SELECT
     p.region_check,
     p.err_table
 FROM uploaders u
-LEFT JOIN p860_uploaders_possible p
+LEFT JOIN p805_uploaders_possible p
     ON p.uploader_id    = u.uploader_id
 WHERE u.app_id          = sess.get_app_id()
 UNION ALL
@@ -48,7 +48,7 @@ SELECT
         WHEN p.auth_scheme IS NOT NULL
             THEN apex.get_page_link (
                 in_page_id      => sess.get_page_id(),
-                in_names        => 'P860_CREATE_UPLOADER,P860_UPLOADER_ID,P860_TABLE_NAME',
+                in_names        => 'P805_CREATE_UPLOADER,P805_UPLOADER_ID,P805_TABLE_NAME',
                 in_values       => 'Y,' || p.table_name || ',' || p.table_name
             )
         END AS action_link,
@@ -58,6 +58,6 @@ SELECT
     p.mappings_check,
     p.region_check,
     p.err_table
-FROM p860_uploaders_possible p
+FROM p805_uploaders_possible p
 WHERE p.uploader_id IS NULL;
 

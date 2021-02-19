@@ -23,7 +23,7 @@ LEFT JOIN uploaders_mapping m
     AND m.uploader_id   = apex.get_item('$TARGET')
     AND m.source_column = c.column_name
     AND m.is_hidden     IS NULL
-LEFT JOIN p860_uploaders_mapping d
+LEFT JOIN p805_uploaders_mapping d
     ON d.app_id         = m.app_id
     AND d.uploader_id   = m.uploader_id
     AND d.source_column = m.source_column
@@ -49,7 +49,7 @@ SELECT  -- missing columns
             THEN apex.get_icon('fa-warning')
         END AS status
 FROM uploaders_mapping m
-LEFT JOIN p860_uploaders_mapping d
+LEFT JOIN p805_uploaders_mapping d
     ON d.app_id         = m.app_id
     AND d.uploader_id   = m.uploader_id
     AND d.source_column = m.source_column

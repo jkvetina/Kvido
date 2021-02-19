@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p860_uploaders_possible AS
+CREATE OR REPLACE VIEW p805_uploaders_possible AS
 WITH u AS (
     SELECT
         u.uploader_id,
@@ -38,6 +38,12 @@ SELECT
     CASE
         WHEN e.table_name IS NULL
             THEN apex.get_icon('fa-plus-square', 'Create table to catch DML errors')
+        -- WHEN
+        --
+        -- @TODO: compare err table columns and data types with real target table
+        --
+        -- @TODO: warning icon on columns mismatch
+        --
         END AS err_table
 FROM user_objects t
 LEFT JOIN user_tables e
