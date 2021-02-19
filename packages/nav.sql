@@ -226,7 +226,6 @@ CREATE OR REPLACE PACKAGE BODY nav AS
             rec.page_id     := c.page_id;
             rec.parent_id   := c.parent_id;
             rec.order#      := c.order#;
-            rec.css_class   := c.css_class;
             rec.is_hidden   := c.is_hidden;
             --
             INSERT INTO navigation VALUES rec;
