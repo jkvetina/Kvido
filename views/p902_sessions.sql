@@ -24,8 +24,8 @@ SELECT
         ELSE TO_CHAR(TRUNC(SYSDATE) + (s.updated_at - s.created_at), 'HH24:MI')
         END AS timer,
     --
-    '<span class="fa fa-external-link" title="Open same page with same global items"></span>'   AS redirect_,
-    '<span class="fa fa-trash-o" title="Delete session and logs"></span>'                       AS delete_
+    apex.get_icon('fa-external-link', 'Open same page with same global items')  AS redirect_,
+    apex.get_icon('fa-trash-o',       'Delete session and logs')                AS delete_
 FROM sessions s
 LEFT JOIN r
     ON r.session_id     = s.session_id
