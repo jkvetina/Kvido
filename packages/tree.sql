@@ -1754,12 +1754,27 @@ CREATE OR REPLACE PACKAGE BODY tree AS
     AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
+        is_active           events.is_active%TYPE;
         rec                 logs_events%ROWTYPE;
     BEGIN
-        rec.log_id          := log_id.NEXTVAL;
-        rec.log_parent      := NULL;        ------------- current log_id
         rec.app_id          := sess.get_app_id();
         rec.event_id        := in_event_id;
+
+        -- check if event is active
+        BEGIN
+            SELECT 'Y' INTO is_active
+            FROM events e
+            WHERE e.app_id          = rec.app_id
+                AND e.event_id      = rec.event_id
+                AND e.is_active     = 'Y';
+        EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RETURN NULL;
+        END;
+
+        -- store in event table
+        rec.log_id          := log_id.NEXTVAL;
+        rec.log_parent      := recent_log_id;
         rec.event_value     := in_event_value;
         rec.user_id         := sess.get_user_id();
         rec.page_id         := sess.get_page_id();
@@ -1768,6 +1783,8 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         --
         INSERT INTO logs_events VALUES rec;
         COMMIT;
+        --
+        RETURN rec.log_id;
     END;
 
 

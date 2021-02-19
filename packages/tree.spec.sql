@@ -546,6 +546,27 @@ CREATE OR REPLACE PACKAGE tree AS
 
 
 
+    --
+    -- Log business event
+    --
+    FUNCTION log_event (
+        in_event_id         logs_events.event_id%TYPE,
+        in_event_value      logs_events.event_value%TYPE    := NULL
+    )
+    RETURN logs_events.log_id%TYPE;
+
+
+
+    --
+    -- Log business event
+    --
+    PROCEDURE log_event (
+        in_event_id         logs_events.event_id%TYPE,
+        in_event_value      logs_events.event_value%TYPE    := NULL
+    );
+
+
+
 
 
     -- ### Working with tree
