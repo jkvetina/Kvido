@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p850_uploaded_sheet_content AS
+CREATE OR REPLACE VIEW p800_uploaded_sheet_content AS
 WITH s AS (
     SELECT
         s.*,
@@ -11,7 +11,7 @@ m AS (
     SELECT
         SUM(CASE WHEN m.target_column IS NOT NULL   AND m.source_column IS NOT NULL THEN 1 ELSE 0 END)                      AS mapped_cols,
         SUM(CASE WHEN m.source_column IS NULL       AND (m.is_key IS NOT NULL OR m.is_nn IS NOT NULL) THEN 1 ELSE 0 END)    AS missing_cols
-    FROM p850_sheet_columns_mapping m
+    FROM p800_sheet_columns_mapping m
 )
 SELECT
     CASE WHEN apex.get_item('$SHOW_COLS') IS NOT NULL
@@ -26,7 +26,7 @@ SELECT
     --
     apex.get_page_link (
         in_page_id      => sess.get_page_id(),
-        in_names        => 'P850_FILE,P850_SHEET,P850_TARGET,P850_SHOW_COLS,P850_RESET',
+        in_names        => 'P800_FILE,P800_SHEET,P800_TARGET,P800_SHOW_COLS,P800_RESET',
         in_values       => s.file_name || ',' || s.sheet_id || ',' || s.target || ',Y,Y'
     ) AS target_url
 FROM s
@@ -44,7 +44,7 @@ SELECT
     --
     apex.get_page_link (
         in_page_id      => sess.get_page_id(),
-        in_names        => 'P850_FILE,P850_SHEET,P850_TARGET,P850_SHOW_DATA,P850_RESET',
+        in_names        => 'P800_FILE,P800_SHEET,P800_TARGET,P800_SHOW_DATA,P800_RESET',
         in_values       => s.file_name || ',' || s.sheet_id || ',' || s.target || ',Y,Y'
     ) AS target_url
 FROM s;

@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p850_uploaded_targets AS
+CREATE OR REPLACE VIEW p800_uploaded_targets AS
 WITH s AS (
     SELECT s.*
     FROM uploaded_file_sheets s
@@ -15,7 +15,7 @@ SELECT
     --
     apex.get_page_link (
         in_page_id      => sess.get_page_id(),
-        in_names        => 'P850_RESET,P850_TARGET',
+        in_names        => 'P800_RESET,P800_TARGET',
         in_values       => ',' || u.uploader_id
     ) AS target_url
 FROM p860_uploaders_possible u

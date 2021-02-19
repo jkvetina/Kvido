@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p850_sheet_columns_mapping AS
+CREATE OR REPLACE VIEW p800_sheet_columns_mapping AS
 SELECT  -- passed and matched columns
     c.column_id,
     c.column_name       AS source_column,

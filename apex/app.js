@@ -36,8 +36,8 @@ var unified_ig_toolbar = function(config, grid_id) {
                 action  : function(event, focusElement) {
                     //console.log(this, event, focusElement);
                     location.href = apex.util.makeApplicationUrl({
-                        pageId      : 850,
-                        itemNames   : ['P850_RESET', 'P850_TARGET'],
+                        pageId      : 800,
+                        itemNames   : ['P800_RESET', 'P800_TARGET'],
                         itemValues  : ['Y', grid_id]
                     });
                 }
