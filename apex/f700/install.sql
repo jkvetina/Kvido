@@ -123,6 +123,7 @@ prompt --install
 @@application/pages/page_00800.sql
 @@application/pages/page_00802.sql
 @@application/pages/page_00805.sql
+@@application/pages/page_00850.sql
 @@application/pages/page_00900.sql
 @@application/pages/page_00901.sql
 @@application/pages/page_00902.sql
