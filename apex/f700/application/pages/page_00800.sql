@@ -38,7 +38,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210220124201'
+,p_last_upd_yyyymmddhh24miss=>'20210220132356'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(25071177918009654)
@@ -222,13 +222,45 @@ wwv_flow_api.create_region_column(
 ,p_data_type=>'VARCHAR2'
 ,p_is_query_only=>false
 ,p_item_type=>'NATIVE_HIDDEN'
-,p_display_sequence=>130
+,p_display_sequence=>150
 ,p_attribute_01=>'Y'
 ,p_use_as_row_header=>false
 ,p_enable_sort_group=>true
 ,p_enable_control_break=>true
 ,p_is_primary_key=>false
 ,p_duplicate_value=>true
+,p_include_in_export=>false
+);
+wwv_flow_api.create_region_column(
+ p_id=>wwv_flow_api.id(13646165680013508)
+,p_name=>'STATUS_MAPPED'
+,p_source_type=>'DB_COLUMN'
+,p_source_expression=>'STATUS_MAPPED'
+,p_data_type=>'VARCHAR2'
+,p_is_query_only=>true
+,p_item_type=>'NATIVE_HIDDEN'
+,p_display_sequence=>40
+,p_attribute_01=>'Y'
+,p_use_as_row_header=>false
+,p_enable_sort_group=>true
+,p_enable_control_break=>true
+,p_is_primary_key=>false
+,p_include_in_export=>false
+);
+wwv_flow_api.create_region_column(
+ p_id=>wwv_flow_api.id(13646242178013509)
+,p_name=>'STATUS_MISSING'
+,p_source_type=>'DB_COLUMN'
+,p_source_expression=>'STATUS_MISSING'
+,p_data_type=>'NUMBER'
+,p_is_query_only=>true
+,p_item_type=>'NATIVE_HIDDEN'
+,p_display_sequence=>50
+,p_attribute_01=>'Y'
+,p_use_as_row_header=>false
+,p_enable_sort_group=>true
+,p_enable_control_break=>true
+,p_is_primary_key=>false
 ,p_include_in_export=>false
 );
 wwv_flow_api.create_region_column(
@@ -241,7 +273,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_NUMBER_FIELD'
 ,p_heading=>'Source #'
 ,p_heading_alignment=>'RIGHT'
-,p_display_sequence=>30
+,p_display_sequence=>60
 ,p_value_alignment=>'RIGHT'
 ,p_attribute_03=>'right'
 ,p_is_required=>false
@@ -267,7 +299,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_TEXT_FIELD'
 ,p_heading=>'Data Type'
 ,p_heading_alignment=>'LEFT'
-,p_display_sequence=>40
+,p_display_sequence=>70
 ,p_value_alignment=>'LEFT'
 ,p_attribute_05=>'BOTH'
 ,p_is_required=>false
@@ -297,7 +329,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_TEXT_FIELD'
 ,p_heading=>'Source Column'
 ,p_heading_alignment=>'LEFT'
-,p_display_sequence=>50
+,p_display_sequence=>80
 ,p_value_alignment=>'LEFT'
 ,p_attribute_05=>'BOTH'
 ,p_is_required=>false
@@ -325,7 +357,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_TEXT_FIELD'
 ,p_heading=>'Target Column'
 ,p_heading_alignment=>'LEFT'
-,p_display_sequence=>80
+,p_display_sequence=>100
 ,p_value_alignment=>'LEFT'
 ,p_attribute_05=>'BOTH'
 ,p_is_required=>false
@@ -356,7 +388,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_TEXT_FIELD'
 ,p_heading=>'Target Data Type'
 ,p_heading_alignment=>'LEFT'
-,p_display_sequence=>90
+,p_display_sequence=>110
 ,p_value_alignment=>'LEFT'
 ,p_attribute_05=>'BOTH'
 ,p_is_required=>false
@@ -386,7 +418,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_DISPLAY_ONLY'
 ,p_heading=>'Is Key'
 ,p_heading_alignment=>'CENTER'
-,p_display_sequence=>100
+,p_display_sequence=>120
 ,p_value_alignment=>'CENTER'
 ,p_attribute_02=>'VALUE'
 ,p_enable_filter=>true
@@ -413,7 +445,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_DISPLAY_ONLY'
 ,p_heading=>'Is Nn'
 ,p_heading_alignment=>'CENTER'
-,p_display_sequence=>110
+,p_display_sequence=>130
 ,p_value_alignment=>'CENTER'
 ,p_attribute_02=>'VALUE'
 ,p_enable_filter=>true
@@ -440,7 +472,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_TEXT_FIELD'
 ,p_heading=>'Overwrite Value'
 ,p_heading_alignment=>'LEFT'
-,p_display_sequence=>120
+,p_display_sequence=>140
 ,p_value_alignment=>'LEFT'
 ,p_attribute_05=>'BOTH'
 ,p_is_required=>false
@@ -468,7 +500,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_DISPLAY_ONLY'
 ,p_heading=>'Status'
 ,p_heading_alignment=>'CENTER'
-,p_display_sequence=>60
+,p_display_sequence=>30
 ,p_value_alignment=>'CENTER'
 ,p_attribute_02=>'VALUE'
 ,p_enable_filter=>true
@@ -494,7 +526,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_NUMBER_FIELD'
 ,p_heading=>'Target #'
 ,p_heading_alignment=>'RIGHT'
-,p_display_sequence=>70
+,p_display_sequence=>90
 ,p_value_alignment=>'RIGHT'
 ,p_attribute_03=>'right'
 ,p_is_required=>false
@@ -573,6 +605,22 @@ wwv_flow_api.create_ig_report_column(
 ,p_view_id=>wwv_flow_api.id(25498817486916085)
 ,p_display_seq=>11
 ,p_column_id=>wwv_flow_api.id(13645822226013505)
+,p_is_visible=>true
+,p_is_frozen=>false
+);
+wwv_flow_api.create_ig_report_column(
+ p_id=>wwv_flow_api.id(13733900283881626)
+,p_view_id=>wwv_flow_api.id(25498817486916085)
+,p_display_seq=>12
+,p_column_id=>wwv_flow_api.id(13646165680013508)
+,p_is_visible=>true
+,p_is_frozen=>false
+);
+wwv_flow_api.create_ig_report_column(
+ p_id=>wwv_flow_api.id(13739824615893342)
+,p_view_id=>wwv_flow_api.id(25498817486916085)
+,p_display_seq=>13
+,p_column_id=>wwv_flow_api.id(13646242178013509)
 ,p_is_visible=>true
 ,p_is_frozen=>false
 );
@@ -990,6 +1038,18 @@ wwv_flow_api.create_page_item(
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
 );
+wwv_flow_api.component_end;
+end;
+/
+begin
+wwv_flow_api.component_begin (
+ p_version_yyyy_mm_dd=>'2020.10.01'
+,p_release=>'20.2.0.00.20'
+,p_default_workspace_id=>9526531750928358
+,p_default_application_id=>700
+,p_default_id_offset=>28323188538908472
+,p_default_owner=>'DEV'
+);
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13442507960622273)
 ,p_name=>'P800_SESSION'
@@ -1037,18 +1097,6 @@ wwv_flow_api.create_page_item(
 ,p_item_plug_id=>wwv_flow_api.id(37673622004032103)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
-);
-wwv_flow_api.component_end;
-end;
-/
-begin
-wwv_flow_api.component_begin (
- p_version_yyyy_mm_dd=>'2020.10.01'
-,p_release=>'20.2.0.00.20'
-,p_default_workspace_id=>9526531750928358
-,p_default_application_id=>700
-,p_default_id_offset=>28323188538908472
-,p_default_owner=>'DEV'
 );
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13453360649622317)

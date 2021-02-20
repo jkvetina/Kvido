@@ -20,6 +20,9 @@ WITH p AS (
                 THEN apex.get_icon('fa-check-square')
             END AS status,
         --
+        CASE WHEN m.target_column IS NOT NULL THEN 'Y' END  AS status_mapped,
+        NULL                                                AS status_missing,
+        --
         CASE WHEN d.column_id IS NOT NULL THEN 'U' END AS allow_changes  -- U = update
     FROM uploaded_file_cols c
     LEFT JOIN uploaders_mapping m
@@ -58,6 +61,9 @@ m AS (
                 THEN apex.get_icon('fa-warning')
             END AS status,
         --
+        NULL                                                        AS status_mapped,
+        CASE WHEN (m.is_key = 'Y' OR m.is_nn = 'Y') THEN 'Y' END    AS status_missing,
+        --
         CASE WHEN x.column_id IS NOT NULL THEN 'U' END AS allow_changes  -- U = update
     FROM uploaders_mapping m
     LEFT JOIN p805_uploaders_mapping x
@@ -84,6 +90,8 @@ SELECT
     p.is_nn,
     p.overwrite_value,
     p.status,
+    p.status_mapped,
+    p.status_missing,
     p.allow_changes
 FROM p
 UNION ALL
@@ -98,9 +106,8 @@ SELECT
     m.is_nn,
     m.overwrite_value,
     m.status,
+    m.status_mapped,
+    m.status_missing,
     m.allow_changes
 FROM m;
-
-
-select * from uploaders_mapping where uploader_id = 'USERS';
 

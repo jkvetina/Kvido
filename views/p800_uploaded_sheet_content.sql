@@ -9,9 +9,9 @@ WITH s AS (
 ),
 m AS (
     SELECT
-        SUM(CASE WHEN m.target_column IS NOT NULL   AND m.source_column IS NOT NULL THEN 1 ELSE 0 END)                      AS mapped_cols,
-        SUM(CASE WHEN m.source_column IS NULL       AND (m.is_key IS NOT NULL OR m.is_nn IS NOT NULL) THEN 1 ELSE 0 END)    AS missing_cols
-    FROM p800_sheet_columns_mapping m
+        SUM(CASE WHEN m.status_mapped  = 'Y' THEN 1 ELSE 0 END) AS mapped_cols,
+        SUM(CASE WHEN m.status_missing = 'Y' THEN 1 ELSE 0 END) AS missing_cols
+    FROM p800_sheet_columns_mapping m    
 )
 SELECT
     CASE WHEN apex.get_item('$SHOW_COLS') IS NOT NULL
