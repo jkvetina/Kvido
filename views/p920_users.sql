@@ -28,7 +28,8 @@ SELECT
     u.*,
     s.sessions_,
     l.logs_,
-    r.roles_
+    r.roles_,
+    u.ROWID AS rid
 FROM users u
 LEFT JOIN s
     ON s.user_id = u.user_id

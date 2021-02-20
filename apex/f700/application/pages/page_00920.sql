@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210219173729'
+,p_last_upd_yyyymmddhh24miss=>'20210220085851'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(11030246584764233)
@@ -98,7 +98,7 @@ wwv_flow_api.create_region_column(
 ,p_enable_sort_group=>true
 ,p_enable_control_break=>true
 ,p_enable_hide=>true
-,p_is_primary_key=>true
+,p_is_primary_key=>false
 ,p_duplicate_value=>true
 ,p_include_in_export=>true
 );
@@ -338,6 +338,20 @@ wwv_flow_api.create_region_column(
 ,p_include_in_export=>true
 ,p_escape_on_http_output=>true
 );
+wwv_flow_api.create_region_column(
+ p_id=>wwv_flow_api.id(13050960747981142)
+,p_name=>'RID'
+,p_source_type=>'DB_COLUMN'
+,p_source_expression=>'ROWID'
+,p_data_type=>'ROWID'
+,p_item_type=>'NATIVE_HIDDEN'
+,p_display_sequence=>130
+,p_attribute_01=>'Y'
+,p_use_as_row_header=>false
+,p_enable_sort_group=>false
+,p_is_primary_key=>true
+,p_include_in_export=>false
+);
 wwv_flow_api.create_interactive_grid(
  p_id=>wwv_flow_api.id(11030334673764234)
 ,p_internal_uid=>11030334673764234
@@ -480,6 +494,14 @@ wwv_flow_api.create_ig_report_column(
 ,p_is_frozen=>false
 ,p_width=>82
 );
+wwv_flow_api.create_ig_report_column(
+ p_id=>wwv_flow_api.id(13599431291296501)
+,p_view_id=>wwv_flow_api.id(11192661465567835)
+,p_display_seq=>11
+,p_column_id=>wwv_flow_api.id(13050960747981142)
+,p_is_visible=>true
+,p_is_frozen=>false
+);
 wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(11206616093964011)
 ,p_button_sequence=>10
@@ -491,18 +513,6 @@ wwv_flow_api.create_page_button(
 ,p_button_image_alt=>'&CLEAR_FILTERS.'
 ,p_button_position=>'RIGHT_OF_TITLE'
 ,p_button_redirect_url=>'f?p=&APP_ID.:920:&SESSION.::&DEBUG.::P920_RESET:Y'
-);
-wwv_flow_api.create_page_button(
- p_id=>wwv_flow_api.id(11031663237764247)
-,p_button_sequence=>20
-,p_button_plug_id=>wwv_flow_api.id(11030246584764233)
-,p_button_name=>'UPLOAD'
-,p_button_action=>'REDIRECT_PAGE'
-,p_button_template_options=>'#DEFAULT#'
-,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_image_alt=>'<span class="fa fa-upload" title="Upload"></span>'
-,p_button_position=>'RIGHT_OF_TITLE'
-,p_button_redirect_url=>'f?p=&APP_ID.:800:&SESSION.::&DEBUG.::P800_TARGET,P800_RESET:USERS,Y'
 );
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(11206357595964008)

@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210220082734'
+,p_last_upd_yyyymmddhh24miss=>'20210220090204'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(9544386426654050)
@@ -641,7 +641,7 @@ wwv_flow_api.create_region_column(
  p_id=>wwv_flow_api.id(13050811281981141)
 ,p_name=>'RID'
 ,p_source_type=>'DB_COLUMN'
-,p_source_expression=>'RID'
+,p_source_expression=>'ROWID'
 ,p_data_type=>'ROWID'
 ,p_item_type=>'NATIVE_HIDDEN'
 ,p_display_sequence=>90
