@@ -45,7 +45,9 @@ SELECT
         THEN apex.get_icon('fa-check-square', 'MUST_NOT_BE_PUBLIC_USER')
         ELSE p.authorization_scheme
         END AS auth_scheme,
-    q.seq#
+    q.seq#,
+    --
+    'UD' AS allow_changes  -- U = update, D = delete
 FROM navigation n
 LEFT JOIN apex_application_pages p
     ON p.application_id         = n.app_id
@@ -78,7 +80,9 @@ SELECT
         THEN apex.get_icon('fa-check-square', 'MUST_NOT_BE_PUBLIC_USER')
         ELSE p.auth_scheme
         END AS auth_scheme,
-    NULL AS seq#
+    NULL AS seq#,
+    --
+    NULL AS allow_changes  -- no changes allowed
 FROM p910_nav_pages_to_add p
 WHERE p.app_id          = sess.get_app_id();
 
