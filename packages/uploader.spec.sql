@@ -5,6 +5,20 @@ CREATE OR REPLACE PACKAGE uploader AS
     dml_tables_postfix      CONSTANT VARCHAR2(30)       := '_U$';
     dml_tables_cols         CONSTANT NUMBER(4)          := 60;
 
+    -- exception used in FORALL exception handling
+    forall_failed           EXCEPTION;
+    PRAGMA                  EXCEPTION_INIT(forall_failed, -24381);
+
+    -- collections used for individial uploaders
+    TYPE target_table_t
+        IS TABLE OF         uploaders_u$%ROWTYPE INDEX BY PLS_INTEGER;
+    --
+    TYPE target_rows_t
+        IS TABLE OF         PLS_INTEGER INDEX BY PLS_INTEGER;
+    --
+    TYPE target_ids_t
+        IS TABLE OF         PLS_INTEGER;
+
 
 
     PROCEDURE upload_file (
