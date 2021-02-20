@@ -12,6 +12,10 @@ wwv_flow_api.component_begin (
 ,p_default_owner=>'DEV'
 );
 wwv_flow_api.create_page_group(
+ p_id=>wwv_flow_api.id(13240277659338518)
+,p_group_name=>'APEX'
+);
+wwv_flow_api.create_page_group(
  p_id=>wwv_flow_api.id(64766608684607384)
 ,p_group_name=>'DASHBOARD'
 );

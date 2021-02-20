@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210217223728'
+,p_last_upd_yyyymmddhh24miss=>'20210220082915'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(11632469671387418)
@@ -1058,10 +1058,11 @@ wwv_flow_api.create_page_process(
 ,p_process_point=>'AFTER_SUBMIT'
 ,p_region_id=>wwv_flow_api.id(11633635501387430)
 ,p_process_type=>'NATIVE_IG_DML'
-,p_process_name=>'User Roles - Save Interactive Grid Data'
-,p_attribute_01=>'REGION_SOURCE'
+,p_process_name=>'User Roles'
+,p_attribute_01=>'TABLE'
+,p_attribute_03=>'USER_ROLES'
 ,p_attribute_05=>'Y'
-,p_attribute_06=>'Y'
+,p_attribute_06=>'N'
 ,p_attribute_08=>'Y'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
 );
