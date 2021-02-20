@@ -28,7 +28,10 @@ SELECT
     NULL                    AS image_attribute,
     NULL                    AS image_alt_attribute,
     --
-    t.css_class             AS attribute01,
+    CASE
+        WHEN t.page_id = 0 THEN 'HIDDEN'
+        ELSE t.css_class
+        END AS attribute01,
     --
     CASE
         WHEN t.page_id IS NULL AND t.page_target IS NULL

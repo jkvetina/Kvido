@@ -496,9 +496,11 @@ div.a-GV-bdy div.a-GV-noDataMsg.a-GV-altMessage {
     background:             #444;
 }
 
+#t_Header > #top_header > nav ul li.UPLOADER,
 #t_Header > #top_header > nav ul li.DARK_GREEN {
     background:             #547B5F;
 }
+#t_Header > #top_header > nav ul li.UPLOADER a:hover,
 #t_Header > #top_header > nav ul li.DARK_GREEN a:hover {
     background:             #444;
 }
