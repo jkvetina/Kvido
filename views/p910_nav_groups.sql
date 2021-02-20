@@ -9,7 +9,9 @@ SELECT
         END AS status,
     --
     NULLIF(COUNT(p.page_id), 0)         AS pages,
-    MAX(a.authorization_scheme_name)    AS auth_scheme
+    MAX(a.authorization_scheme_name)    AS auth_scheme,
+    --
+    MAX(g.ROWID) AS rid
 FROM navigation_groups g
 LEFT JOIN apex_application_pages p
     ON p.application_id                 = g.app_id
@@ -22,3 +24,4 @@ LEFT JOIN user_procedures s
     AND s.procedure_name                = p.authorization_scheme
 WHERE g.app_id                          = sess.get_app_id()
 GROUP BY g.app_id, g.page_id, g.page_group;
+
