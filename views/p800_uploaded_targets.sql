@@ -6,7 +6,10 @@ WITH s AS (
         AND s.sheet_id  = apex.get_item('$SHEET')
 )
 SELECT
-    CASE WHEN u.uploader_id = apex.get_item('$TARGET')
+    CASE WHEN (
+            u.uploader_id       = apex.get_item('$TARGET')
+            OR s.uploader_id    = apex.get_item('$TARGET')
+        )
         THEN '<b>' || NVL(u.uploader_id, '-') || '</b>'
         ELSE          NVL(u.uploader_id, '-')
         END AS list_label,
@@ -24,5 +27,6 @@ WHERE u.is_active = 'Y'
     AND 1 = CASE
         WHEN u.uploader_id IS NOT NULL AND u.uploader_id != apex.get_item('$TARGET')
             THEN 0
-        ELSE 1 END;
+        ELSE 1 END
+ORDER BY 1;
 
