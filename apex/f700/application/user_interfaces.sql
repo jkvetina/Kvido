@@ -23,6 +23,7 @@ wwv_flow_api.create_user_interface(
 ,p_login_url=>'f?p=&APP_ID.:9999:&SESSION.'
 ,p_theme_style_by_user_pref=>false
 ,p_built_with_love=>false
+,p_global_page_id=>0
 ,p_navigation_list_id=>wwv_flow_api.id(77155376142062545)
 ,p_navigation_list_position=>'TOP'
 ,p_navigation_list_template_id=>wwv_flow_api.id(64163400516768059)
