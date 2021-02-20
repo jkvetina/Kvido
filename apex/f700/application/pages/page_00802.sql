@@ -22,7 +22,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210220093902'
+,p_last_upd_yyyymmddhh24miss=>'20210220135045'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(25536932297178152)
@@ -46,6 +46,7 @@ wwv_flow_api.create_page_plug(
 'FROM p800_uploaded_files f',
 'WHERE f.file_name       = NVL(apex.get_item(''$FILE''), f.file_name)',
 '    AND f.file_name     LIKE ''%'' || apex.get_item(''$FILE_LIKE'')',
+'    AND f.uploader_id   = NVL(apex.get_item(''$UPLOADER''), f.uploader_id)',
 '    AND f.created_by    = NVL(apex.get_item(''$UPLOADED_BY''), f.created_by);',
 ''))
 ,p_plug_source_type=>'NATIVE_IG'
@@ -248,15 +249,14 @@ wwv_flow_api.create_region_column(
 ,p_source_type=>'DB_COLUMN'
 ,p_source_expression=>'UPLOADER_ID'
 ,p_data_type=>'VARCHAR2'
-,p_is_query_only=>false
-,p_item_type=>'NATIVE_TEXT_FIELD'
+,p_is_query_only=>true
+,p_item_type=>'NATIVE_LINK'
 ,p_heading=>'Uploader Id'
 ,p_heading_alignment=>'LEFT'
 ,p_display_sequence=>80
 ,p_value_alignment=>'LEFT'
-,p_attribute_05=>'BOTH'
-,p_is_required=>false
-,p_max_length=>30
+,p_link_target=>'f?p=&APP_ID.:802:&SESSION.::&DEBUG.::P802_UPLOADER:&UPLOADER_ID.'
+,p_link_text=>'&UPLOADER_ID.'
 ,p_enable_filter=>true
 ,p_filter_operators=>'C:S:CASE_INSENSITIVE:REGEXP'
 ,p_filter_is_required=>false
@@ -268,8 +268,8 @@ wwv_flow_api.create_region_column(
 ,p_enable_control_break=>true
 ,p_enable_hide=>true
 ,p_is_primary_key=>false
-,p_duplicate_value=>true
 ,p_include_in_export=>true
+,p_escape_on_http_output=>true
 );
 wwv_flow_api.create_region_column(
  p_id=>wwv_flow_api.id(25538028295178163)
@@ -967,7 +967,7 @@ wwv_flow_api.create_page_item(
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13051282518981145)
 ,p_name=>'P802_UPLOADED_BY'
-,p_item_sequence=>50
+,p_item_sequence=>60
 ,p_item_plug_id=>wwv_flow_api.id(25536932297178152)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
@@ -992,6 +992,14 @@ wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13476208203738756)
 ,p_name=>'P802_FILE'
 ,p_item_sequence=>30
+,p_item_plug_id=>wwv_flow_api.id(25536932297178152)
+,p_display_as=>'NATIVE_HIDDEN'
+,p_attribute_01=>'Y'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(13646352623013510)
+,p_name=>'P802_UPLOADER'
+,p_item_sequence=>50
 ,p_item_plug_id=>wwv_flow_api.id(25536932297178152)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
