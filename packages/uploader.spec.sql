@@ -55,6 +55,15 @@ CREATE OR REPLACE PACKAGE uploader AS
 
 
 
+    PROCEDURE process_file_sheet (
+        in_file_name        uploaded_file_sheets.file_name%TYPE,
+        in_sheet_id         uploaded_file_sheets.sheet_id%TYPE,
+        in_uploader_id      uploaded_file_sheets.uploader_id%TYPE,
+        in_commit           BOOLEAN                                     := FALSE
+    );
+
+
+
     PROCEDURE delete_file (
         in_file_name        uploaded_files.file_name%TYPE
     );

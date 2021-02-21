@@ -38,7 +38,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210220132356'
+,p_last_upd_yyyymmddhh24miss=>'20210221122608'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(25071177918009654)
@@ -1283,9 +1283,13 @@ wwv_flow_api.create_page_process(
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'PROCESS_SHEET'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'--uploader.process_file (',
-'--);',
-'NULL;',
+'IF apex.get_item(''$SHEET'') IS NOT NULL AND apex.get_item(''$TARGET'') IS NOT NULL THEN',
+'    uploader.process_file_sheet (',
+'        in_file_name        => apex.get_item(''$FILE''),',
+'        in_sheet_id         => apex.get_item(''$SHEET''),',
+'        in_uploader_id      => apex.get_item(''$TARGET'')',
+'    );',
+'END IF;',
 ''))
 ,p_process_clob_language=>'PLSQL'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'

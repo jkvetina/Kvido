@@ -175,6 +175,69 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
 
+    PROCEDURE process_file_sheet (
+        in_file_name        uploaded_file_sheets.file_name%TYPE,
+        in_sheet_id         uploaded_file_sheets.sheet_id%TYPE,
+        in_uploader_id      uploaded_file_sheets.uploader_id%TYPE,
+        in_commit           BOOLEAN                                     := FALSE
+    ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+        --
+        uploader_procedure  VARCHAR2(30);
+    BEGIN
+        tree.log_module(in_file_name, in_sheet_id, in_uploader_id, CASE WHEN in_commit THEN 'Y' ELSE 'N' END);
+        --
+        SAVEPOINT before_merge;
+
+        -- check if customized upload procedure exists
+        BEGIN
+            SELECT p.object_name INTO uploader_procedure
+            FROM user_procedures p
+            WHERE p.object_name         = uploader.uploader_prefix || in_uploader_id
+                AND p.procedure_name    IS NULL
+                AND p.object_type       = 'PROCEDURE';
+        EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            tree.raise_error('UPLOADER_CODE_MISSING', uploader.uploader_prefix || in_uploader_id);
+        END;
+
+tree.log_warning('EXECUTE',
+            'BEGIN ' || uploader_procedure || '(' ||
+            'in_file_name    => :1, ' ||
+            'in_sheet_id     => :2, ' ||
+            'in_uploader_id  => :3'   ||
+            '); END;',
+            in_file_name, 'SHEET:' || in_sheet_id, 'UPL:' || in_uploader_id
+);
+
+        -- execute procedure
+        EXECUTE IMMEDIATE
+            'BEGIN ' || uploader_procedure || '(' ||
+            'in_file_name    => :1, ' ||
+            'in_sheet_id     => :2, ' ||
+            'in_uploader_id  => :3'   ||
+            '); END;'
+            USING in_file_name, in_sheet_id, in_uploader_id;
+
+        -- commit or rollback changes
+        IF NOT in_commit THEN
+            ROLLBACK TO SAVEPOINT before_merge;
+        ELSE
+            COMMIT;
+        END IF;
+        --
+        tree.update_timer();
+    EXCEPTION
+    WHEN tree.app_exception THEN
+        ROLLBACK;
+        RAISE;
+    WHEN OTHERS THEN
+        ROLLBACK;
+        tree.raise_error();
+    END;
+
+
+
     PROCEDURE delete_file (
         in_file_name        uploaded_files.file_name%TYPE
     ) AS
