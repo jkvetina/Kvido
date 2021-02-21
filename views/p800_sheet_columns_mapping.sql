@@ -46,7 +46,7 @@ m AS (
             WHERE p.target_column_id < x.column_id
         ) AS column_id,
         --
-        m.source_column,
+        NULL                AS source_column,
         NULL                AS data_type,
         x.column_id         AS target_column_id,
         m.target_column     AS target_column,

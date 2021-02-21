@@ -18,8 +18,8 @@ SELECT
     --
     apex.get_page_link (
         in_page_id      => sess.get_page_id(),
-        in_names        => 'P800_RESET,P800_TARGET',
-        in_values       => ',' || u.uploader_id
+        in_names        => 'P800_RESET,P800_FILE,P800_SHEET,P800_TARGET,P800_SHOW_COLS',
+        in_values       => 'Y,' || apex.get_item('$FILE') || ',' || apex.get_item('$SHEET') || ',' || u.uploader_id || ',' || apex.get_item('$SHOW_COLS')
     ) AS target_url
 FROM p805_uploaders_possible u
 CROSS JOIN s

@@ -22,7 +22,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210220135045'
+,p_last_upd_yyyymmddhh24miss=>'20210220153033'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(25536932297178152)
@@ -44,10 +44,10 @@ wwv_flow_api.create_page_plug(
 '        ''"></span>'' AS open_,',
 '    ''<span class="fa fa-trash-o"></span>'' AS delete_',
 'FROM p800_uploaded_files f',
-'WHERE f.file_name       = NVL(apex.get_item(''$FILE''), f.file_name)',
-'    AND f.file_name     LIKE ''%'' || apex.get_item(''$FILE_LIKE'')',
-'    AND f.uploader_id   = NVL(apex.get_item(''$UPLOADER''), f.uploader_id)',
-'    AND f.created_by    = NVL(apex.get_item(''$UPLOADED_BY''), f.created_by);',
+'WHERE f.file_name               = NVL(apex.get_item(''$FILE''), f.file_name)',
+'    AND f.file_name             LIKE ''%'' || apex.get_item(''$FILE_LIKE'')',
+'    AND NVL(f.uploader_id, ''-'') = NVL(apex.get_item(''$UPLOADER''), NVL(f.uploader_id, ''-''))',
+'    AND f.created_by            = NVL(apex.get_item(''$UPLOADED_BY''), f.created_by);',
 ''))
 ,p_plug_source_type=>'NATIVE_IG'
 ,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
