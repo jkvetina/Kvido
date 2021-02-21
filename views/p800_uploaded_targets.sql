@@ -6,25 +6,27 @@ WITH s AS (
         AND s.sheet_id  = apex.get_item('$SHEET')
 )
 SELECT
-    CASE WHEN (
-            u.uploader_id       = apex.get_item('$TARGET')
-            OR s.uploader_id    = apex.get_item('$TARGET')
-        )
-        THEN '<b>' || NVL(u.uploader_id, '-') || '</b>'
-        ELSE          NVL(u.uploader_id, '-')
-        END AS list_label,
+    NVL(u.uploader_id, '-')/* ||
+        CASE WHEN (
+                u.uploader_id       = apex.get_item('$TARGET')
+                OR s.uploader_id    = apex.get_item('$TARGET')
+            )
+            THEN ' ' || apex.get_icon('fa-star')
+            END*/ AS list_label,
     --
     '[' || u.page_id || '] ' || u.page_name || ' - ' || u.region_name AS supplemental,
     --
     apex.get_page_link (
         in_page_id      => sess.get_page_id(),
-        in_names        => 'P800_RESET,P800_FILE,P800_SHEET,P800_TARGET,P800_SHOW_COLS',
-        in_values       => 'Y,' || apex.get_item('$FILE') || ',' || apex.get_item('$SHEET') || ',' || u.uploader_id || ',' || apex.get_item('$SHOW_COLS')
+        in_names        => 'P800_RESET,P800_FILE,P800_SHEET,P800_TARGET,P800_SHOW_COLS,P800_SHOW_TARGETS',
+        in_values       => 'Y,' || apex.get_item('$FILE') || ',' || apex.get_item('$SHEET') || ',' || u.uploader_id || ',' || apex.get_item('$SHOW_COLS') || ','
     ) AS target_url
 FROM p805_uploaders_possible u
 CROSS JOIN s
 WHERE u.is_active = 'Y'
     AND 1 = CASE
+        WHEN apex.get_item('$SHOW_TARGETS') IS NOT NULL
+            THEN 1
         WHEN u.uploader_id IS NOT NULL AND u.uploader_id != apex.get_item('$TARGET')
             THEN 0
         ELSE 1 END

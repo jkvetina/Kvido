@@ -234,6 +234,17 @@ BEGIN
     FORALL i IN 1 .. target_table.COUNT
     INSERT INTO uploaders_u$ VALUES target_table(i);
     --
+    UPDATE uploaded_file_sheets s
+    SET s.uploader_id       = in_uploader_id,
+        s.result_inserted   = rows_inserted#,
+        s.result_updated    = rows_updated#,
+        s.result_deleted    = rows_deleted#,
+        s.result_errors     = rows_errors#,
+        s.result_unmatched  = NULL                  ---------- @TODO: calculate difference agains rows from uploaded_file_sheets table
+    WHERE s.file_name       = in_file_name
+        AND s.sheet_id      = in_sheet_id;
+
+    -- close log
     tree.log_result (
         'ROWS: ' || TO_CHAR(target_table.COUNT) ||
         CASE WHEN rows_inserted# > 0 THEN ', INSERTED: ' || rows_inserted# END ||

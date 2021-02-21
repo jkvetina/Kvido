@@ -14,14 +14,12 @@ m AS (
     FROM p800_sheet_columns_mapping m    
 )
 SELECT
-    CASE WHEN apex.get_item('$SHOW_COLS') IS NOT NULL
-        THEN '<b>Columns</b>'
-        ELSE    'Columns'
-        END AS list_label,
+    'Columns' AS list_label,
     --
     'Mapped: ' || m.mapped_cols ||
         CASE WHEN m.missing_cols > 0 THEN ', Missing: ' || m.missing_cols END
         AS supplemental,
+    --
     s.sheet_cols        AS count_,
     --
     apex.get_page_link (
@@ -34,11 +32,7 @@ CROSS JOIN m
 UNION ALL
 --
 SELECT
-    CASE WHEN apex.get_item('$SHOW_DATA') IS NOT NULL
-        THEN '<b>Rows</b>'
-        ELSE    'Rows'
-        END AS list_label,
-    --
+    'Rows'              AS list_label,
     NULL                AS supplemental,
     s.sheet_rows        AS count_,
     --

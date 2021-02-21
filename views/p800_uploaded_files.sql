@@ -1,9 +1,7 @@
 CREATE OR REPLACE VIEW p800_uploaded_files AS
 SELECT
-    CASE WHEN u.file_name = apex.get_item('$FILE')
-        THEN '<b>' || uploader.get_basename(u.file_name) || '</b>'
-        ELSE          uploader.get_basename(u.file_name)
-        END AS list_label,
+    uploader.get_basename(u.file_name) AS list_label,
+    --CASE WHEN u.file_name = apex.get_item('$FILE')
     --
     u.created_at || ' ' || u.uploader_id AS supplemental,
     --

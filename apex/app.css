@@ -651,6 +651,11 @@ button.a-Button.a-Button--notification.js-showDetails {
 div.NO_ARROWS li.a-ListView-item.has-link a.ui-btn span.fa-angle-right {
     display:                none;
 }
+div.NO_ARROWS li.a-ListView-item.has-count span.ui-li-count {
+    right:                  0.8rem !important;
+}
+
+
 
 /**
  * DONT ALIGN ICONS IN TEXT TO THE RIGHT
