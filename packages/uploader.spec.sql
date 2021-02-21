@@ -10,14 +10,20 @@ CREATE OR REPLACE PACKAGE uploader AS
     PRAGMA                  EXCEPTION_INIT(forall_failed, -24381);
 
     -- collections used for individial uploaders
-    TYPE target_table_t
-        IS TABLE OF         uploaders_u$%ROWTYPE INDEX BY PLS_INTEGER;
-    --
     TYPE target_rows_t
         IS TABLE OF         PLS_INTEGER INDEX BY PLS_INTEGER;
     --
     TYPE target_ids_t
         IS TABLE OF         PLS_INTEGER;
+
+    -- delete flag
+    delete_flag_name        CONSTANT VARCHAR2(30)       := 'DELETE_FLAG';
+    delete_flag_value       CONSTANT VARCHAR2(2)        := 'Y';             -- ORA_ERR_OPTYP$%TYPE
+
+    -- custom uploader prefix
+    uploader_prefix         CONSTANT VARCHAR2(30)       := 'UPLOADER_';
+
+
 
 
 
