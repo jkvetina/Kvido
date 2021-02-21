@@ -37,14 +37,16 @@ var unified_ig_toolbar = function(config, grid_id) {
     var toolbarGroup = toolbarData.toolbarFind('actions4');
 
     // only for developers
-    // add a filter button after the actions menu
-    toolbarGroup.controls.push({
-        type            : 'BUTTON',
-        action          : 'save-report',
-        label           : 'Save as Default',
-        icon            : ''  // no icon
-    });
-    config.toolbarData = toolbarData;
+    if ($('#apexDevToolbar.a-DevToolbar')) {
+        // add a filter button after the actions menu
+        toolbarGroup.controls.push({
+            type            : 'BUTTON',
+            action          : 'save-report',
+            label           : 'Save as Default',
+            icon            : ''  // no icon
+        });
+        config.toolbarData = toolbarData;
+    }
 
     // add upload button
     if (grid_id != '') {
