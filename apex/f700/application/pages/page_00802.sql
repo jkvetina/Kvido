@@ -22,7 +22,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210220153033'
+,p_last_upd_yyyymmddhh24miss=>'20210221180821'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(25536932297178152)
@@ -955,6 +955,18 @@ wwv_flow_api.create_page_button(
 ,p_button_image_alt=>'&CLEAR_FILTERS.'
 ,p_button_position=>'RIGHT_OF_TITLE'
 ,p_button_redirect_url=>'f?p=&APP_ID.:802:&SESSION.::&DEBUG.::P802_RESET:Y'
+);
+wwv_flow_api.create_page_button(
+ p_id=>wwv_flow_api.id(13647179016013518)
+,p_button_sequence=>20
+,p_button_plug_id=>wwv_flow_api.id(25536932297178152)
+,p_button_name=>'UPLOAD'
+,p_button_action=>'REDIRECT_PAGE'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>wwv_flow_api.id(63744470351014400)
+,p_button_image_alt=>'<span class="fa fa-upload" title="Upload"></span>'
+,p_button_position=>'RIGHT_OF_TITLE'
+,p_button_redirect_url=>'f?p=&APP_ID.:800:&SESSION.::&DEBUG.::P800_RESET:Y'
 );
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13051152246981144)
