@@ -241,9 +241,25 @@ tree.log_warning('EXECUTE',
     PROCEDURE delete_file (
         in_file_name        uploaded_files.file_name%TYPE
     ) AS
+        file_exists         CHAR(1) := 'N';
     BEGIN
         tree.log_module(in_file_name);
-        --
+
+        -- check file ownership
+        BEGIN
+            SELECT 'Y' INTO file_exists
+            FROM uploaded_files f
+            WHERE f.file_name = in_file_name
+                AND (
+                    f.created_by = sess.get_user_id()
+                    OR auth.is_developer = 'Y'
+                );
+        EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            tree.raise_error('FILE_ACCESS_DENIED');
+        END;
+
+        -- proceed
         DELETE FROM uploaded_file_cols u
         WHERE u.file_name = in_file_name;
         --
