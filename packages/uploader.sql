@@ -201,15 +201,6 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             tree.raise_error('UPLOADER_CODE_MISSING', uploader.uploader_prefix || in_uploader_id);
         END;
 
-tree.log_warning('EXECUTE',
-            'BEGIN ' || uploader_procedure || '(' ||
-            'in_file_name    => :1, ' ||
-            'in_sheet_id     => :2, ' ||
-            'in_uploader_id  => :3'   ||
-            '); END;',
-            in_file_name, 'SHEET:' || in_sheet_id, 'UPL:' || in_uploader_id
-);
-
         -- execute procedure
         EXECUTE IMMEDIATE
             'BEGIN ' || uploader_procedure || '(' ||
@@ -422,41 +413,35 @@ tree.log_warning('EXECUTE',
     PROCEDURE rebuild_dml_err_table (
         in_table_name       uploaders.target_table%TYPE
     ) AS
+        err_table_name      uploaders.target_table%TYPE;
     BEGIN
+        err_table_name      := uploader.get_dml_err_table_name(in_table_name);
         --
-        -- @TODO: create this as PTT (private temp table) just for current user and transaction
-        --
-        tree.log_module(in_table_name);
+        tree.log_module(in_table_name, err_table_name, uploader.dml_tables_owner);
 
         -- drop table if exists
         BEGIN
-            EXECUTE IMMEDIATE
-                'DROP TABLE ' || uploader.get_dml_err_table_name(in_table_name) || ' PURGE';
+            DBMS_UTILITY.EXEC_DDL_STATEMENT('DROP TABLE ' || err_table_name);
         EXCEPTION
         WHEN OTHERS THEN
             NULL;
         END;
 
-        -- recreate as empty table
+        -- refresh ERR table
+        --
+        -- @TODO: create this as PTT (private temp table) just for current user and transaction
+        --
         DBMS_ERRLOG.CREATE_ERROR_LOG (
-            dml_table_name          => 'DUAL',
+            dml_table_name          => in_table_name,
+            err_log_table_name      => err_table_name,
             err_log_table_owner     => uploader.dml_tables_owner,
-            err_log_table_name      => uploader.get_dml_err_table_name(in_table_name),
+            err_log_table_space     => NULL,
             skip_unsupported        => TRUE
         );
         --
-        EXECUTE IMMEDIATE
-            'ALTER TABLE ' || uploader.get_dml_err_table_name(in_table_name) ||
-            ' DROP COLUMN DUMMY';
-
-        -- add numbered columns
-        FOR col IN 1 .. uploader.dml_tables_cols LOOP
-            EXECUTE IMMEDIATE
-                'ALTER TABLE ' || uploader.get_dml_err_table_name(in_table_name) ||
-                ' ADD COL' || LPAD(col, 3, '0') || ' VARCHAR2(4000)';
-        END LOOP;
-        --
         tree.update_timer();
+        --
+        recompile();
     EXCEPTION
     WHEN tree.app_exception THEN
         RAISE;
