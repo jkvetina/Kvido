@@ -16,15 +16,26 @@ BEGIN
 END;
 /
 --
+SELECT sess.get_app_id() FROM dual;
+--
 SELECT u.*
 FROM users u
 ORDER BY 1;
 --
 /*
+DELETE FROM logs;
 DELETE FROM sessions;
 DELETE FROM users;
 COMMIT;
 */
+
+
+
+DELETE FROM uploaded_file_cols;
+DELETE FROM uploaded_file_sheets;
+DELETE FROM uploaded_files;
+DELETE FROM uploaders_mapping;
+DELETE FROM uploaders;
 
 
 
@@ -34,13 +45,16 @@ COMMIT;
 DECLARE
     in_app_id           CONSTANT navigation.app_id%TYPE := sess.get_app_id();
 BEGIN
+    DELETE FROM navigation_extras
+    WHERE app_id = in_app_id;
+    --
     DELETE FROM navigation
     WHERE app_id = in_app_id;
     --
-    -- LEFT/RIGHT splitter
+    -- LEFT/RIGHT SPLITTER
     --
-    INSERT INTO navigation (app_id, page_id, order#, css_class)
-    SELECT in_app_id, 0, 666, 'HIDDEN' FROM DUAL;
+    INSERT INTO navigation (app_id, page_id, order#)
+    SELECT in_app_id, 0, 666 FROM DUAL;
     --
     -- USER LOGIN/LOGOUT
     --
@@ -50,6 +64,7 @@ BEGIN
     COMMIT;
 END;
 /
+--
 DECLARE
     in_app_id           CONSTANT navigation.app_id%TYPE := sess.get_app_id();
 BEGIN
@@ -67,8 +82,26 @@ BEGIN
     --
     -- CALENDAR
     --
-    INSERT INTO navigation_extras (app_id, page_alias, page_name, order#, css_class)
-    VALUES (in_app_id, 'CALENDAR', '<input value="${DATE}" id="NAV_CALENDAR" />', 851, '');
+    INSERT INTO navigation_extras (app_id, page_alias, page_name, order#)
+    VALUES (in_app_id, 'CALENDAR', '<input value="${DATE}" id="NAV_CALENDAR" />', 851);
+    --
+    COMMIT;
+    --
+    nav.add_new_pages();
+    --
+    UPDATE navigation n
+    SET n.is_hidden     = NULL
+    WHERE n.app_id      = in_app_id;
+    --
+    UPDATE navigation n
+    SET n.order#        = 980
+    WHERE n.app_id      = in_app_id
+        AND n.page_id   = 199;
+    --
+    UPDATE navigation n
+    SET n.parent_id     = NULL
+    WHERE n.app_id      = in_app_id
+        AND n.parent_id = n.page_id;
     --
     COMMIT;
 END;
@@ -79,5 +112,6 @@ FROM navigation n
 WHERE n.app_id = sess.get_app_id()
 ORDER BY 1, 2;
 --
-COMMIT;
+SELECT * FROM nav_top_src;
+SELECT * FROM nav_top;
 
