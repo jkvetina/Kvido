@@ -285,7 +285,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     WHEN tree.app_exception THEN
         RAISE;
     WHEN APEX_APPLICATION.E_STOP_APEX_ENGINE THEN
-        NULL;
+        COMMIT;
     WHEN OTHERS THEN
         ROLLBACK;
         --
@@ -394,22 +394,25 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         ELSIF TRUNC(rec.created_at) < TRUNC(rec.updated_at) THEN    -- avoid sessions thru multiple days
             sess.force_new_session();
         END IF;
-        --
-        COMMIT;
 
         -- log request, except for login page
         IF rec.page_id != 9999 THEN
             tree.log_module (
                 in_note,
+                --
+                -- @TODO: FIRST ARG^ USE AS ACTION NAME ???
+                --
                 APEX_APPLICATION.G_REQUEST,                                 -- button name
                 REGEXP_REPLACE(req, '^/[^/]+/[^/]+/f[?]p=([^:]*:){6}', '')  -- arguments in URL
             );
         END IF;
+        --
+        COMMIT;
     EXCEPTION
     WHEN tree.app_exception THEN
         RAISE;
     WHEN APEX_APPLICATION.E_STOP_APEX_ENGINE THEN
-        NULL;
+        COMMIT;
     WHEN OTHERS THEN
         ROLLBACK;
         --
