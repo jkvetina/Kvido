@@ -17,6 +17,9 @@
 @../tables/uploaded_files.sql
 @../tables/uploaded_file_sheets.sql
 @../tables/uploaded_file_cols.sql
+@../tables/languages.sql
+@../tables/events.sql
+@../tables/logs_events.sql
 
 
 
@@ -29,6 +32,7 @@
 @../packages/auth.spec.sql
 @../packages/app.spec.sql
 @../packages/nav.spec.sql
+@../packages/uploader.spec.sql
 @../packages/wiki.spec.sql
 
 
@@ -64,32 +68,46 @@ EXEC DBMS_PLSQL_CODE_COVERAGE.CREATE_COVERAGE_TABLES(force_it => TRUE);
 --
 -- CREATE VIEWS
 --
-@../views/logs_tree.sql
-@../views/logs_tree_extended.sql
-@../views/logs_dml_errors.sql
---
--- @TODO: TOO SLOW
-@../views/logs_modules.sql
---
---@../views/logs_profiler.sql
---@../views/logs_profiler_sum.sql
---
 @../views/apex_app_items.sql
 @../views/apex_page_items.sql
---
+@../views/code_coverage_report.sql
+@../views/logs_dml_errors.sql
+@../views/logs_modules.sql
+@../views/logs_profiler_sum.sql
+@../views/logs_profiler.sql
+@../views/logs_tree_extended.sql
+@../views/logs_tree.sql
+@../views/nav_badges.sql
+@../views/nav_top_src.sql
 @../views/nav_top.sql
+--
+@../views/p800_sheet_columns_mapping.sql
+@../views/p800_uploaded_file_sheets.sql
+@../views/p800_uploaded_files.sql
+@../views/p800_uploaded_sheet_content.sql
+@../views/p800_uploaded_targets.sql
+@../views/p805_uploaders_mapping.sql
+@../views/p805_uploaders_possible.sql
+@../views/p805_uploaders.sql
 --
 @../views/p900_dashboard.sql
 @../views/p901_logs.sql
+@../views/p902_activity_chart.sql
 @../views/p902_sessions.sql
---
+@../views/p910_auth_schemes.sql
+@../views/p910_nav_groups.sql
+@../views/p910_nav_overview.sql
 @../views/p910_nav_pages_to_add.sql
 @../views/p910_nav_pages_to_remove.sql
-@../views/p910_nav_overview.sql
-@../views/p910_nav_groups.sql
-@../views/p910_auth_schemes.sql
-@../views/p910_nav_left.sql
-@../views/p910_nav_right.sql
+@../views/p910_nav_peek_left.sql
+@../views/p910_nav_peek_right.sql
+@../views/p910_nav_peek_schemes.sql
+@../views/p920_users.sql
+@../views/p951_table_columns.sql
+@../views/p951_tables.sql
+@../views/p952_triggers.sql
+--
+@../views/user_roles_assigned.sql
 
 
 
@@ -122,8 +140,6 @@ EXEC DBMS_PLSQL_CODE_COVERAGE.CREATE_COVERAGE_TABLES(force_it => TRUE);
 --
 -- CREATE PACKAGES
 --
-EXEC recompile;
---
 @../packages/tree.sql
 @../packages/sess.sql
 @../packages/apex.sql
@@ -131,6 +147,9 @@ EXEC recompile;
 @../packages/nav.sql
 @../packages/app.sql
 @../packages/auth.sql
+@../packages/uploader.sql
+--
+EXEC recompile;
 
 
 
