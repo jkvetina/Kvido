@@ -1,4 +1,15 @@
 CREATE OR REPLACE FORCE VIEW nav_top AS
+WITH curr AS (
+    SELECT
+        n.app_id,
+        n.page_id,
+        n.parent_id,
+        sess.get_root_page_id(n.page_id)    AS root_id,
+        sess.get_page_group(n.page_id)      AS page_group
+    FROM navigation n
+    WHERE n.app_id      = sess.get_app_id()
+        AND n.page_id   = COALESCE(nav.get_peeked_page_id(), sess.get_page_id())
+)
 SELECT
     CASE WHEN t.parent_id IS NULL THEN 1 ELSE 2 END AS lvl,
     --
@@ -21,12 +32,15 @@ SELECT
         END AS target,
     --
     CASE        
-        WHEN t.page_id IN (t.curr_page_id, t.curr_parent_id, t.curr_root_id, t.group_id) THEN 'YES'
+        WHEN t.page_id IN (
+            curr.page_id, curr.parent_id, curr.root_id
+            --, t.group_id
+        ) THEN 'YES'
         END AS is_current_list_entry,
     --
-    NULL                    AS image,
-    NULL                    AS image_attribute,
-    NULL                    AS image_alt_attribute,
+    NULL AS image,
+    NULL AS image_attribute,
+    NULL AS image_alt_attribute,
     --
     CASE
         WHEN t.page_id = 0 THEN 'HIDDEN'
@@ -54,31 +68,21 @@ SELECT
         WHEN t.page_onclick IS NOT NULL
             THEN 'javascript:{' || t.page_onclick || '}'
         END AS attribute05,                     -- javascript action
+
     --
-    NULL                    AS attribute06,     -- badge left
-    --
-    CASE
-        WHEN b.badge IS NOT NULL
-            THEN '<span class="BADGE">' || b.badge || '</span>'
-        END AS attribute07,                     -- badge right
-    --
-    NULL                    AS attribute08,
-    NULL                    AS attribute09,
-    NULL                    AS attribute10
+    NULL AS attribute06,     -- badge left
+    NULL AS attribute07,     -- badge right
+    NULL AS attribute08,
+    NULL AS attribute09,
+    NULL AS attribute10
 FROM nav_top_src t
-LEFT JOIN nav_badges b
-    ON (b.page_id           = t.page_id
-        OR b.page_alias     = t.page_alias
-    )
-WHERE t.is_hidden           IS NULL
+CROSS JOIN curr
+WHERE t.order#              > 0
+    AND t.is_hidden         IS NULL
     --
-    AND 'Y' = nav.is_available(t.page_id)
-    AND 'Y' = nav.is_visible(t.curr_page_id, t.page_id)
-    --
-CONNECT BY t.app_id         = PRIOR t.app_id
-    AND t.parent_id         = PRIOR t.page_id
-START WITH t.parent_id      IS NULL
-ORDER SIBLINGS BY t.order# NULLS LAST, t.page_id;
+    AND 'Y' = nav.is_available(t.page_id)     -- 0.035s
+    AND 'Y' = nav.is_visible(sess.get_page_id(), t.page_id)  -- 0.02s
+ORDER BY t.order#;
 --
 COMMENT ON TABLE nav_top                IS 'View for top menu, column names cant be changed, they are required by Oracle doc';
 --

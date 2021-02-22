@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210220143958'
+,p_last_upd_yyyymmddhh24miss=>'20210222212634'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(9544386426654050)
@@ -1714,15 +1714,35 @@ wwv_flow_api.create_page_button(
 ,p_button_action=>'REDIRECT_PAGE'
 ,p_button_template_options=>'#DEFAULT#'
 ,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_is_hot=>'Y'
 ,p_button_image_alt=>'Auto Update'
 ,p_button_position=>'RIGHT_OF_TITLE'
 ,p_button_redirect_url=>'f?p=&APP_ID.:910:&SESSION.::&DEBUG.:RP:P910_AUTO_UPDATE:Y'
+);
+wwv_flow_api.create_page_button(
+ p_id=>wwv_flow_api.id(13648256700013529)
+,p_button_sequence=>40
+,p_button_plug_id=>wwv_flow_api.id(67834774792737768)
+,p_button_name=>'PUBLISH_CHANGES'
+,p_button_action=>'REDIRECT_PAGE'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>wwv_flow_api.id(63744470351014400)
+,p_button_is_hot=>'Y'
+,p_button_image_alt=>'Publish Changes'
+,p_button_position=>'RIGHT_OF_TITLE'
+,p_button_redirect_url=>'f?p=&APP_ID.:910:&SESSION.::&DEBUG.:RP,:P910_PUBLISH_CHANGES:Y'
 );
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(9544267811654049)
 ,p_name=>'P910_AUTO_ID'
 ,p_item_sequence=>80
+,p_item_plug_id=>wwv_flow_api.id(67834774792737768)
+,p_display_as=>'NATIVE_HIDDEN'
+,p_attribute_01=>'Y'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(13648328801013530)
+,p_name=>'P910_PUBLISH_CHANGES'
+,p_item_sequence=>90
 ,p_item_plug_id=>wwv_flow_api.id(67834774792737768)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
@@ -1828,8 +1848,27 @@ wwv_flow_api.create_page_process(
 ,p_process_when2=>'Y'
 );
 wwv_flow_api.create_page_process(
- p_id=>wwv_flow_api.id(31272310407792327)
+ p_id=>wwv_flow_api.id(13648470320013531)
 ,p_process_sequence=>20
+,p_process_point=>'AFTER_HEADER'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'PUBLISH_CHANGES'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'tree.log_module(''PUBLISH_CHANGES'');',
+'DBMS_SNAPSHOT.REFRESH(''NAV_TOP_SRC'');',
+'tree.update_timer();',
+'--',
+'apex.redirect();',
+''))
+,p_process_clob_language=>'PLSQL'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
+,p_process_when=>'P910_PUBLISH_CHANGES'
+,p_process_when_type=>'VAL_OF_ITEM_IN_COND_EQ_COND2'
+,p_process_when2=>'Y'
+);
+wwv_flow_api.create_page_process(
+ p_id=>wwv_flow_api.id(31272310407792327)
+,p_process_sequence=>30
 ,p_process_point=>'AFTER_HEADER'
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'ADJUST_ROLES'

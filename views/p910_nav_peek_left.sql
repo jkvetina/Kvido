@@ -24,8 +24,7 @@ JOIN (
 ) l
     ON l.page_id = NVL(n.parent_id, n.page_id)
 --
-CONNECT BY n.app_id         = PRIOR n.app_id
-    AND n.parent_id         = PRIOR n.page_id
-START WITH n.parent_id      IS NULL
+CONNECT BY n.parent_id = PRIOR n.page_id
+START WITH n.parent_id IS NULL
 ORDER SIBLINGS BY n.order# NULLS LAST, n.page_id;
 

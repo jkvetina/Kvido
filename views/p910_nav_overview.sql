@@ -2,22 +2,9 @@ CREATE OR REPLACE FORCE VIEW p910_nav_overview AS
 WITH q AS (
     -- to get correct (hierarchic) order
     SELECT
-        ROWNUM AS seq#,
-        q.page_id
-    FROM (
-        SELECT
-            LEVEL AS lvl,
-            n.page_id,
-            n.parent_id,
-            n.page_group,
-            n.group_id,
-            n.order#
-        FROM nav_top_src n
-        CONNECT BY n.app_id         = PRIOR n.app_id
-            AND n.parent_id         = PRIOR n.page_id
-        START WITH n.parent_id      IS NULL
-        ORDER SIBLINGS BY n.order# NULLS LAST, n.page_id
-    ) q
+        q.page_id,
+        q.order#    AS seq#
+    FROM nav_top_src q
 )
 SELECT
     n.app_id,
