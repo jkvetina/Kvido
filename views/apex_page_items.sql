@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW apex_page_items AS
+CREATE OR REPLACE FORCE VIEW apex_page_items AS
 SELECT
     i.item_name,
     apex.get_item(i.item_name) AS item_value

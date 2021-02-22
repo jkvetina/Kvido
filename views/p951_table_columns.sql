@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p951_table_columns AS
+CREATE OR REPLACE FORCE VIEW p951_table_columns AS
 SELECT
     c.column_id,
     c.column_name,

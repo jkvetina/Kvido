@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p920_users AS
+CREATE OR REPLACE FORCE VIEW p920_users AS
 WITH s AS (
     SELECT
         s.user_id,

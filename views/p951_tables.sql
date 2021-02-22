@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p951_tables AS
+CREATE OR REPLACE FORCE VIEW p951_tables AS
 WITH c AS (
     -- constraints overview
     SELECT

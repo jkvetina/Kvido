@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p910_nav_pages_to_remove AS
+CREATE OR REPLACE FORCE VIEW p910_nav_pages_to_remove AS
 SELECT n.app_id, n.page_id
 FROM navigation n
 LEFT JOIN apex_application_pages p

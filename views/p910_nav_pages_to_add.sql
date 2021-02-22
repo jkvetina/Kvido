@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p910_nav_pages_to_add AS
+CREATE OR REPLACE FORCE VIEW p910_nav_pages_to_add AS
 SELECT
     p.application_id        AS app_id,
     p.page_id,

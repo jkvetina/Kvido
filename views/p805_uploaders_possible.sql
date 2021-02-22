@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p805_uploaders_possible AS
+CREATE OR REPLACE FORCE VIEW p805_uploaders_possible AS
 WITH u AS (
     SELECT
         u.uploader_id,

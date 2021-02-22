@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW logs_profiler_sum AS
+CREATE OR REPLACE FORCE VIEW logs_profiler_sum AS
 WITH p AS (
     SELECT
         p.name                  AS package_name,

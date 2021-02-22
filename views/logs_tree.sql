@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW logs_tree AS
+CREATE OR REPLACE FORCE VIEW logs_tree AS
 SELECT
     e.log_id,
     e.log_parent,

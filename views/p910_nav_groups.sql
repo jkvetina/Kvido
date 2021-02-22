@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p910_nav_groups AS
+CREATE OR REPLACE FORCE VIEW p910_nav_groups AS
 SELECT
     g.app_id,
     g.page_id,

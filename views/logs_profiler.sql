@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW logs_profiler AS
+CREATE OR REPLACE FORCE VIEW logs_profiler AS
 SELECT
     s.name,
     s.type,

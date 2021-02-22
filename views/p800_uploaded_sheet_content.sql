@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p800_uploaded_sheet_content AS
+CREATE OR REPLACE FORCE VIEW p800_uploaded_sheet_content AS
 WITH s AS (
     SELECT
         s.*,

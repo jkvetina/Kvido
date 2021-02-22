@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW nav_badges AS
+CREATE OR REPLACE FORCE VIEW nav_badges AS
 SELECT
     900                             AS page_id,
     ' '                             AS page_alias,

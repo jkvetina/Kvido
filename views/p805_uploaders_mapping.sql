@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p805_uploaders_mapping AS
+CREATE OR REPLACE FORCE VIEW p805_uploaders_mapping AS
 SELECT
     u.app_id,
     u.uploader_id,

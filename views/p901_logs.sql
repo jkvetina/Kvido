@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p901_logs AS
+CREATE OR REPLACE FORCE VIEW p901_logs AS
 SELECT l.*
 FROM logs l
 WHERE l.app_id          = sess.get_app_id()

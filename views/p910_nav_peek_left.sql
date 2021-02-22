@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p910_nav_peek_left AS
+CREATE OR REPLACE FORCE VIEW p910_nav_peek_left AS
 SELECT
     n.page_id,
     CASE WHEN n.parent_id IS NOT NULL

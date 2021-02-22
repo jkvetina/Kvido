@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW logs_tree_extended AS
+CREATE OR REPLACE FORCE VIEW logs_tree_extended AS
 WITH x AS (
     SELECT
         MIN(t.log_id) AS min_log_id,

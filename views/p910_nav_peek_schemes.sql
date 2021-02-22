@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p910_nav_peek_schemes AS
+CREATE OR REPLACE FORCE VIEW p910_nav_peek_schemes AS
 SELECT
     g.auth_scheme,
     CASE WHEN nav.is_role_peeking_enabled(g.auth_scheme) = 'Y'

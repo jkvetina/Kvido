@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p952_triggers AS
+CREATE OR REPLACE FORCE VIEW p952_triggers AS
 WITH r AS (
     SELECT
         l.module_name,

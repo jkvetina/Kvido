@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p800_uploaded_targets AS
+CREATE OR REPLACE FORCE VIEW p800_uploaded_targets AS
 WITH s AS (
     SELECT s.*
     FROM uploaded_file_sheets s

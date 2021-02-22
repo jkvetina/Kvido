@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p902_activity_chart AS
+CREATE OR REPLACE FORCE VIEW p902_activity_chart AS
 WITH x AS (
     SELECT
         LEVEL AS bucket_id,

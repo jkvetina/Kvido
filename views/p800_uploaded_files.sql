@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p800_uploaded_files AS
+CREATE OR REPLACE FORCE VIEW p800_uploaded_files AS
 SELECT
     uploader.get_basename(u.file_name) AS list_label,
     --CASE WHEN u.file_name = apex.get_item('$FILE')

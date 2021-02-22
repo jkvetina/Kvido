@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p910_nav_overview AS
+CREATE OR REPLACE FORCE VIEW p910_nav_overview AS
 WITH q AS (
     -- to get correct (hierarchic) order
     SELECT

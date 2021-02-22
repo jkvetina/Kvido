@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW user_roles_assigned AS
+CREATE OR REPLACE FORCE VIEW user_roles_assigned AS
 SELECT
     t.role_name AS role_name
 FROM (

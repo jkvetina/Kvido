@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p800_sheet_columns_mapping AS
+CREATE OR REPLACE FORCE VIEW p800_sheet_columns_mapping AS
 WITH p AS (
     -- passed and matched columns
     SELECT

@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW p800_uploaded_file_sheets AS
+CREATE OR REPLACE FORCE VIEW p800_uploaded_file_sheets AS
 SELECT
     s.sheet_name
         --CASE WHEN s.sheet_id = apex.get_item('$SHEET')
