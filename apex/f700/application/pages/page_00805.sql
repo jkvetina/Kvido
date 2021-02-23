@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210223182622'
+,p_last_upd_yyyymmddhh24miss=>'20210223190737'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(24516054953743573)
@@ -1297,16 +1297,17 @@ wwv_flow_api.create_ig_report_column(
 ,p_width=>158
 );
 wwv_flow_api.create_page_button(
- p_id=>wwv_flow_api.id(13494354585979373)
+ p_id=>wwv_flow_api.id(13495151477979376)
 ,p_button_sequence=>10
 ,p_button_plug_id=>wwv_flow_api.id(24516054953743573)
-,p_button_name=>'CLEAR_FILTERS_MAP'
+,p_button_name=>'UPDATE_MAPPINGS'
 ,p_button_action=>'REDIRECT_PAGE'
 ,p_button_template_options=>'#DEFAULT#'
 ,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_image_alt=>'&CLEAR_FILTERS.'
+,p_button_is_hot=>'Y'
+,p_button_image_alt=>'Update'
 ,p_button_position=>'RIGHT_OF_TITLE'
-,p_button_redirect_url=>'f?p=&APP_ID.:805:&SESSION.::&DEBUG.::P805_RESET,P805_UPLOADER_ID,P805_TABLE_NAME:Y,&P805_UPLOADER_ID.,&P805_TABLE_NAME.'
+,p_button_redirect_url=>'f?p=&APP_ID.:805:&SESSION.::&DEBUG.::P805_UPDATE_MAPPINGS,P805_UPLOADER_ID,P805_TABLE_NAME:Y,&P805_UPLOADER_ID.,&P805_TABLE_NAME.'
 );
 wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(13504595764979398)
@@ -1321,17 +1322,16 @@ wwv_flow_api.create_page_button(
 ,p_button_redirect_url=>'f?p=&APP_ID.:805:&SESSION.::&DEBUG.::P805_RESET:Y'
 );
 wwv_flow_api.create_page_button(
- p_id=>wwv_flow_api.id(13495151477979376)
+ p_id=>wwv_flow_api.id(13494787568979375)
 ,p_button_sequence=>20
 ,p_button_plug_id=>wwv_flow_api.id(24516054953743573)
-,p_button_name=>'UPDATE_MAPPINGS'
+,p_button_name=>'RESET_MAPPINGS'
 ,p_button_action=>'REDIRECT_PAGE'
 ,p_button_template_options=>'#DEFAULT#'
 ,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_is_hot=>'Y'
-,p_button_image_alt=>'Update'
+,p_button_image_alt=>'Reset to Defaults'
 ,p_button_position=>'RIGHT_OF_TITLE'
-,p_button_redirect_url=>'f?p=&APP_ID.:805:&SESSION.::&DEBUG.::P805_UPDATE_MAPPINGS,P805_UPLOADER_ID,P805_TABLE_NAME:Y,&P805_UPLOADER_ID.,&P805_TABLE_NAME.'
+,p_button_redirect_url=>'f?p=&APP_ID.:805:&SESSION.::&DEBUG.::P805_RESET_MAPPINGS,P805_UPLOADER_ID,P805_TABLE_NAME:&P805_UPLOADER_ID.,&P805_UPLOADER_ID.,&P805_TABLE_NAME.'
 );
 wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(13504932843979399)
@@ -1361,18 +1361,6 @@ wwv_flow_api.create_page_button(
 ,p_button_redirect_url=>'f?p=&APP_ID.:800:&SESSION.::&DEBUG.::P800_TARGET,P800_RESET:&P805_UPLOADER_ID.,Y'
 ,p_button_condition=>'P805_UPLOADER_ID'
 ,p_button_condition_type=>'ITEM_IS_NOT_NULL'
-);
-wwv_flow_api.create_page_button(
- p_id=>wwv_flow_api.id(13494787568979375)
-,p_button_sequence=>30
-,p_button_plug_id=>wwv_flow_api.id(24516054953743573)
-,p_button_name=>'RESET_MAPPINGS'
-,p_button_action=>'REDIRECT_PAGE'
-,p_button_template_options=>'#DEFAULT#'
-,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_image_alt=>'Reset to Defaults'
-,p_button_position=>'RIGHT_OF_TITLE'
-,p_button_redirect_url=>'f?p=&APP_ID.:805:&SESSION.::&DEBUG.::P805_RESET_MAPPINGS,P805_UPLOADER_ID,P805_TABLE_NAME:&P805_UPLOADER_ID.,&P805_UPLOADER_ID.,&P805_TABLE_NAME.'
 );
 wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(13648196505013528)
