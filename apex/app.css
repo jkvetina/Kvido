@@ -529,7 +529,7 @@ div.a-GV-bdy div.a-GV-noDataMsg.a-GV-altMessage {
 footer.t-Footer {
     background-color:       #bfbaa3;
     color:                  #fff;
-    height:                 10rem;
+    min-height:             9rem;
 }
 footer.t-Footer {
     align-items:            start;
@@ -538,9 +538,22 @@ footer.t-Footer div.t-Footer-top a {  /* LINK TO TOP */
     color:                  #666;
 }
 #main {
-    min-height:             calc(100vh - 14rem);  /* 100 - footer - header */
+    min-height:             calc(100vh - 13rem);  /* 100 - footer - header */
     padding:                0 1rem 2rem;
 }
+
+/** LIST VIEW */
+li.a-ListView-item,
+li.a-ListView-item * {
+    color:                  #333;
+    font-family:            'Roboto', sans-serif;
+}
+li.a-ListView-item span.ui-li-count {
+    color:                  #000          !important;
+    font-size:              1.35rem         !important;
+}
+
+
 
 
 
