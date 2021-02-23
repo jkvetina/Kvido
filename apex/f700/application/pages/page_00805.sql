@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210222213849'
+,p_last_upd_yyyymmddhh24miss=>'20210223182622'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(24516054953743573)
@@ -1352,7 +1352,7 @@ wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(13048546101981118)
 ,p_button_sequence=>30
 ,p_button_plug_id=>wwv_flow_api.id(24693853681943365)
-,p_button_name=>'TEST_UPLOAD'
+,p_button_name=>'UPLOAD'
 ,p_button_action=>'REDIRECT_PAGE'
 ,p_button_template_options=>'#DEFAULT#'
 ,p_button_template_id=>wwv_flow_api.id(63744470351014400)
