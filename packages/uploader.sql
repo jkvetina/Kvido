@@ -144,8 +144,8 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
                 c.sheet_id,
                 c.sheet_xml_id,
                 c.sheet_name,
-                JSON_VALUE(c.profile_json, '$."columns".size()'),   -- cols
-                JSON_VALUE(c.profile_json, '$."parsed-rows"'),      -- rows
+                JSON_VALUE(c.profile_json, '$."columns".size()' RETURNING NUMBER),      -- cols
+                JSON_VALUE(c.profile_json, '$."parsed-rows"'    RETURNING NUMBER) - 1,  -- rows
                 sess.get_app_id(),
                 in_uploader_id,
                 c.profile_json
