@@ -38,7 +38,7 @@ SELECT
     --
     apex.get_page_link (
         in_page_id      => sess.get_page_id(),
-        in_names        => 'P800_FILE,P800_SHEET,P800_TARGET,P800_SHOW_DATA,P800_RESET',
+        in_names        => 'P800_FILE,P800_SHEET,P800_TARGET,P800_SHOW_ROWS,P800_RESET',
         in_values       => s.file_name || ',' || s.sheet_id || ',' || s.target || ',Y,Y'
     ) AS target_url
 FROM s;

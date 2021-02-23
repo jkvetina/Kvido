@@ -64,6 +64,13 @@ CREATE OR REPLACE PACKAGE uploader AS
 
 
 
+    PROCEDURE copy_uploaded_data_to_collection (
+        in_uploader_id      uploaders.uploader_id%TYPE,
+        in_header_name      VARCHAR2                    := '$HEADER_'
+    );
+
+
+
     PROCEDURE delete_file (
         in_file_name        uploaded_files.file_name%TYPE
     );

@@ -118,7 +118,7 @@ BEGIN
     BEGIN
         FORALL i IN INDICES OF rows_to_insert
         SAVE EXCEPTIONS
-        INSERT INTO uploaders (
+        INSERT INTO uploaders (                         /** TARGET_TABLE */
             /** GENERATE_COLUMNS:START(3) */
             app_id,
             uploader_id,
@@ -186,7 +186,7 @@ BEGIN
     -- process rows marked for update
     BEGIN
         FORALL i IN INDICES OF rows_to_update
-        UPDATE uploaders u
+        UPDATE uploaders u                              /** TARGET_TABLE */
         SET /** GENERATE_UPDATE:START(3) */
             u.target_table      = target_table(i).target_table,
             u.target_page_id    = target_table(i).target_page_id,
@@ -228,11 +228,18 @@ BEGIN
     NULL;
 
     -- store uploaded data for further investigations
-    DELETE FROM uploaders_u$ t
+    DELETE FROM uploaders_u$ t                          /** INVESTIGATIVE_TABLE */
     WHERE t.ORA_ERR_TAG$ = sess.get_session_id();
     --
     FORALL i IN 1 .. target_table.COUNT
     INSERT INTO uploaders_u$ VALUES target_table(i);
+    --
+    UPDATE uploaders_u$ t                               /** INVESTIGATIVE_TABLE */
+    SET t.ORA_ERR_OPTYP$        = '-'
+    WHERE t.ORA_ERR_TAG$        = sess.get_session_id()
+        AND (t.ORA_ERR_OPTYP$   = 'Y'
+            OR t.ORA_ERR_OPTYP$ IS NULL
+        );
     --
     UPDATE uploaded_file_sheets s
     SET s.uploader_id       = in_uploader_id,
@@ -240,7 +247,7 @@ BEGIN
         s.result_updated    = rows_updated#,
         s.result_deleted    = rows_deleted#,
         s.result_errors     = rows_errors#,
-        s.result_unmatched  = NULL                  ---------- @TODO: calculate difference agains rows from uploaded_file_sheets table
+        s.result_unmatched  = s.sheet_rows - rows_inserted# - rows_updated# - rows_deleted# - rows_errors#
     WHERE s.file_name       = in_file_name
         AND s.sheet_id      = in_sheet_id;
 

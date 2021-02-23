@@ -229,6 +229,57 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
 
+    PROCEDURE copy_uploaded_data_to_collection (
+        in_uploader_id      uploaders.uploader_id%TYPE,
+        in_header_name      VARCHAR2                    := '$HEADER_'
+    ) AS
+        in_collection       CONSTANT VARCHAR2(30)       := 'SQL_' || in_uploader_id;
+        in_query            CONSTANT VARCHAR2(32767)    := 'SELECT * FROM ' || in_uploader_id || '_u$';  -- real table, not just upl_id
+        --
+        out_cols            PLS_INTEGER;
+        out_cursor          PLS_INTEGER                 := DBMS_SQL.OPEN_CURSOR;
+        out_desc            DBMS_SQL.DESC_TAB;
+    BEGIN
+        -- initialize and populate collection
+        IF APEX_COLLECTION.COLLECTION_EXISTS(in_collection) THEN
+            APEX_COLLECTION.DELETE_COLLECTION(in_collection);
+        END IF;
+        --
+        APEX_COLLECTION.CREATE_COLLECTION_FROM_QUERY (
+            p_collection_name   => in_collection,
+            p_query             => in_query
+        );
+        --
+        DBMS_SQL.PARSE(out_cursor, in_query, DBMS_SQL.NATIVE);
+        DBMS_SQL.DESCRIBE_COLUMNS(out_cursor, out_cols, out_desc);
+        DBMS_SQL.CLOSE_CURSOR(out_cursor);
+
+        -- populate APEX items
+        FOR i IN 1 .. out_desc.COUNT LOOP
+            CASE i
+                WHEN 1 THEN out_desc(i).col_name := 'Row #';
+                WHEN 2 THEN out_desc(i).col_name := 'Error #';
+                WHEN 4 THEN out_desc(i).col_name := 'Result';
+                ELSE NULL;
+                END CASE;
+            --
+            BEGIN
+                apex.set_item (
+                    in_name      => in_header_name || LPAD(i, 3, 0),
+                    in_value     => out_desc(i).col_name
+                    --
+                    -- TRANSLATE COLUMN NAME TO SOMETHING MORE HUMAN FRIENDLY
+                    --
+                );
+            EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                NULL;
+            END;
+        END LOOP;
+    END;
+
+
+
     PROCEDURE delete_file (
         in_file_name        uploaded_files.file_name%TYPE
     ) AS
