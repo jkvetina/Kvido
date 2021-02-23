@@ -179,6 +179,15 @@ ul.a-IG-reportSummary span.a-IG-reportSummary-icon {
     --a-checkbox-text-color:            #333    !important;
 }
 
+/** FILTERS */
+ul.a-IG-controls li.a-IG-controls-item.a-IG-controls-item--filter span.a-IG-controls-cell:not(.a-IG-controls-cell--remove),
+ul.a-IG-reportSummary li.a-IG-reportSummary-item.a-IG-reportSummary-item--filter a.a-IG-reportSummary-label span.a-IG-reportSummary-icon {
+    background:                         #7A9867 !important;
+}
+
+
+
+
 
 /**
  * GRID HEADER
