@@ -184,6 +184,16 @@ ul.a-IG-controls li.a-IG-controls-item.a-IG-controls-item--filter span.a-IG-cont
 ul.a-IG-reportSummary li.a-IG-reportSummary-item.a-IG-reportSummary-item--filter a.a-IG-reportSummary-label span.a-IG-reportSummary-icon {
     background:                         #7A9867 !important;
 }
+ul.a-IG-controls li.a-IG-controls-item.a-IG-controls-item--filter a.a-IG-controlsLabel:hover {
+    background:                         #fbfbfb !important;
+}
+
+/** BACKGROUND FOR NEW ROWS */
+tr.a-GV-row.is-inserted,
+tr.a-GV-row.is-inserted th.a-GV-cell,
+tr.a-GV-row.is-inserted td.a-GV-cell {
+    background:                         #fbfbfb !important;
+}
 
 
 
@@ -558,6 +568,10 @@ li.a-ListView-item * {
     font-family:            'Roboto', sans-serif;
 }
 li.a-ListView-item span.ui-li-count {
+    color:                  #333          !important;
+    font-size:              1.1rem          !important;
+}
+footer.t-Footer li.a-ListView-item span.ui-li-count {
     color:                  #000          !important;
     font-size:              1.35rem         !important;
 }
