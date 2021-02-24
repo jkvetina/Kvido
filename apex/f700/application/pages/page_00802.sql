@@ -19,10 +19,11 @@ wwv_flow_api.create_page(
 ,p_step_title=>'Uploaded Files'
 ,p_autocomplete_on_off=>'OFF'
 ,p_group_id=>wwv_flow_api.id(10819719419852508)
+,p_step_template=>wwv_flow_api.id(64127379571157916)
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210223175944'
+,p_last_upd_yyyymmddhh24miss=>'20210224163716'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(25536932297178152)
@@ -395,12 +396,10 @@ wwv_flow_api.create_interactive_grid(
  p_id=>wwv_flow_api.id(25537041017178153)
 ,p_internal_uid=>25537041017178153
 ,p_is_editable=>true
-,p_edit_operations=>'i:u:d'
-,p_add_authorization_scheme=>wwv_flow_api.id(63770652250014528)
+,p_edit_operations=>'u:d'
 ,p_update_authorization_scheme=>wwv_flow_api.id(63770652250014528)
 ,p_delete_authorization_scheme=>wwv_flow_api.id(63770652250014528)
 ,p_lost_update_check_type=>'VALUES'
-,p_add_row_if_empty=>false
 ,p_submit_checked_rows=>false
 ,p_lazy_loading=>false
 ,p_requires_filter=>false
