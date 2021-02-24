@@ -70,6 +70,7 @@ WHERE t.table_name      NOT LIKE '%\_%$' ESCAPE '\'
         'LOGS',
         'LOGS_LOBS',
         'LOGS_SETUP',
+        'LOGS_EVENTS',
         'SESSIONS'
     )
     AND t.table_name    = NVL(apex.get_item('$TABLE'), t.table_name)
