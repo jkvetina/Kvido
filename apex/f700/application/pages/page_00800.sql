@@ -61,7 +61,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210223191137'
+,p_last_upd_yyyymmddhh24miss=>'20210224203706'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(13647015415013517)
@@ -129,6 +129,7 @@ wwv_flow_api.create_page_plug(
 ''))
 ,p_attribute_02=>'LIST_LABEL'
 ,p_attribute_06=>'SUPPLEMENTAL'
+,p_attribute_08=>'COUNT_'
 ,p_attribute_16=>'&TARGET_URL.'
 );
 wwv_flow_api.create_page_plug(
@@ -2734,6 +2735,7 @@ wwv_flow_api.create_page_plug(
 ''))
 ,p_attribute_02=>'LIST_LABEL'
 ,p_attribute_06=>'SUPPLEMENTAL'
+,p_attribute_08=>'COUNT_'
 ,p_attribute_16=>'&TARGET_URL.'
 );
 wwv_flow_api.create_page_plug(

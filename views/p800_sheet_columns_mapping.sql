@@ -30,7 +30,7 @@ WITH p AS (
         AND m.uploader_id   = apex.get_item('$TARGET')
         AND m.source_column = c.column_name
         AND m.is_hidden     IS NULL
-    LEFT JOIN p805_uploaders_mapping d
+    LEFT JOIN p805_uploaders_mapping d      -- @TODO: TOO EXPENSIVE JUST FOR DATA TYPE
         ON d.app_id         = m.app_id
         AND d.uploader_id   = m.uploader_id
         AND d.source_column = m.source_column
@@ -66,7 +66,7 @@ m AS (
         --
         CASE WHEN x.column_id IS NOT NULL THEN 'U' END AS allow_changes  -- U = update
     FROM uploaders_mapping m
-    LEFT JOIN p805_uploaders_mapping x
+    LEFT JOIN p805_uploaders_mapping x      -- @TODO: TOO EXPENSIVE JUST FOR DATA TYPE
         ON x.app_id         = m.app_id
         AND x.uploader_id   = m.uploader_id
         AND x.target_column = m.target_column

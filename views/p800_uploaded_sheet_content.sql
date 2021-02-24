@@ -11,7 +11,7 @@ m AS (
     SELECT
         SUM(CASE WHEN m.status_mapped  = 'Y' THEN 1 ELSE 0 END) AS mapped_cols,
         SUM(CASE WHEN m.status_missing = 'Y' THEN 1 ELSE 0 END) AS missing_cols
-    FROM p800_sheet_columns_mapping m    
+    FROM p800_sheet_columns_mapping m
 )
 SELECT
     'Columns' AS list_label,
