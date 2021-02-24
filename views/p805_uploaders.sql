@@ -21,7 +21,9 @@ SELECT
     --
     p.mappings_check,
     p.region_check,
-    p.err_table
+    p.err_table,
+    --
+    'UD' AS allow_changes  -- U = update, D = delete
 FROM uploaders u
 LEFT JOIN p805_uploaders_possible p
     ON p.uploader_id    = u.uploader_id
@@ -57,7 +59,9 @@ SELECT
     --
     p.mappings_check,
     p.region_check,
-    p.err_table
+    p.err_table,
+    --
+    NULL AS allow_changes  -- NULL = nothing
 FROM p805_uploaders_possible p
 WHERE p.uploader_id IS NULL;
 
