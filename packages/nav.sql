@@ -16,6 +16,9 @@ CREATE OR REPLACE PACKAGE BODY nav AS
             s.procedure_name
         INTO auth_name, proc_name
         FROM apex_application_pages p
+        --
+        -- @TODO: join apex_auth view
+        --
         LEFT JOIN user_procedures s
             ON s.object_name                = nav.auth_package
             AND s.procedure_name            = p.authorization_scheme
@@ -187,6 +190,15 @@ CREATE OR REPLACE PACKAGE BODY nav AS
             WHERE n.app_id      = c.app_id
                 AND n.page_id   = c.page_id;
         END LOOP;
+
+        -- remove more references and uploader
+        DELETE FROM navigation_groups n
+        WHERE n.app_id      = sess.get_app_id()
+            AND n.page_id   = in_page_id;
+        --
+        DELETE FROM uploaders u
+        WHERE u.app_id              = sess.get_app_id()
+            AND u.target_page_id    = in_page_id;
 
         -- remove rows for pages which dont exists
         FOR c IN (
