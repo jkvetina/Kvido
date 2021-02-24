@@ -829,54 +829,6 @@ wwv_flow_api.create_ig_report_column(
 ,p_is_frozen=>false
 );
 wwv_flow_api.create_page_button(
- p_id=>wwv_flow_api.id(13120461413120342)
-,p_button_sequence=>10
-,p_button_plug_id=>wwv_flow_api.id(22662326941774367)
-,p_button_name=>'CLEAR_SESSION'
-,p_button_action=>'REDIRECT_PAGE'
-,p_button_template_options=>'#DEFAULT#'
-,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_image_alt=>'&CLEAR_FILTERS.'
-,p_button_position=>'RIGHT_OF_TITLE'
-,p_button_redirect_url=>'f?p=&APP_ID.:900:&SESSION.::&DEBUG.::P900_SESSION_ID:'
-);
-wwv_flow_api.create_page_button(
- p_id=>wwv_flow_api.id(13122219498120347)
-,p_button_sequence=>10
-,p_button_plug_id=>wwv_flow_api.id(22661983106774364)
-,p_button_name=>'CLEAR_PAGE'
-,p_button_action=>'REDIRECT_PAGE'
-,p_button_template_options=>'#DEFAULT#'
-,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_image_alt=>'&CLEAR_FILTERS.'
-,p_button_position=>'RIGHT_OF_TITLE'
-,p_button_redirect_url=>'f?p=&APP_ID.:900:&SESSION.::&DEBUG.::P900_PAGE_ID:'
-);
-wwv_flow_api.create_page_button(
- p_id=>wwv_flow_api.id(13124058879120351)
-,p_button_sequence=>10
-,p_button_plug_id=>wwv_flow_api.id(34647717482613319)
-,p_button_name=>'CLEAR_FLAG'
-,p_button_action=>'REDIRECT_PAGE'
-,p_button_template_options=>'#DEFAULT#'
-,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_image_alt=>'&CLEAR_FILTERS.'
-,p_button_position=>'RIGHT_OF_TITLE'
-,p_button_redirect_url=>'f?p=&APP_ID.:900:&SESSION.::&DEBUG.::P900_FLAG:'
-);
-wwv_flow_api.create_page_button(
- p_id=>wwv_flow_api.id(13125859426120357)
-,p_button_sequence=>10
-,p_button_plug_id=>wwv_flow_api.id(22661704301774361)
-,p_button_name=>'CLEAR_USER'
-,p_button_action=>'REDIRECT_PAGE'
-,p_button_template_options=>'#DEFAULT#'
-,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_image_alt=>'&CLEAR_FILTERS.'
-,p_button_position=>'RIGHT_OF_TITLE'
-,p_button_redirect_url=>'f?p=&APP_ID.:900:&SESSION.::&DEBUG.::P900_USER_ID:'
-);
-wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(31330584376875804)
 ,p_button_sequence=>10
 ,p_button_plug_id=>wwv_flow_api.id(71819787564897425)
@@ -946,9 +898,9 @@ wwv_flow_api.create_page_process(
 'WHERE e.created_at    >= TO_DATE(:P900_DELETE, ''YYYY-MM-DD'')',
 '    AND e.created_at  <  TO_DATE(:P900_DELETE, ''YYYY-MM-DD'') + 1;',
 '--',
-'apex.redirect();',
-'--',
 'tree.update_timer();',
+'--',
+'apex.redirect();',
 ''))
 ,p_process_clob_language=>'PLSQL'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
@@ -964,12 +916,10 @@ wwv_flow_api.create_page_process(
 ,p_process_name=>'DELETE_OLD'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
 'tree.log_module(''DELETE_OLD'');',
-'--',
 'tree.purge_old(7);',
+'tree.update_timer();',
 '--',
 'apex.redirect();',
-'--',
-'tree.update_timer();',
 ''))
 ,p_process_clob_language=>'PLSQL'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
@@ -993,9 +943,9 @@ wwv_flow_api.create_page_process(
 'DBMS_STATS.GATHER_TABLE_STATS(''#OWNER#'', ''LOGS'');',
 'EXECUTE IMMEDIATE ''ANALYZE TABLE #OWNER#.logs COMPUTE STATISTICS FOR TABLE'';',
 '--',
-'apex.redirect();',
-'--',
 'tree.update_timer();',
+'--',
+'apex.redirect();',
 ''))
 ,p_process_clob_language=>'PLSQL'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
