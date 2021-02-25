@@ -189,6 +189,11 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         --
         SAVEPOINT before_merge;
 
+        -- check for pre processing procedure
+        --
+        -- @TODO:
+        --
+
         -- check if customized upload procedure exists
         BEGIN
             SELECT p.object_name INTO uploader_procedure
@@ -210,12 +215,22 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             '); END;'
             USING in_file_name, in_sheet_id, in_uploader_id;
 
+        -- move data to collections so we can have dynamic report in APEX
+        copy_uploaded_data_to_collection(in_uploader_id);
+
+        -- check for post processing procedure
+        --
+        -- @TODO:
+        --
+
         -- commit or rollback changes
         IF NOT in_commit THEN
             ROLLBACK TO SAVEPOINT before_merge;
         ELSE
             COMMIT;
         END IF;
+
+        -- redirect ???
         --
         tree.update_timer();
     EXCEPTION
