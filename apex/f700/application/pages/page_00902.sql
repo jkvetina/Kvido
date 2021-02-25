@@ -37,9 +37,6 @@ wwv_flow_api.create_page_plug(
 ,p_plug_source_type=>'NATIVE_JET_CHART'
 ,p_plug_query_num_rows=>15
 ,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
-,p_plug_footer=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'<span class="timing">#TIMING#s</span>',
-''))
 );
 wwv_flow_api.create_jet_chart(
  p_id=>wwv_flow_api.id(12341509114558321)
@@ -176,7 +173,10 @@ wwv_flow_api.create_jet_chart_axis(
 ,p_chart_id=>wwv_flow_api.id(12341509114558321)
 ,p_axis=>'y'
 ,p_is_rendered=>'on'
-,p_format_scaling=>'none'
+,p_min=>0
+,p_format_type=>'decimal'
+,p_decimal_places=>0
+,p_format_scaling=>'auto'
 ,p_scaling=>'linear'
 ,p_baseline_scaling=>'zero'
 ,p_position=>'auto'
@@ -189,10 +189,12 @@ wwv_flow_api.create_jet_chart_axis(
 ,p_chart_id=>wwv_flow_api.id(12341509114558321)
 ,p_axis=>'y2'
 ,p_is_rendered=>'on'
-,p_format_scaling=>'none'
+,p_min=>0
+,p_format_type=>'decimal'
+,p_decimal_places=>0
+,p_format_scaling=>'auto'
 ,p_scaling=>'linear'
-,p_baseline_scaling=>'zero'
-,p_step=>1
+,p_baseline_scaling=>'min'
 ,p_position=>'auto'
 ,p_major_tick_rendered=>'on'
 ,p_minor_tick_rendered=>'off'
