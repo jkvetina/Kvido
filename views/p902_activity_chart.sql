@@ -2,14 +2,14 @@ CREATE OR REPLACE FORCE VIEW p902_activity_chart AS
 WITH x AS (
     SELECT
         LEVEL AS bucket_id,
-        app.get_date() + NUMTODSINTERVAL((LEVEL - 1) * 15, 'MINUTE') AS start_at,
-        app.get_date() + NUMTODSINTERVAL( LEVEL      * 15, 'MINUTE') AS end_at
+        app.get_date() + NUMTODSINTERVAL((LEVEL - 1) * 10, 'MINUTE') AS start_at,
+        app.get_date() + NUMTODSINTERVAL( LEVEL      * 10, 'MINUTE') AS end_at
     FROM DUAL
-    CONNECT BY LEVEL <= (1440 / 15)
+    CONNECT BY LEVEL <= (1440 / 10)
 ),
 d AS (
     SELECT
-        sess.get_time_bucket(l.created_at, 15)  AS bucket_id,
+        sess.get_time_bucket(l.created_at, 10)  AS bucket_id,
         l.*
     FROM logs l
     WHERE l.app_id          = sess.get_app_id()
@@ -22,20 +22,20 @@ d AS (
 a AS (
     -- tracked business event #1
     SELECT
-        sess.get_time_bucket(a.created_at, 15)  AS bucket_id,
+        sess.get_time_bucket(a.created_at, 10)  AS bucket_id,
         COUNT(a.created_at)                     AS count_rows
     FROM d a
     WHERE a.flag            = 'E'
-    GROUP BY sess.get_time_bucket(a.created_at, 15)
+    GROUP BY sess.get_time_bucket(a.created_at, 10)
 ),
 b AS (
     -- tracked business event #2
     SELECT
-        sess.get_time_bucket(b.created_at, 15)  AS bucket_id,
+        sess.get_time_bucket(b.created_at, 10)  AS bucket_id,
         COUNT(b.created_at)                     AS count_rows
     FROM d b
     WHERE b.flag            = 'W'
-    GROUP BY sess.get_time_bucket(b.created_at, 15)
+    GROUP BY sess.get_time_bucket(b.created_at, 10)
 )
 SELECT
     x.bucket_id,
