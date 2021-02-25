@@ -124,5 +124,11 @@ CREATE OR REPLACE PACKAGE uploader AS
     )
     RETURN VARCHAR2;
 
+
+
+    PROCEDURE generate_procedure (
+        in_uploader_id      uploaders.uploader_id%TYPE
+    );
+
 END;
 /
