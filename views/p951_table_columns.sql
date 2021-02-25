@@ -1,21 +1,8 @@
 CREATE OR REPLACE FORCE VIEW p951_table_columns AS
 SELECT
-    c.column_id,
-    c.column_name,
-    --
-    c.data_type ||
-    CASE
-        WHEN c.data_type LIKE '%CHAR%' OR c.data_type = 'RAW' THEN
-            DECODE(NVL(c.char_length, 0), 0, '',
-                '(' || c.char_length || DECODE(c.char_used, 'C', ' CHAR', '') || ')'
-            )
-        WHEN c.data_type = 'NUMBER' THEN
-            DECODE(NVL(c.data_precision || c.data_scale, 0), 0, '',
-                DECODE(NVL(c.data_scale, 0), 0, '(' || c.data_precision || ')',
-                    '(' || c.data_precision || ',' || c.data_scale || ')'
-                )
-            )
-        END AS data_type,
+    d.column_id,
+    d.column_name,
+    d.data_type,
     --
     n.pk_,
     n.uq_,
@@ -35,8 +22,9 @@ SELECT
     --
     apex.get_icon('fa-database-search', 'Show column dependencies') AS dep
 FROM user_tab_columns c
-JOIN user_tables t
-    ON t.table_name     = c.table_name
+JOIN p805_table_columns d
+    ON d.table_name     = c.table_name
+    AND d.column_id     = c.column_id
 LEFT JOIN (
     SELECT
         m.table_name,
@@ -57,5 +45,5 @@ LEFT JOIN (
 LEFT JOIN user_col_comments m
     ON m.table_name     = c.table_name
     AND m.column_name   = c.column_name
-WHERE t.table_name      = apex.get_item('$TABLE');
+WHERE c.table_name      = apex.get_item('$TABLE');
 

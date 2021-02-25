@@ -30,10 +30,9 @@ WITH p AS (
         AND m.uploader_id   = apex.get_item('$TARGET')
         AND m.source_column = c.column_name
         AND m.is_hidden     IS NULL
-    LEFT JOIN p805_uploaders_mapping d      -- @TODO: TOO EXPENSIVE JUST FOR DATA TYPE
-        ON d.app_id         = m.app_id
-        AND d.uploader_id   = m.uploader_id
-        AND d.source_column = m.source_column
+    LEFT JOIN p805_table_columns d
+        ON d.table_name     = m.uploader_id
+        AND d.column_name   = m.source_column
     WHERE c.file_name       = apex.get_item('$FILE')
         AND c.sheet_id      = apex.get_item('$SHEET')
 ),
@@ -43,14 +42,14 @@ m AS (
         (
             SELECT MAX(p.column_id)
             FROM p
-            WHERE p.target_column_id < x.column_id
+            WHERE p.target_column_id < d.column_id
         ) AS column_id,
         --
         NULL                AS source_column,
         NULL                AS data_type,
-        x.column_id         AS target_column_id,
+        d.column_id         AS target_column_id,
         m.target_column     AS target_column,
-        x.data_type         AS target_data_type,
+        d.data_type         AS target_data_type,
         --
         CASE WHEN m.is_key = 'Y' THEN apex.get_icon('fa-check-square') END AS is_key,
         CASE WHEN m.is_nn  = 'Y' THEN apex.get_icon('fa-check-square') END AS is_nn,
@@ -64,12 +63,11 @@ m AS (
         NULL                                                        AS status_mapped,
         CASE WHEN (m.is_key = 'Y' OR m.is_nn = 'Y') THEN 'Y' END    AS status_missing,
         --
-        CASE WHEN x.column_id IS NOT NULL THEN 'U' END AS allow_changes  -- U = update
+        CASE WHEN d.column_id IS NOT NULL THEN 'U' END AS allow_changes  -- U = update
     FROM uploaders_mapping m
-    LEFT JOIN p805_uploaders_mapping x      -- @TODO: TOO EXPENSIVE JUST FOR DATA TYPE
-        ON x.app_id         = m.app_id
-        AND x.uploader_id   = m.uploader_id
-        AND x.target_column = m.target_column
+    LEFT JOIN p805_table_columns d
+        ON d.table_name     = m.uploader_id
+        AND d.column_name   = m.target_column
     LEFT JOIN uploaded_file_cols c
         ON c.column_name    = m.source_column
         AND c.file_name     = apex.get_item('$FILE')
