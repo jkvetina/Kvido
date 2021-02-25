@@ -785,5 +785,51 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         tree.raise_error();
     END;
 
+
+
+    FUNCTION generate_columns (
+        in_uploader_id      uploaders.uploader_id%TYPE,
+        in_type             VARCHAR2,
+        in_indentation      PLS_INTEGER                     := NULL
+    )
+    RETURN VARCHAR2 AS
+        out_                VARCHAR2(32767);
+    BEGIN
+        FOR c IN (
+            SELECT
+                ROW_NUMBER()    OVER(ORDER BY d.column_id)  AS r#,
+                COUNT(*)        OVER()                      AS r#_max,
+                --
+                CASE
+                    WHEN in_type = 'INSERT'
+                        THEN LOWER(d.column_name)
+                    WHEN in_type = 'VALUES'
+                        THEN 'target_table(i).' || LOWER(d.column_name)
+                    WHEN in_type IN ('UPDATE', 'WHERE')
+                        THEN RPAD('t.' || LOWER(d.column_name), CEIL((d.name_length + 5) * 4) / 4) || ' = target_table(i).' || LOWER(d.column_name)
+                    END AS text_
+            FROM p805_table_columns d
+            JOIN uploaders u
+                ON u.target_table       = d.table_name
+            JOIN uploaders_mapping m
+                ON m.uploader_id        = u.uploader_id
+                AND m.target_column     = d.column_name
+            WHERE u.uploader_id         = in_uploader_id
+                AND NVL(m.is_key, '-')  = CASE WHEN in_type = 'WHERE' THEN 'Y' ELSE NVL(m.is_key, '-') END
+            ORDER BY d.column_id
+        ) LOOP
+            out_ := out_ ||
+                CASE WHEN in_indentation > 0
+                    THEN RPAD(' ', 4 * NVL(in_indentation, 0), ' ') END ||
+                CASE WHEN in_type IN ('UPDATE', 'WHERE')
+                    THEN CASE WHEN c.r# = 1 THEN '    ' ELSE 'AND ' END
+                    END ||
+                c.text_ ||
+                CASE WHEN c.r# < c.r#_max THEN ',' END || CHR(10);
+        END LOOP;
+        --
+        RETURN out_;
+    END;
+
 END;
 /

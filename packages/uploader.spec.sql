@@ -115,5 +115,14 @@ CREATE OR REPLACE PACKAGE uploader AS
         in_uploader_id      uploaded_file_sheets.uploader_id%TYPE
     );
 
+
+
+    FUNCTION generate_columns (
+        in_uploader_id      uploaders.uploader_id%TYPE,
+        in_type             VARCHAR2,
+        in_indentation      PLS_INTEGER                     := NULL
+    )
+    RETURN VARCHAR2;
+
 END;
 /
