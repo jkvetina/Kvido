@@ -545,6 +545,17 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
     BEGIN
         tree.log_module(in_file_name, in_sheet_id, in_uploader_id);
 
+        -- get sheet name for possible use in rows replacements
+        BEGIN
+            SELECT s.sheet_name INTO in_sheet_name
+            FROM uploaded_file_sheets s
+            WHERE s.file_name       = in_file_name
+                AND s.sheet_id      = in_sheet_id;
+        EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            tree.raise_error('SHEET_MISSING');
+        END;
+
         -- get delete_flag column name
         BEGIN
             SELECT 'COL' || LPAD(c.column_id, 3, '0') INTO delete_flag_col
