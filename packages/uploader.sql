@@ -831,5 +831,105 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         RETURN out_;
     END;
 
+
+
+    PROCEDURE generate_procedure (
+        in_uploader_id      uploaders.uploader_id%TYPE
+    )
+    AS
+        in_target_table     CONSTANT VARCHAR2(30) := LOWER(in_uploader_id);
+        in_template_table   CONSTANT VARCHAR2(30) := 'uploaders';
+        in_u$_postfix       CONSTANT VARCHAR2(30) := '_u$';
+        --
+        skipping_flag       VARCHAR2(64);
+        line_               VARCHAR2(4000);
+        out_                VARCHAR2(32767);
+    BEGIN
+        tree.log_module(in_uploader_id);
+        --
+        FOR c IN (
+            WITH start_line AS (
+                SELECT s.line
+                FROM user_source s
+                WHERE s.name        = 'UPLOADER'
+                    AND s.type      = 'PACKAGE BODY'
+                    AND s.text      LIKE '%uploader_template%'
+            ),
+            x AS (
+                SELECT
+                    MAX(s.line)     AS start_line,
+                    MIN(e.line)     AS end_line
+                FROM user_source e
+                CROSS JOIN start_line s
+                WHERE e.name        = 'UPLOADER'
+                    AND e.type      = 'PACKAGE BODY'
+                    AND e.text      LIKE '    END;%'
+                    AND e.line      > s.line
+            )
+            SELECT s.line, s.text, REGEXP_SUBSTR(s.text, '/\*\*\s?([^*]+)\s?\*/', 1, 1, NULL, 1) AS action
+            FROM user_source s
+            CROSS JOIN x
+            WHERE s.name        = 'UPLOADER'
+                AND s.type      = 'PACKAGE BODY'
+                AND s.line      BETWEEN x.start_line + 1 AND x.end_line
+            ORDER BY s.line
+        ) LOOP
+            -- stop skipping
+            IF skipping_flag IS NOT NULL AND skipping_flag = RTRIM(c.action) THEN
+                skipping_flag := NULL;
+            END IF;
+
+            -- during skipping
+            IF skipping_flag IS NOT NULL THEN
+                CONTINUE;
+            END IF;
+
+            -- passing line
+            IF skipping_flag IS NULL THEN
+                -- replace table names
+                IF RTRIM(c.action) = 'STAGE_TABLE' THEN
+                    c.text := REPLACE(c.text, in_template_table || in_u$_postfix, in_target_table || in_u$_postfix);
+                END IF;
+                --
+                IF RTRIM(c.action) = 'TARGET_TABLE' THEN
+                    c.text := REPLACE(c.text, in_template_table, in_target_table);
+                END IF;
+                --
+                line_   := SUBSTR(c.text, 5, 4000);
+                out_    := out_ || REGEXP_REPLACE(line_, '\s+$', '') || CHR(10);
+            END IF;
+
+            -- check for start flags
+            IF c.action LIKE 'GENERATE_%:START%' THEN
+                skipping_flag := REGEXP_REPLACE(c.action, ':START.*$', ':END');
+                line_   := uploader.generate_columns (
+                    in_uploader_id      => in_uploader_id,
+                    in_type             => REGEXP_SUBSTR(c.action, 'GENERATE_([^:]+):', 1, 1, NULL, 1),
+                    in_indentation      => REGEXP_SUBSTR(c.action, ':START[(](\d+)[)]', 1, 1, NULL, 1)
+                );
+                --
+                out_    := out_ || REGEXP_REPLACE(line_, '\s+$', '') || CHR(10);
+            END IF;
+        END LOOP;
+        --
+
+--
+-- @TODO: EXECUTE IMMEDIATE
+--
+
+        DBMS_OUTPUT.PUT_LINE('');
+        DBMS_OUTPUT.PUT_LINE('CREATE OR REPLACE PROCEDURE ... AS');
+        DBMS_OUTPUT.PUT_LINE(out_);
+        DBMS_OUTPUT.PUT_LINE('/');
+        DBMS_OUTPUT.PUT_LINE('');
+        --
+        tree.update_timer();
+    EXCEPTION
+    WHEN tree.app_exception THEN
+        RAISE;
+    WHEN OTHERS THEN
+        tree.raise_error();
+    END;
+
 END;
 /
