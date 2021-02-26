@@ -14,14 +14,13 @@ SELECT
     --
     apex.get_page_link(u.target_page_id) AS page_link,
     --
-    NULL AS action,
-    NULL AS action_link,
+    p.action,
+    p.action_link,
     --
     apex.get_developer_page_link(u.target_page_id, p.region_id) AS apex_,
     --
     p.mappings_check,
     p.region_check,
-    p.err_table,
     --
     'UD' AS allow_changes  -- U = update, D = delete
 FROM uploaders u
@@ -45,21 +44,12 @@ SELECT
     apex.get_page_link(p.page_id)                                   AS page_link,
     --
     apex.get_icon('fa-plus-square', 'Add record to Uploaders')      AS action,
-    --
-    CASE
-        WHEN p.auth_scheme IS NOT NULL
-            THEN apex.get_page_link (
-                in_page_id      => sess.get_page_id(),
-                in_names        => 'P805_CREATE_UPLOADER,P805_UPLOADER_ID,P805_TABLE_NAME',
-                in_values       => 'Y,' || p.table_name || ',' || p.table_name
-            )
-        END AS action_link,
+    p.action_link,
     --
     apex.get_developer_page_link(p.page_id, p.region_id)            AS apex_,
     --
     p.mappings_check,
     p.region_check,
-    p.err_table,
     --
     NULL AS allow_changes  -- NULL = nothing
 FROM p805_uploaders_possible p
