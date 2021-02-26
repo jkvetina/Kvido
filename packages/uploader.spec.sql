@@ -96,10 +96,17 @@ CREATE OR REPLACE PACKAGE uploader AS
 
 
 
-    FUNCTION get_dml_err_table_name (
-        in_table_name       VARCHAR2
+    FUNCTION get_procedure_name (
+        in_uploader_id      uploaders.uploader_id%TYPE
     )
-    RETURN VARCHAR2;
+    RETURN uploaders.target_table%TYPE;
+
+
+
+    FUNCTION get_u$_table_name (
+        in_table_name       uploaders.target_table%TYPE
+    )
+    RETURN uploaders.target_table%TYPE;
 
 
 
@@ -126,9 +133,27 @@ CREATE OR REPLACE PACKAGE uploader AS
 
 
 
+    FUNCTION generate_mappings (
+        in_uploader_id      uploaders.uploader_id%TYPE,
+        in_indentation      PLS_INTEGER                             := NULL
+    )
+    RETURN VARCHAR2;
+
+
+
     PROCEDURE generate_procedure (
         in_uploader_id      uploaders.uploader_id%TYPE
     );
+
+
+
+    FUNCTION get_column_value (
+        in_file_name        uploaded_file_sheets.file_name%TYPE,
+        in_sheet_id         uploaded_file_sheets.sheet_id%TYPE,
+        in_uploader_id      uploaded_file_sheets.uploader_id%TYPE,
+        in_column_name      uploaders_mapping.target_column%TYPE
+    )
+    RETURN VARCHAR2;
 
 END;
 /

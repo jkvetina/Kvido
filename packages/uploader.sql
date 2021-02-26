@@ -249,12 +249,23 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         in_header_name      VARCHAR2                    := '$HEADER_'
     ) AS
         in_collection       CONSTANT VARCHAR2(30)       := 'SQL_' || in_uploader_id;
-        in_query            CONSTANT VARCHAR2(32767)    := 'SELECT * FROM ' || in_uploader_id || '_u$';  -- real table, not just upl_id
+        in_query            VARCHAR2(32767);
+        in_table_name       uploaders.target_table%TYPE;
         --
         out_cols            PLS_INTEGER;
         out_cursor          PLS_INTEGER                 := DBMS_SQL.OPEN_CURSOR;
         out_desc            DBMS_SQL.DESC_TAB;
     BEGIN
+        tree.log_module(in_uploader_id, in_header_name);
+
+        -- get target table
+        SELECT u.target_table INTO in_table_name
+        FROM uploaders u
+        WHERE u.app_id              = sess.get_app_id()
+            AND u.uploader_id       = in_uploader_id;
+        --
+        in_query := 'SELECT * FROM ' || uploader.get_u$_table_name(in_table_name);
+
         -- initialize and populate collection
         IF APEX_COLLECTION.COLLECTION_EXISTS(in_collection) THEN
             APEX_COLLECTION.DELETE_COLLECTION(in_collection);
@@ -344,6 +355,8 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
     BEGIN
         tree.log_module(in_file_name);
         --
+        -- @TODO: AUTH
+        --
         SELECT f.blob_content, f.mime_type
         INTO out_blob_content, out_mime_type
         FROM uploaded_files f
@@ -375,16 +388,30 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
     BEGIN
         tree.log_module(in_uploader_id);
         --
-        SELECT p.table_name, p.page_id
-        INTO rec.target_table, rec.target_page_id
-        FROM p805_uploaders_possible p
-        WHERE p.table_name      = in_uploader_id
-            AND p.uploader_id   IS NULL;
+        BEGIN
+            SELECT p.table_name, p.page_id
+            INTO rec.target_table, rec.target_page_id
+            FROM p805_uploaders_possible p
+            WHERE p.uploader_id = in_uploader_id;
+        EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            tree.raise_error('UPLOADER_NOT_POSSIBLE');
+        END;
         --        
         rec.app_id              := sess.get_app_id();
         rec.uploader_id         := in_uploader_id;
         --
-        INSERT INTO uploaders VALUES rec;
+        BEGIN
+            INSERT INTO uploaders VALUES rec;
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+            NULL;
+        END;
+        --
+        uploader.create_uploader_mappings (
+            in_uploader_id      => in_uploader_id,
+            in_clear_current    => TRUE
+        );
         --
         tree.update_timer();
     EXCEPTION
@@ -400,10 +427,18 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         in_uploader_id      uploaders_mapping.uploader_id%TYPE,
         in_clear_current    BOOLEAN                                 := FALSE
     ) AS
+        in_table_name       uploaders.target_table%TYPE;
+        --
         TYPE list_mappings  IS TABLE OF uploaders_mapping%ROWTYPE INDEX BY PLS_INTEGER;
         curr_mappings       list_mappings;
     BEGIN
         tree.log_module(in_uploader_id, CASE WHEN in_clear_current THEN 'Y' END);
+
+        -- get target table
+        SELECT u.target_table INTO in_table_name
+        FROM uploaders u
+        WHERE u.app_id              = sess.get_app_id()
+            AND u.uploader_id       = in_uploader_id;
 
         -- store current mappings
         IF NOT in_clear_current THEN
@@ -436,7 +471,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
                 c.is_key_def,
                 c.is_nn_def,
                 c.is_hidden_def,
-                c.source_column,
+                NVL(c.source_column, c.target_column),
                 c.overwrite_value
             );
         END LOOP;
@@ -455,6 +490,15 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
                     AND m.target_column     = curr_mappings(i).target_column;
             END LOOP;
         END IF;
+
+        -- rebuild DML Err table and uploader procedure
+        uploader.rebuild_dml_err_table (
+            in_table_name       => in_table_name
+        );
+        --
+        uploader.generate_procedure (
+            in_uploader_id      => in_uploader_id
+        );
         --
         tree.update_timer();
     EXCEPTION
@@ -466,10 +510,20 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
 
-    FUNCTION get_dml_err_table_name (
-        in_table_name       VARCHAR2
+    FUNCTION get_procedure_name (
+        in_uploader_id      uploaders.uploader_id%TYPE
     )
-    RETURN VARCHAR2 AS
+    RETURN uploaders.target_table%TYPE AS
+    BEGIN
+        RETURN UPPER('UPLOADER_' || in_uploader_id);
+    END;
+
+
+
+    FUNCTION get_u$_table_name (
+        in_table_name       uploaders.target_table%TYPE
+    )
+    RETURN uploaders.target_table%TYPE AS
     BEGIN
         RETURN in_table_name || uploader.dml_tables_postfix;
     END;
@@ -481,7 +535,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
     ) AS
         err_table_name      uploaders.target_table%TYPE;
     BEGIN
-        err_table_name      := uploader.get_dml_err_table_name(in_table_name);
+        err_table_name      := uploader.get_u$_table_name(in_table_name);
         --
         tree.log_module(in_table_name, err_table_name, uploader.dml_tables_owner);
 
@@ -506,8 +560,6 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         );
         --
         tree.update_timer();
-        --
-        recompile();
     EXCEPTION
     WHEN tree.app_exception THEN
         RAISE;
@@ -523,6 +575,11 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         in_uploader_id      uploaded_file_sheets.uploader_id%TYPE
     )
     AS
+        in_sheet_name       uploaded_file_sheets.sheet_name%TYPE;
+        in_user_id          CONSTANT uploaded_files.created_by%TYPE     := sess.get_user_id();
+        in_app_id           CONSTANT uploaded_files.app_id%TYPE         := sess.get_app_id();
+        in_sysdate          CONSTANT DATE                               := SYSDATE;
+        --
         TYPE target_table_t
             IS TABLE OF     uploaders_u$%ROWTYPE INDEX BY PLS_INTEGER;  /** STAGE_TABLE */
         --
@@ -580,13 +637,12 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             --
             /** GENERATE_MAPPINGS:START(2) */
             sess.get_app_id()                       AS app_id,
-            NULLIF(p.col002, '[Data Error: N/A]')   AS uploader_id,             -- missing in mappings
+            NULLIF(p.col002, '[Data Error: N/A]')   AS uploader_id,
             NULLIF(p.col002, '[Data Error: N/A]')   AS target_table,
             NULLIF(p.col007, '[Data Error: N/A]')   AS target_page_id,
             NULLIF(p.col009, '[Data Error: N/A]')   AS pre_procedure,
             NULLIF(p.col010, '[Data Error: N/A]')   AS post_procedure,
-            --
-            REPLACE(NULLIF(p.col011, '[Data Error: N/A]'), 'Checked', 'Y') AS is_active,
+            NULLIF(p.col011, '[Data Error: N/A]')   AS is_active,
             --
             sess.get_user_id()      AS updated_by,
             SYSDATE                 AS updated_at
@@ -806,6 +862,8 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
     RETURN VARCHAR2 AS
         out_                VARCHAR2(32767);
     BEGIN
+        tree.log_module(in_uploader_id, in_type, in_indentation);
+        --
         FOR c IN (
             SELECT
                 ROW_NUMBER()    OVER(ORDER BY d.column_id)  AS r#,
@@ -832,12 +890,46 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             out_ := out_ ||
                 CASE WHEN in_indentation > 0
                     THEN RPAD(' ', 4 * NVL(in_indentation, 0), ' ') END ||
-                CASE WHEN in_type IN ('UPDATE', 'WHERE')
+                CASE WHEN in_type = 'WHERE'
                     THEN CASE WHEN c.r# = 1 THEN '    ' ELSE 'AND ' END
                     END ||
                 c.text_ ||
-                CASE WHEN c.r# < c.r#_max THEN ',' END || CHR(10);
+                CASE WHEN in_type != 'WHERE' AND c.r# < c.r#_max THEN ',' END ||
+                CHR(10);
         END LOOP;
+        --
+        tree.update_timer();
+        --
+        RETURN out_;
+    END;
+
+
+
+    FUNCTION generate_mappings (
+        in_uploader_id      uploaders.uploader_id%TYPE,
+        in_indentation      PLS_INTEGER                             := NULL
+    )
+    RETURN VARCHAR2 AS
+        out_                VARCHAR2(32767);
+    BEGIN
+        tree.log_module(in_uploader_id, in_indentation);
+
+        -- map uploaded columns to target columns (and use all of them)
+        FOR c IN (
+            SELECT d.column_name, d.is_last
+            FROM p805_table_columns d
+            JOIN uploaders u
+                ON u.target_table       = d.table_name
+            WHERE u.app_id              = sess.get_app_id()
+                AND u.uploader_id       = in_uploader_id
+            ORDER BY d.column_id
+        ) LOOP
+            out_ := out_ || 'uploader.get_column_value(in_file_name, in_sheet_id, in_uploader_id, ''' ||
+                c.column_name || ''') AS ' || LOWER(c.column_name) ||
+                CASE WHEN c.is_last IS NULL THEN ',' END || CHR(10);
+        END LOOP;
+        --
+        tree.update_timer();
         --
         RETURN out_;
     END;
@@ -846,11 +938,9 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
     PROCEDURE generate_procedure (
         in_uploader_id      uploaders.uploader_id%TYPE
-    )
-    AS
+    ) AS
+        in_template_table   CONSTANT VARCHAR2(30) := 'uploaders';               -- table used in template
         in_target_table     CONSTANT VARCHAR2(30) := LOWER(in_uploader_id);
-        in_template_table   CONSTANT VARCHAR2(30) := 'uploaders';
-        in_u$_postfix       CONSTANT VARCHAR2(30) := '_u$';
         --
         skipping_flag       VARCHAR2(64);
         line_               VARCHAR2(4000);
@@ -858,17 +948,20 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
     BEGIN
         tree.log_module(in_uploader_id);
         --
+        out_ := 'CREATE OR REPLACE PROCEDURE ' || LOWER(uploader.get_procedure_name(in_uploader_id)) || ' (' || CHR(10);
+
+        -- find template start and end and all lines in between
         FOR c IN (
             WITH start_line AS (
                 SELECT s.line
                 FROM user_source s
                 WHERE s.name        = 'UPLOADER'
                     AND s.type      = 'PACKAGE BODY'
-                    AND s.text      LIKE '%uploader_template%'
+                    AND s.text      LIKE '%PROCEDURE uploader_template%'
             ),
             x AS (
                 SELECT
-                    MAX(s.line)     AS start_line,
+                    MIN(s.line)     AS start_line,
                     MIN(e.line)     AS end_line
                 FROM user_source e
                 CROSS JOIN start_line s
@@ -899,11 +992,15 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             IF skipping_flag IS NULL THEN
                 -- replace table names
                 IF RTRIM(c.action) = 'STAGE_TABLE' THEN
-                    c.text := REPLACE(c.text, in_template_table || in_u$_postfix, in_target_table || in_u$_postfix);
+                    c.text := REGEXP_REPLACE(c.text,
+                        REPLACE(uploader.get_u$_table_name(in_template_table), '$', '[$]'),
+                        uploader.get_u$_table_name(in_target_table),
+                        1, 1, 'i'
+                    );
                 END IF;
                 --
                 IF RTRIM(c.action) = 'TARGET_TABLE' THEN
-                    c.text := REPLACE(c.text, in_template_table, in_target_table);
+                    c.text := REGEXP_REPLACE(c.text, in_template_table, in_target_table, 1, 1, 'i');
                 END IF;
                 --
                 line_   := SUBSTR(c.text, 5, 4000);
@@ -913,26 +1010,32 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             -- check for start flags
             IF c.action LIKE 'GENERATE_%:START%' THEN
                 skipping_flag := REGEXP_REPLACE(c.action, ':START.*$', ':END');
-                line_   := uploader.generate_columns (
-                    in_uploader_id      => in_uploader_id,
-                    in_type             => REGEXP_SUBSTR(c.action, 'GENERATE_([^:]+):', 1, 1, NULL, 1),
-                    in_indentation      => REGEXP_SUBSTR(c.action, ':START[(](\d+)[)]', 1, 1, NULL, 1)
-                );
                 --
-                out_    := out_ || REGEXP_REPLACE(line_, '\s+$', '') || CHR(10);
+                IF c.action LIKE 'GENERATE_MAPPINGS:START%' THEN
+                    line_ := uploader.generate_mappings (
+                        in_uploader_id      => in_uploader_id,
+                        in_indentation      => REGEXP_SUBSTR(c.action, ':START[(](\d+)[)]', 1, 1, NULL, 1)
+                    );
+                ELSE
+                    line_ := uploader.generate_columns (
+                        in_uploader_id      => in_uploader_id,
+                        in_type             => REGEXP_SUBSTR(c.action, 'GENERATE_([^:]+):', 1, 1, NULL, 1),
+                        in_indentation      => REGEXP_SUBSTR(c.action, ':START[(](\d+)[)]', 1, 1, NULL, 1)
+                    );
+                END IF;
+                --
+                out_ := out_ || REGEXP_REPLACE(line_, '\s+$', '') || CHR(10);
             END IF;
         END LOOP;
         --
-
---
--- @TODO: EXECUTE IMMEDIATE
---
-
-        DBMS_OUTPUT.PUT_LINE('');
-        DBMS_OUTPUT.PUT_LINE('CREATE OR REPLACE PROCEDURE ... AS');
-        DBMS_OUTPUT.PUT_LINE(out_);
-        DBMS_OUTPUT.PUT_LINE('/');
-        DBMS_OUTPUT.PUT_LINE('');
+        tree.attach_clob(out_, 'UPLOADER');
+        --
+        BEGIN
+            EXECUTE IMMEDIATE out_;
+        EXCEPTION
+        WHEN OTHERS THEN
+            tree.raise_error('COMPILATION_FAILED');
+        END;
         --
         tree.update_timer();
     EXCEPTION
@@ -940,6 +1043,19 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         RAISE;
     WHEN OTHERS THEN
         tree.raise_error();
+    END;
+
+
+
+    FUNCTION get_column_value (
+        in_file_name        uploaded_file_sheets.file_name%TYPE,
+        in_sheet_id         uploaded_file_sheets.sheet_id%TYPE,
+        in_uploader_id      uploaded_file_sheets.uploader_id%TYPE,
+        in_column_name      uploaders_mapping.target_column%TYPE
+    )
+    RETURN VARCHAR2 AS
+    BEGIN
+        RETURN NULL;
     END;
 
 END;
