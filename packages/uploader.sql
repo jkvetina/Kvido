@@ -179,15 +179,11 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         in_file_name        uploaded_file_sheets.file_name%TYPE,
         in_sheet_id         uploaded_file_sheets.sheet_id%TYPE,
         in_uploader_id      uploaded_file_sheets.uploader_id%TYPE,
-        in_commit           BOOLEAN                                     := FALSE
+        in_commit           VARCHAR2                                    := NULL
     ) AS
-        PRAGMA AUTONOMOUS_TRANSACTION;
-        --
         uploader_procedure  VARCHAR2(30);
     BEGIN
-        tree.log_module(in_file_name, in_sheet_id, in_uploader_id, CASE WHEN in_commit THEN 'Y' ELSE 'N' END);
-        --
-        SAVEPOINT before_merge;
+        tree.log_module(in_file_name, in_sheet_id, in_uploader_id, in_commit);
 
         -- check for pre processing procedure
         --
@@ -211,34 +207,26 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             'BEGIN ' || uploader_procedure || '(' ||
             'in_file_name    => :1, ' ||
             'in_sheet_id     => :2, ' ||
-            'in_uploader_id  => :3'   ||
+            'in_uploader_id  => :3,'  ||
+            'in_commit       => :4'   ||
             '); END;'
-            USING in_file_name, in_sheet_id, in_uploader_id;
+            USING in_file_name, in_sheet_id, in_uploader_id, in_commit;
 
         -- move data to collections so we can have dynamic report in APEX
-        copy_uploaded_data_to_collection(in_uploader_id);
+        uploader.copy_uploaded_data_to_collection(in_uploader_id);
 
         -- check for post processing procedure
         --
         -- @TODO:
         --
 
-        -- commit or rollback changes
-        IF NOT in_commit THEN
-            ROLLBACK TO SAVEPOINT before_merge;
-        ELSE
-            COMMIT;
-        END IF;
-
         -- redirect ???
         --
         tree.update_timer();
     EXCEPTION
     WHEN tree.app_exception THEN
-        ROLLBACK;
         RAISE;
     WHEN OTHERS THEN
-        ROLLBACK;
         tree.raise_error();
     END;
 
@@ -563,9 +551,11 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
     PROCEDURE uploader_template (
         in_file_name        uploaded_file_sheets.file_name%TYPE,
         in_sheet_id         uploaded_file_sheets.sheet_id%TYPE,
-        in_uploader_id      uploaded_file_sheets.uploader_id%TYPE
-    )
-    AS
+        in_uploader_id      uploaded_file_sheets.uploader_id%TYPE,
+        in_commit           VARCHAR2                                    := NULL
+    ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+        --
         in_sheet_name       uploaded_file_sheets.sheet_name%TYPE;
         in_user_id          CONSTANT uploaded_files.created_by%TYPE     := sess.get_user_id();
         in_app_id           CONSTANT uploaded_files.app_id%TYPE         := sess.get_app_id();
@@ -591,7 +581,9 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         idx                 PLS_INTEGER;
         delete_flag_col     VARCHAR2(30);
     BEGIN
-        tree.log_module(in_file_name, in_sheet_id, in_uploader_id);
+        tree.log_module(in_file_name, in_sheet_id, in_uploader_id, in_commit);
+        --
+        SAVEPOINT before_merge;
 
         -- get sheet name for possible use in rows replacements
         BEGIN
@@ -797,6 +789,13 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             idx := rows_to_update.NEXT(idx);
         END LOOP;
 
+        -- rollback changes if not committing changes
+        IF in_commit IS NULL THEN
+            ROLLBACK TO SAVEPOINT before_merge;
+            --
+            tree.log_debug('ROLLBACK TO SAVEPOINT');
+        END IF;
+
         --
         -- @TODO: try to evaluate catched errors to get meaningful messages
         --
@@ -823,7 +822,10 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             s.result_updated    = rows_updated#,
             s.result_deleted    = rows_deleted#,
             s.result_errors     = rows_errors#,
-            s.result_unmatched  = s.sheet_rows - rows_inserted# - rows_updated# - rows_deleted# - rows_errors#
+            s.result_unmatched  = s.sheet_rows - rows_inserted# - rows_updated# - rows_deleted# - rows_errors#,
+            --
+            s.commited_by       = CASE WHEN in_commit = 'Y' THEN sess.get_user_id() END,
+            s.commited_at       = CASE WHEN in_commit = 'Y' THEN SYSDATE END
         WHERE s.file_name       = in_file_name
             AND s.sheet_id      = in_sheet_id;
         --
@@ -835,11 +837,15 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             CASE WHEN rows_errors#   > 0 THEN ', ERRORS: '   || rows_errors#   END
         );
         --
+        COMMIT;
+        --
         tree.update_timer();
     EXCEPTION
     WHEN tree.app_exception THEN
+        ROLLBACK;
         RAISE;
     WHEN OTHERS THEN
+        ROLLBACK;
         tree.raise_error();
     END;
 

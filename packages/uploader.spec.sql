@@ -59,7 +59,7 @@ CREATE OR REPLACE PACKAGE uploader AS
         in_file_name        uploaded_file_sheets.file_name%TYPE,
         in_sheet_id         uploaded_file_sheets.sheet_id%TYPE,
         in_uploader_id      uploaded_file_sheets.uploader_id%TYPE,
-        in_commit           BOOLEAN                                     := FALSE
+        in_commit           VARCHAR2                                    := NULL
     );
 
 
@@ -119,7 +119,8 @@ CREATE OR REPLACE PACKAGE uploader AS
     PROCEDURE uploader_template (
         in_file_name        uploaded_file_sheets.file_name%TYPE,
         in_sheet_id         uploaded_file_sheets.sheet_id%TYPE,
-        in_uploader_id      uploaded_file_sheets.uploader_id%TYPE
+        in_uploader_id      uploaded_file_sheets.uploader_id%TYPE,
+        in_commit           VARCHAR2                                := NULL
     );
 
 
