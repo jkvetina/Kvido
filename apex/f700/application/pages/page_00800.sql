@@ -61,14 +61,13 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210227102440'
+,p_last_upd_yyyymmddhh24miss=>'20210227224736'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(13647015415013517)
 ,p_plug_name=>'Preview'
 ,p_region_css_classes=>'NO_ARROWS FLOATING_ICONS'
 ,p_region_template_options=>'#DEFAULT#'
-,p_escape_on_http_output=>'Y'
 ,p_plug_template=>wwv_flow_api.id(64142195941700285)
 ,p_plug_display_sequence=>90
 ,p_include_in_reg_disp_sel_yn=>'Y'
@@ -76,21 +75,7 @@ wwv_flow_api.create_page_plug(
 ,p_plug_display_point=>'BODY'
 ,p_query_type=>'SQL'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'WITH s AS (',
-'    SELECT s.*',
-'    FROM uploaded_file_sheets s',
-'    WHERE s.file_name           = apex.get_item(''$FILE'')',
-'        AND s.sheet_id          = apex.get_item(''$SHEET'')',
-')',
-'SELECT *',
-'FROM (',
-'    SELECT ''Inserted''   AS name_, s.result_inserted     AS value_, ''I'' AS filter_ FROM s UNION ALL',
-'    SELECT ''Updated''    AS name_, s.result_updated      AS value_, ''U'' AS filter_ FROM s UNION ALL',
-'    SELECT ''Deleted''    AS name_, s.result_deleted      AS value_, ''D'' AS filter_ FROM s UNION ALL',
-'    SELECT ''Errors''     AS name_, s.result_errors       AS value_, ''E'' AS filter_ FROM s UNION ALL',
-'    SELECT ''Unmatched''  AS name_, s.result_unmatched    AS value_, ''-'' AS filter_ FROM s',
-')',
-'WHERE value_ > 0;',
+'SELECT * FROM p800_sheet_preview;',
 ''))
 ,p_plug_source_type=>'NATIVE_JQM_LIST_VIEW'
 ,p_plug_query_num_rows=>15
@@ -100,9 +85,10 @@ wwv_flow_api.create_page_plug(
 ,p_plug_footer=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<br />',
 ''))
-,p_attribute_02=>'NAME_'
-,p_attribute_08=>'VALUE_'
-,p_attribute_16=>'f?p=&APP_ID.:800:&SESSION.::&DEBUG.::P800_RESET,P800_FILE,P800_SHEET,P800_TARGET,P800_SHOW_ROWS:Y,&P800_FILE.,&P800_SHEET.,&P800_TARGET.,&FILTER_.'
+,p_attribute_02=>'LABEL_'
+,p_attribute_06=>'SUPPLEMENTAL_'
+,p_attribute_08=>'COUNTER_'
+,p_attribute_16=>'f?p=&APP_ID.:800:&SESSION.::&DEBUG.::P800_FILE,P800_SHEET,P800_TARGET,P800_SHOW_ROWS,P800_SHOW_COLS,P800_PREVIEW,P800_COMMIT:&P800_FILE.,&P800_SHEET.,&P800_TARGET.,&FILTER_.,,,'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(13647639086013523)
@@ -116,8 +102,7 @@ wwv_flow_api.create_page_plug(
 ,p_plug_display_point=>'BODY'
 ,p_query_type=>'SQL'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'SELECT t.*',
-'FROM p800_uploaded_targets t;',
+'SELECT * FROM p800_uploaded_targets;',
 ''))
 ,p_plug_source_type=>'NATIVE_JQM_LIST_VIEW'
 ,p_plug_query_num_rows=>15
@@ -1100,18 +1085,6 @@ wwv_flow_api.create_region_column(
 ,p_display_condition_type=>'ITEM_IS_NOT_NULL'
 ,p_display_condition=>'P800_HEADER_035'
 );
-wwv_flow_api.component_end;
-end;
-/
-begin
-wwv_flow_api.component_begin (
- p_version_yyyy_mm_dd=>'2020.10.01'
-,p_release=>'20.2.0.00.20'
-,p_default_workspace_id=>9526531750928358
-,p_default_application_id=>700
-,p_default_id_offset=>28323188538908472
-,p_default_owner=>'DEV'
-);
 wwv_flow_api.create_region_column(
  p_id=>wwv_flow_api.id(15347715051894509)
 ,p_name=>'C036'
@@ -1139,6 +1112,18 @@ wwv_flow_api.create_region_column(
 ,p_include_in_export=>true
 ,p_display_condition_type=>'ITEM_IS_NOT_NULL'
 ,p_display_condition=>'P800_HEADER_036'
+);
+wwv_flow_api.component_end;
+end;
+/
+begin
+wwv_flow_api.component_begin (
+ p_version_yyyy_mm_dd=>'2020.10.01'
+,p_release=>'20.2.0.00.20'
+,p_default_workspace_id=>9526531750928358
+,p_default_application_id=>700
+,p_default_id_offset=>28323188538908472
+,p_default_owner=>'DEV'
 );
 wwv_flow_api.create_region_column(
  p_id=>wwv_flow_api.id(15347896465894510)
@@ -2211,18 +2196,6 @@ wwv_flow_api.create_region_column(
 ,p_readonly_condition_type=>'ALWAYS'
 ,p_readonly_for_each_row=>false
 );
-wwv_flow_api.component_end;
-end;
-/
-begin
-wwv_flow_api.component_begin (
- p_version_yyyy_mm_dd=>'2020.10.01'
-,p_release=>'20.2.0.00.20'
-,p_default_workspace_id=>9526531750928358
-,p_default_application_id=>700
-,p_default_id_offset=>28323188538908472
-,p_default_owner=>'DEV'
-);
 wwv_flow_api.create_region_column(
  p_id=>wwv_flow_api.id(25071981582009662)
 ,p_name=>'DATA_TYPE'
@@ -2252,6 +2225,18 @@ wwv_flow_api.create_region_column(
 ,p_include_in_export=>true
 ,p_readonly_condition_type=>'ALWAYS'
 ,p_readonly_for_each_row=>false
+);
+wwv_flow_api.component_end;
+end;
+/
+begin
+wwv_flow_api.component_begin (
+ p_version_yyyy_mm_dd=>'2020.10.01'
+,p_release=>'20.2.0.00.20'
+,p_default_workspace_id=>9526531750928358
+,p_default_application_id=>700
+,p_default_id_offset=>28323188538908472
+,p_default_owner=>'DEV'
 );
 wwv_flow_api.create_region_column(
  p_id=>wwv_flow_api.id(25507871117061614)
@@ -2666,8 +2651,7 @@ wwv_flow_api.create_page_plug(
 ,p_plug_display_point=>'BODY'
 ,p_query_type=>'SQL'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'SELECT t.*',
-'FROM p800_uploaded_targets t;',
+'SELECT * FROM p800_sheet_target;',
 ''))
 ,p_plug_source_type=>'NATIVE_JQM_LIST_VIEW'
 ,p_plug_query_num_rows=>15
@@ -2758,7 +2742,7 @@ wwv_flow_api.create_page_button(
 ,p_button_is_hot=>'Y'
 ,p_button_image_alt=>'Commit'
 ,p_button_position=>'RIGHT_OF_TITLE'
-,p_button_redirect_url=>'f?p=&APP_ID.:800:&SESSION.::&DEBUG.:::'
+,p_button_redirect_url=>'f?p=&APP_ID.:800:&SESSION.::&DEBUG.::P800_RESET,P800_FILE,P800_SHEET,P800_TARGET,P800_COMMIT:Y,&P800_FILE.,&P800_SHEET.,&P800_TARGET.,Y'
 ,p_button_condition=>'P800_COMMIT'
 ,p_button_condition_type=>'ITEM_IS_NULL'
 );
@@ -2841,8 +2825,8 @@ wwv_flow_api.create_page_button(
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13048640589981119)
 ,p_name=>'P800_TARGET_NAME'
-,p_item_sequence=>40
-,p_item_plug_id=>wwv_flow_api.id(46429087864913333)
+,p_item_sequence=>50
+,p_item_plug_id=>wwv_flow_api.id(25071177918009654)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
 );
@@ -2850,7 +2834,7 @@ wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13438053898622261)
 ,p_name=>'P800_RESET'
 ,p_item_sequence=>10
-,p_item_plug_id=>wwv_flow_api.id(35387743581829181)
+,p_item_plug_id=>wwv_flow_api.id(25071177918009654)
 ,p_use_cache_before_default=>'NO'
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_is_persistent=>'N'
@@ -2860,7 +2844,7 @@ wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13438450670622263)
 ,p_name=>'P800_FILE'
 ,p_item_sequence=>20
-,p_item_plug_id=>wwv_flow_api.id(35387743581829181)
+,p_item_plug_id=>wwv_flow_api.id(25071177918009654)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
 );
@@ -2868,15 +2852,15 @@ wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13439128216622265)
 ,p_name=>'P800_SHEET'
 ,p_item_sequence=>30
-,p_item_plug_id=>wwv_flow_api.id(35387743581829181)
+,p_item_plug_id=>wwv_flow_api.id(25071177918009654)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
 );
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13439827610622267)
 ,p_name=>'P800_DELETE'
-,p_item_sequence=>50
-,p_item_plug_id=>wwv_flow_api.id(35387743581829181)
+,p_item_sequence=>70
+,p_item_plug_id=>wwv_flow_api.id(25071177918009654)
 ,p_use_cache_before_default=>'NO'
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_is_persistent=>'N'
@@ -2885,8 +2869,8 @@ wwv_flow_api.create_page_item(
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13440256902622268)
 ,p_name=>'P800_DOWNLOAD'
-,p_item_sequence=>40
-,p_item_plug_id=>wwv_flow_api.id(35387743581829181)
+,p_item_sequence=>60
+,p_item_plug_id=>wwv_flow_api.id(25071177918009654)
 ,p_use_cache_before_default=>'NO'
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_is_persistent=>'N'
@@ -2918,8 +2902,8 @@ wwv_flow_api.create_page_item(
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13442121082622272)
 ,p_name=>'P800_TARGET'
-,p_item_sequence=>30
-,p_item_plug_id=>wwv_flow_api.id(46429087864913333)
+,p_item_sequence=>40
+,p_item_plug_id=>wwv_flow_api.id(25071177918009654)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
 );
@@ -2934,40 +2918,40 @@ wwv_flow_api.create_page_item(
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13449426519622303)
 ,p_name=>'P800_SHOW_COLS'
-,p_item_sequence=>90
-,p_item_plug_id=>wwv_flow_api.id(35387743581829181)
+,p_item_sequence=>100
+,p_item_plug_id=>wwv_flow_api.id(25071177918009654)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
 );
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13450106940622305)
 ,p_name=>'P800_SHOW_ROWS'
-,p_item_sequence=>100
-,p_item_plug_id=>wwv_flow_api.id(35387743581829181)
+,p_item_sequence=>110
+,p_item_plug_id=>wwv_flow_api.id(25071177918009654)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
 );
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13452965138622316)
 ,p_name=>'P800_COMMIT'
-,p_item_sequence=>60
-,p_item_plug_id=>wwv_flow_api.id(35387743581829181)
+,p_item_sequence=>130
+,p_item_plug_id=>wwv_flow_api.id(25071177918009654)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
 );
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13453748017622318)
 ,p_name=>'P800_SHOW_PREVIEW'
-,p_item_sequence=>80
-,p_item_plug_id=>wwv_flow_api.id(35387743581829181)
+,p_item_sequence=>90
+,p_item_plug_id=>wwv_flow_api.id(25071177918009654)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
 );
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13647974535013526)
 ,p_name=>'P800_SHOW_TARGETS'
-,p_item_sequence=>70
-,p_item_plug_id=>wwv_flow_api.id(35387743581829181)
+,p_item_sequence=>80
+,p_item_plug_id=>wwv_flow_api.id(25071177918009654)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
 );
@@ -3267,18 +3251,6 @@ wwv_flow_api.create_page_item(
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'N'
 );
-wwv_flow_api.component_end;
-end;
-/
-begin
-wwv_flow_api.component_begin (
- p_version_yyyy_mm_dd=>'2020.10.01'
-,p_release=>'20.2.0.00.20'
-,p_default_workspace_id=>9526531750928358
-,p_default_application_id=>700
-,p_default_id_offset=>28323188538908472
-,p_default_owner=>'DEV'
-);
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(15330777221843910)
 ,p_name=>'P800_HEADER_048'
@@ -3310,6 +3282,18 @@ wwv_flow_api.create_page_item(
 ,p_item_plug_id=>wwv_flow_api.id(15332199956843924)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'N'
+);
+wwv_flow_api.component_end;
+end;
+/
+begin
+wwv_flow_api.component_begin (
+ p_version_yyyy_mm_dd=>'2020.10.01'
+,p_release=>'20.2.0.00.20'
+,p_default_workspace_id=>9526531750928358
+,p_default_application_id=>700
+,p_default_id_offset=>28323188538908472
+,p_default_owner=>'DEV'
 );
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(15331161786843914)
@@ -3382,6 +3366,14 @@ wwv_flow_api.create_page_item(
 ,p_item_plug_id=>wwv_flow_api.id(15332199956843924)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'N'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(15349371768894525)
+,p_name=>'P800_PREVIEW'
+,p_item_sequence=>120
+,p_item_plug_id=>wwv_flow_api.id(25071177918009654)
+,p_display_as=>'NATIVE_HIDDEN'
+,p_attribute_01=>'Y'
 );
 wwv_flow_api.create_page_process(
  p_id=>wwv_flow_api.id(13457289275622333)
@@ -3503,24 +3495,6 @@ wwv_flow_api.create_page_process(
 '        apex.set_item(''$TARGET'',    c.uploader_id);',
 '    END LOOP;',
 'END IF;',
-'--',
-'IF apex.get_item(''$TARGET'') IS NULL THEN',
-'    apex.set_item(''$SHOW_TARGETS'', ''Y'');',
-'    apex.set_item(''$SHOW_PREVIEW'');',
-'    apex.set_item(''$SHOW_ROWS'');',
-'    apex.set_item(''$SHOW_COLS'');',
-'ELSE',
-'    apex.set_item(''$SHOW_TARGETS'');',
-'    apex.set_item(''$SHOW_PREVIEW'', ''Y'');',
-'END IF;',
-'--',
-'IF apex.get_item(''$SHOW_ROWS'') IS NOT NULL THEN',
-'    apex.set_item(''$SHOW_PREVIEW'');',
-'END IF;',
-'--',
-'IF apex.get_item(''$SHOW_COLS'') IS NOT NULL THEN',
-'    apex.set_item(''$SHOW_PREVIEW'');',
-'END IF;',
 ''))
 ,p_process_clob_language=>'PLSQL'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
@@ -3548,33 +3522,63 @@ wwv_flow_api.create_page_process(
 ,p_process_when_type=>'ITEM_IS_NOT_NULL'
 );
 wwv_flow_api.create_page_process(
- p_id=>wwv_flow_api.id(13455219708622328)
+ p_id=>wwv_flow_api.id(15349439052894526)
 ,p_process_sequence=>80
 ,p_process_point=>'AFTER_HEADER'
 ,p_process_type=>'NATIVE_PLSQL'
-,p_process_name=>'PROCESS_SHEET'
+,p_process_name=>'ADJUST_ITEMS'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'IF (    apex.get_item(''$SHOW_ROWS'')     IS NULL',
-'    AND apex.get_item(''$SHOW_COLS'')     IS NULL',
-'    AND apex.get_item(''$SHOW_TARGETS'')  IS NULL',
-'    AND apex.get_item(''$SHOW_PREVIEW'')  IS NOT NULL',
-'    AND apex.get_item(''$SHEET'')         IS NOT NULL',
-'    AND apex.get_item(''$TARGET'')        IS NOT NULL',
-') THEN',
-'    uploader.process_file_sheet (',
-'        in_file_name        => apex.get_item(''$FILE''),',
-'        in_sheet_id         => apex.get_item(''$SHEET''),',
-'        in_uploader_id      => apex.get_item(''$TARGET'')',
-'    );',
-'    --',
+'-- show preview region even for commit',
+'IF apex.get_item(''$COMMIT'') = ''Y'' THEN',
 '    apex.set_item(''$SHOW_PREVIEW'', ''Y'');',
+'END IF;',
+'',
+'-- if target is unknown show all targets',
+'IF apex.get_item(''$FILE'') IS NOT NULL AND apex.get_item(''$TARGET'') IS NULL THEN',
+'    apex.set_item(''$SHOW_TARGETS'', ''Y'');',
+'    apex.set_item(''$SHOW_PREVIEW'');',
+'    apex.set_item(''$SHOW_ROWS'');',
+'    apex.set_item(''$SHOW_COLS'');',
+'    apex.set_item(''$PREVIEW'');      -- no target = no action',
+'    apex.set_item(''$COMMIT'');',
+'END IF;',
+'',
+'-- hide other targets',
+'IF apex.get_item(''$TARGET'') IS NOT NULL THEN',
 '    apex.set_item(''$SHOW_TARGETS'');',
+'    apex.set_item(''$SHOW_PREVIEW'', ''Y'');',
 'END IF;',
 ''))
 ,p_process_clob_language=>'PLSQL'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
-,p_process_when=>'P800_FILE'
-,p_process_when_type=>'ITEM_IS_NOT_NULL'
+);
+wwv_flow_api.create_page_process(
+ p_id=>wwv_flow_api.id(13455219708622328)
+,p_process_sequence=>90
+,p_process_point=>'AFTER_HEADER'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'PROCESS_SHEET'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'IF (    apex.get_item(''$FILE'')      IS NOT NULL',
+'    AND apex.get_item(''$SHEET'')     IS NOT NULL',
+'    AND apex.get_item(''$TARGET'')    IS NOT NULL',
+') THEN',
+'    uploader.process_file_sheet (',
+'        in_file_name        => apex.get_item(''$FILE''),',
+'        in_sheet_id         => apex.get_item(''$SHEET''),',
+'        in_uploader_id      => apex.get_item(''$TARGET''),',
+'        in_commit           => apex.get_item(''$COMMIT'')',
+'    );',
+'END IF;',
+''))
+,p_process_clob_language=>'PLSQL'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
+,p_process_when=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'apex.get_item(''$PREVIEW'')   IS NOT NULL',
+'OR apex.get_item(''$COMMIT'') IS NOT NULL',
+''))
+,p_process_when_type=>'EXPRESSION'
+,p_process_when2=>'PLSQL'
 );
 wwv_flow_api.create_page_process(
  p_id=>wwv_flow_api.id(13645774829013504)
