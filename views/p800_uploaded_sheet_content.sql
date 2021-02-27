@@ -24,8 +24,8 @@ SELECT
     --
     apex.get_page_link (
         in_page_id      => sess.get_page_id(),
-        in_names        => 'P800_FILE,P800_SHEET,P800_TARGET,P800_SHOW_COLS,P800_SHOW_ROWS,P800_RESET',
-        in_values       => s.file_name || ',' || s.sheet_id || ',' || s.target || ',Y,,'
+        in_names        => 'P800_FILE,P800_SHEET,P800_TARGET,P800_SHOW_COLS,P800_SHOW_ROWS,P800_RESET,P800_PREVIEW,P800_COMMIT',
+        in_values       => s.file_name || ',' || s.sheet_id || ',' || s.target || ',Y,,,,'
     ) AS target_url
 FROM s
 CROSS JOIN m
@@ -38,8 +38,8 @@ SELECT
     --
     apex.get_page_link (
         in_page_id      => sess.get_page_id(),
-        in_names        => 'P800_FILE,P800_SHEET,P800_TARGET,P800_SHOW_COLS,P800_SHOW_ROWS,P800_RESET',
-        in_values       => s.file_name || ',' || s.sheet_id || ',' || s.target || ',,Y,'
+        in_names        => 'P800_FILE,P800_SHEET,P800_TARGET,P800_SHOW_COLS,P800_SHOW_ROWS,P800_RESET,P800_PREVIEW,P800_COMMIT',
+        in_values       => s.file_name || ',' || s.sheet_id || ',' || s.target || ',,Y,,,'
     ) AS target_url
 FROM s;
 
