@@ -246,7 +246,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
     PROCEDURE copy_uploaded_data_to_collection (
         in_uploader_id      uploaders.uploader_id%TYPE,
-        in_header_name      VARCHAR2                    := '$HEADER_'
+        in_header_name      VARCHAR2                    := '$HEADER_'  -- to rename cols from apex_collections view
     ) AS
         in_collection       CONSTANT VARCHAR2(30)       := 'SQL_' || in_uploader_id;
         in_query            VARCHAR2(32767);
@@ -265,6 +265,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             AND u.uploader_id       = in_uploader_id;
         --
         in_query := 'SELECT * FROM ' || uploader.get_u$_table_name(in_table_name);
+        tree.log_debug(in_query);
 
         -- initialize and populate collection
         IF APEX_COLLECTION.COLLECTION_EXISTS(in_collection) THEN
@@ -281,19 +282,17 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         DBMS_SQL.CLOSE_CURSOR(out_cursor);
 
         -- populate APEX items
-        FOR i IN 1 .. out_desc.COUNT LOOP
-            CASE i
-                WHEN 1 THEN out_desc(i).col_name := 'Row #';
-                WHEN 2 THEN out_desc(i).col_name := 'Error #';
-                WHEN 4 THEN out_desc(i).col_name := 'Result';
-                ELSE NULL;
-                END CASE;
-            --
+        FOR i IN 6 .. out_desc.COUNT LOOP       -- skip first 5 (internal) rows
             apex.set_item (
                 in_name      => in_header_name || LPAD(i, 3, 0),
                 in_value     => out_desc(i).col_name
             );
         END LOOP;
+    EXCEPTION
+    WHEN tree.app_exception THEN
+        RAISE;
+    WHEN OTHERS THEN
+        tree.raise_error();
     END;
 
 
