@@ -1,4 +1,4 @@
-CREATE OR REPLACE FORCE VIEW p800_uploaded_targets AS
+CREATE OR REPLACE FORCE VIEW p800_sheet_target AS
 WITH s AS (
     SELECT s.*
     FROM uploaded_file_sheets s
@@ -7,7 +7,7 @@ WITH s AS (
         AND s.app_id        = sess.get_app_id()
 )
 SELECT
-    NVL(u.uploader_id, '-') AS list_label,
+    u.uploader_id AS list_label,
     --
     '[' || u.page_id || '] ' || u.page_name || ' - ' || u.region_name AS supplemental,
     --
@@ -23,5 +23,5 @@ CROSS JOIN s
 JOIN p800_uploaded_targets_src m
     ON m.uploader_id    = u.uploader_id
 WHERE u.is_active       = 'Y'
-ORDER BY 1;
+    AND u.uploader_id   = apex.get_item('$TARGET');
 
