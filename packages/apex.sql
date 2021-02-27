@@ -1,10 +1,10 @@
 CREATE OR REPLACE PACKAGE BODY apex AS
 
     FUNCTION is_developer (
-        in_username             VARCHAR2
+        in_username         VARCHAR2
     )
     RETURN BOOLEAN AS
-        valid                   VARCHAR2(1);
+        valid               VARCHAR2(1);
     BEGIN
         SELECT 'Y' INTO valid
         FROM apex_workspace_developers d
@@ -34,7 +34,7 @@ CREATE OR REPLACE PACKAGE BODY apex AS
     FUNCTION get_developer_session_id
     RETURN apex_workspace_sessions.apex_session_id%TYPE
     AS
-        session_id      apex_workspace_sessions.apex_session_id%TYPE;
+        session_id          apex_workspace_sessions.apex_session_id%TYPE;
     BEGIN
         SELECT MIN(s.apex_session_id) KEEP (DENSE_RANK FIRST ORDER BY s.session_created DESC)
         INTO session_id
@@ -59,27 +59,84 @@ CREATE OR REPLACE PACKAGE BODY apex AS
 
 
 
-    PROCEDURE set_item (
-        in_name         VARCHAR2,
-        in_value        VARCHAR2        := NULL
-    ) AS
+    FUNCTION check_item_name (
+        in_name             VARCHAR2
+    )
+    RETURN VARCHAR2 AS
+        out_item_name       VARCHAR2(30)    := '';
+        out_item_exists     CHAR(1)         := 'N';
     BEGIN
-        APEX_UTIL.SET_SESSION_STATE(REPLACE(in_name, apex.item_prefix, 'P' || sess.get_page_id() || '_'), in_value);
+        out_item_name       := REPLACE(in_name, apex.item_prefix, 'P' || sess.get_page_id() || '_');
+        --
+        IF NOT apex.is_developer() THEN
+            RETURN out_item_name;
+        END IF;
+
+        -- check item existence to avoid hidden errors
+        IF out_item_name LIKE 'P%' THEN
+            BEGIN
+                SELECT 'Y' INTO out_item_exists
+                FROM apex_application_page_items p
+                WHERE p.application_id      = sess.get_app_id()
+                    AND p.page_id           = sess.get_page_id()
+                    AND p.item_name         = out_item_name;
+                --
+                RETURN out_item_name;
+            EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                NULL;
+            END;
+        END IF;
+        --
+        BEGIN
+            SELECT 'Y' INTO out_item_exists
+            FROM apex_application_items g
+            WHERE g.application_id      = sess.get_app_id()
+                AND g.item_name         = out_item_name;
+            --
+            RETURN out_item_name;
+        EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            NULL;
+        END;
+        --
+        tree.log_error('APEX_ITEM_NOT_FOUND', in_name, out_item_name);
+        --
+        RETURN NULL;
+    END;
+
+
+
+    PROCEDURE set_item (
+        in_name             VARCHAR2,
+        in_value            VARCHAR2        := NULL
+    ) AS
+        item_name           VARCHAR2(30);
+    BEGIN
+        item_name := apex.check_item_name(in_name);
+        --
+        IF item_name IS NOT NULL THEN
+            APEX_UTIL.SET_SESSION_STATE(item_name, in_value);
+        END IF;
     END;
 
 
 
     FUNCTION get_item (
-        in_name         VARCHAR2
+        in_name             VARCHAR2
         --
         -- @TODO: OVERLOAD NUMBER, DATE
         --
     )
     RETURN VARCHAR2 AS
+        item_name           VARCHAR2(30);
     BEGIN
-        RETURN APEX_UTIL.GET_SESSION_STATE(REPLACE(in_name, apex.item_prefix, 'P' || sess.get_page_id() || '_'));
-    EXCEPTION
-    WHEN OTHERS THEN
+        item_name := apex.check_item_name(in_name);
+        --
+        IF item_name IS NOT NULL THEN
+            RETURN APEX_UTIL.GET_SESSION_STATE(item_name);
+        END IF;
+        --
         RETURN NULL;
     END;
 
@@ -249,7 +306,13 @@ CREATE OR REPLACE PACKAGE BODY apex AS
     FUNCTION get_page_link (
         in_page_id      NUMBER      := NULL,
         in_names        VARCHAR2    := NULL,
+        --
+        -- @TODO: $NAME -> P###_
+        --
         in_values       VARCHAR2    := NULL
+        --
+        -- @TODO: in_attach_globals
+        --
     )
     RETURN VARCHAR2 AS
         reset_item      apex_application_page_items.item_name%TYPE;

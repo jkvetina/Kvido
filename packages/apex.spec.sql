@@ -29,7 +29,7 @@ CREATE OR REPLACE PACKAGE apex AS
      *
      */
 
-    item_prefix     CONSTANT VARCHAR2(4)        := '$';  -- transform $NAME to P500_NAME if current page_id = 500
+    item_prefix             CONSTANT VARCHAR2(4)        := '$';  -- transform $NAME to P500_NAME if current page_id = 500
 
 
 
@@ -42,7 +42,7 @@ CREATE OR REPLACE PACKAGE apex AS
     -- Check if current/requested user is APEX developer
     --
     FUNCTION is_developer (
-        in_username     VARCHAR2        := NULL
+        in_username         VARCHAR2        := NULL
     )
     RETURN BOOLEAN;
 
@@ -70,11 +70,21 @@ CREATE OR REPLACE PACKAGE apex AS
     --
 
     --
+    -- Internal function to convert item name and check if it exists
+    --
+    FUNCTION check_item_name (
+        in_name             VARCHAR2
+    )
+    RETURN VARCHAR2;
+
+
+
+    --
     -- Set item
     --
     PROCEDURE set_item (
-        in_name         VARCHAR2,
-        in_value        VARCHAR2        := NULL
+        in_name             VARCHAR2,
+        in_value            VARCHAR2        := NULL
     );
 
 
@@ -83,7 +93,7 @@ CREATE OR REPLACE PACKAGE apex AS
     -- Get (global and page) item
     --
     FUNCTION get_item (
-        in_name         VARCHAR2
+        in_name             VARCHAR2
     )
     RETURN VARCHAR2;
 

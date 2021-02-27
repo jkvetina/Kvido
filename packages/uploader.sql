@@ -289,18 +289,10 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
                 ELSE NULL;
                 END CASE;
             --
-            BEGIN
-                apex.set_item (
-                    in_name      => in_header_name || LPAD(i, 3, 0),
-                    in_value     => out_desc(i).col_name
-                    --
-                    -- TRANSLATE COLUMN NAME TO SOMETHING MORE HUMAN FRIENDLY
-                    --
-                );
-            EXCEPTION
-            WHEN NO_DATA_FOUND THEN
-                NULL;
-            END;
+            apex.set_item (
+                in_name      => in_header_name || LPAD(i, 3, 0),
+                in_value     => out_desc(i).col_name
+            );
         END LOOP;
     END;
 
