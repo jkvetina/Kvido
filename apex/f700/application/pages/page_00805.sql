@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210226222240'
+,p_last_upd_yyyymmddhh24miss=>'20210227221041'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(24516054953743573)
@@ -1496,24 +1496,13 @@ wwv_flow_api.create_page_process(
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'AUTO_UPDATE'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'-- create missing uploaders',
+'-- create missing and update existing uploaders',
 'FOR c IN (',
 '    SELECT p.table_name AS uploader_id',
 '    FROM p805_uploaders_possible p',
-'    WHERE p.uploader_id IS NULL',
+'    WHERE p.is_active = ''Y''',
 ') LOOP',
 '    uploader.create_uploader(c.uploader_id);',
-'END LOOP;',
-'',
-'-- update existing uploaders',
-'FOR c IN (',
-'    SELECT p.table_name AS uploader_id',
-'    FROM p805_uploaders_possible p',
-') LOOP',
-'    uploader.create_uploader_mappings (',
-'        in_uploader_id      => c.uploader_id,',
-'        in_clear_current    => FALSE',
-'    );',
 'END LOOP;',
 '--',
 'apex.redirect();',
