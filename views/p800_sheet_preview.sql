@@ -4,14 +4,26 @@ WITH s AS (
     FROM uploaded_file_sheets s
     WHERE s.file_name           = apex.get_item('$FILE')
         AND s.sheet_id          = apex.get_item('$SHEET')
+        AND s.app_id            = sess.get_app_id()
+        AND s.uploader_id       = apex.get_item('$TARGET')
 )
-SELECT *
+SELECT
+    t.label_,
+    --
+    CASE WHEN ROWNUM = 1 THEN
+        TO_CHAR(s.updated_at, 'YYYY-MM-DD HH24:MI') ||
+        CASE WHEN s.commited_at IS NOT NULL THEN ' COMMIT' END
+        END AS supplemental_,
+    --
+    t.counter_,
+    t.filter_
 FROM (
-    SELECT 'Inserted'   AS name_, s.result_inserted     AS value_, 'I' AS filter_ FROM s UNION ALL
-    SELECT 'Updated'    AS name_, s.result_updated      AS value_, 'U' AS filter_ FROM s UNION ALL
-    SELECT 'Deleted'    AS name_, s.result_deleted      AS value_, 'D' AS filter_ FROM s UNION ALL
-    SELECT 'Errors'     AS name_, s.result_errors       AS value_, 'E' AS filter_ FROM s UNION ALL
-    SELECT 'Unmatched'  AS name_, s.result_unmatched    AS value_, '-' AS filter_ FROM s
-)
-WHERE value_ > 0;
+    SELECT 'Inserted'   AS label_,  s.result_inserted   AS counter_,  'I' AS filter_ FROM s UNION ALL
+    SELECT 'Updated'    AS label_,  s.result_updated    AS counter_,  'U' AS filter_ FROM s UNION ALL
+    SELECT 'Deleted'    AS label_,  s.result_deleted    AS counter_,  'D' AS filter_ FROM s UNION ALL
+    SELECT 'Errors'     AS label_,  s.result_errors     AS counter_,  'E' AS filter_ FROM s UNION ALL
+    SELECT 'Unmatched'  AS label_,  s.result_unmatched  AS counter_,  '-' AS filter_ FROM s
+) t
+CROSS JOIN s
+WHERE t.counter_ > 0;
 
