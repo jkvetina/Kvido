@@ -705,6 +705,14 @@ wwv_flow_api.create_page_button(
 ,p_button_redirect_url=>'f?p=&APP_ID.:902:&SESSION.::&DEBUG.:RP,:P902_RESET:Y'
 );
 wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(15349525759894527)
+,p_name=>'P902_PAGE_ID'
+,p_item_sequence=>40
+,p_item_plug_id=>wwv_flow_api.id(54195600298789905)
+,p_display_as=>'NATIVE_HIDDEN'
+,p_attribute_01=>'Y'
+);
+wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(31286339758817510)
 ,p_name=>'P902_RESET'
 ,p_item_sequence=>10
@@ -732,7 +740,7 @@ wwv_flow_api.create_page_item(
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(31287874142817513)
 ,p_name=>'P902_DELETE'
-,p_item_sequence=>40
+,p_item_sequence=>50
 ,p_item_plug_id=>wwv_flow_api.id(54195600298789905)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
