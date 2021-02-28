@@ -142,10 +142,13 @@ CREATE OR REPLACE PACKAGE BODY tree AS
     RETURN logs.arguments%TYPE AS
     BEGIN
         RETURN SUBSTR(
-            REGEXP_REPLACE(
-                NULLIF(JSON_ARRAY(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8), '[]'),
-                '"(\d+)([.,]\d+)?"', '\1\2'  -- convert to numbers if possible
-            ),
+            NULLIF(REGEXP_REPLACE(
+                REGEXP_REPLACE(
+                    NULLIF(JSON_ARRAY(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8 NULL ON NULL), '[]'),
+                    '"(\d+)([.,]\d+)?"', '\1\2'  -- convert to numbers if possible
+                ),
+                '(,null)+\]$', ']'),
+                '[null]'),
             1, tree.length_arguments);
     END;
 
