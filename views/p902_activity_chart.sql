@@ -7,54 +7,56 @@ WITH x AS (
     FROM DUAL
     CONNECT BY LEVEL <= (1440 / 10)
 ),
-d AS (
+l AS (
     SELECT
-        sess.get_time_bucket(l.created_at, 10)  AS bucket_id,
-        l.*
+        sess.get_time_bucket(l.created_at, 10) AS bucket_id,
+        l.log_id,
+        l.flag,
+        l.user_id,
+        l.page_id,
+        l.session_id
     FROM logs l
-    WHERE l.app_id          = sess.get_app_id()
-        AND l.user_id       = NVL(apex.get_item('$USER_ID'),    l.user_id)
-        AND l.page_id       = NVL(apex.get_item('$PAGE_ID'),    l.page_id)
-        AND l.session_id    = NVL(apex.get_item('$SESSION_ID'), l.session_id)
-        AND l.created_at    >= app.get_date()
-        AND l.created_at    <  app.get_date() + 1
+    WHERE l.created_at     >= app.get_date()
+        AND l.created_at    < app.get_date() + 1
+        AND l.app_id        = sess.get_app_id()
 ),
-a AS (
-    -- tracked business event #1
-    SELECT
-        sess.get_time_bucket(a.created_at, 10)  AS bucket_id,
-        COUNT(a.created_at)                     AS count_rows
-    FROM d a
-    WHERE a.flag            = 'E'
-    GROUP BY sess.get_time_bucket(a.created_at, 10)
+filter_pages AS (
+    SELECT l.log_id
+    FROM l
+    WHERE l.page_id = TO_NUMBER(apex.get_item('$PAGE_ID'))
+        AND apex.get_item('$PAGE_ID') IS NOT NULL
 ),
-b AS (
-    -- tracked business event #2
-    SELECT
-        sess.get_time_bucket(b.created_at, 10)  AS bucket_id,
-        COUNT(b.created_at)                     AS count_rows
-    FROM d b
-    WHERE b.flag            = 'W'
-    GROUP BY sess.get_time_bucket(b.created_at, 10)
+filter_users AS (
+    SELECT l.log_id
+    FROM l
+    WHERE l.user_id = apex.get_item('$USER_ID')
+        AND apex.get_item('$USER_ID') IS NOT NULL
+),
+filter_sessions AS (
+    SELECT l.log_id
+    FROM l
+    WHERE l.session_id = TO_NUMBER(apex.get_item('$SESSION_ID'))
+        AND apex.get_item('$SESSION_ID') IS NOT NULL
 )
+--
 SELECT
     x.bucket_id,
-    TO_CHAR(x.start_at, 'HH24:MI')          AS chart_label,
+    TO_CHAR(x.start_at, 'HH24:MI')                              AS chart_label,
     --
-    NULLIF(SUM(CASE WHEN d.flag = 'X' AND d.action_name = 'ON_LOAD_BEFORE_HEADER'   THEN 1 ELSE 0 END), 0) AS count_pages,
-    NULLIF(SUM(CASE WHEN d.flag = 'X' AND d.action_name = 'ON_SUBMIT'               THEN 1 ELSE 0 END), 0) AS count_forms,
+    NULLIF(SUM(CASE WHEN l.flag = 'P' THEN 1 ELSE 0 END), 0)    AS count_pages,
+    NULLIF(SUM(CASE WHEN l.flag = 'F' THEN 1 ELSE 0 END), 0)    AS count_forms,
     --
-    NULLIF(COUNT(DISTINCT d.user_id), 0)    AS count_users,
-    --
-    NULLIF(MAX(a.count_rows), 0)            AS count_errors,
-    NULLIF(MAX(b.count_rows), 0)            AS count_warnings
+    NULLIF(COUNT(DISTINCT l.user_id), 0)                        AS count_users
 FROM x
-LEFT JOIN d
-    ON d.bucket_id   = x.bucket_id
-LEFT JOIN a
-    ON a.bucket_id   = x.bucket_id
-LEFT JOIN b
-    ON b.bucket_id   = x.bucket_id
+LEFT JOIN l                     ON l.bucket_id = x.bucket_id
+LEFT JOIN filter_pages p        ON p.log_id = l.log_id
+LEFT JOIN filter_users u        ON u.log_id = l.log_id
+LEFT JOIN filter_sessions s     ON s.log_id = l.log_id
+--
+WHERE 1 = 1
+    AND (u.log_id IS NOT NULL OR apex.get_item('$USER_ID')      IS NULL)
+    AND (p.log_id IS NOT NULL OR apex.get_item('$PAGE_ID')      IS NULL)
+    AND (s.log_id IS NOT NULL OR apex.get_item('$SESSION_ID')   IS NULL)
 --
 GROUP BY x.bucket_id, x.start_at;
 
