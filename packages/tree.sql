@@ -981,6 +981,11 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             rec.flag := tree.flag_session;
         END IF;
 
+        -- override flag for triggers
+        IF rec.flag = tree.flag_module AND rec.module_name LIKE '%\_\_' ESCAPE '\' THEN
+            rec.flag := tree.flag_trigger;
+        END IF;
+
         -- force log errors
         IF SQLCODE != 0 OR rec.flag IN (tree.flag_error, tree.flag_warning) THEN
             whitelisted := TRUE;
@@ -1196,6 +1201,47 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                 '^(\d)[\.,]', '0\1,'
             ), 9, '0')
         WHERE e.log_id = COALESCE(in_log_id, rec.log_parent);
+        --
+        COMMIT;
+    EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+    END;
+
+
+
+    PROCEDURE update_trigger (
+        in_log_id               logs.log_id%TYPE,
+        in_rows_inserted        NUMBER          := NULL,
+        in_rows_updated         NUMBER          := NULL,
+        in_rows_deleted         NUMBER          := NULL,
+        in_last_rowid           VARCHAR2        := NULL
+    ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+    BEGIN
+        -- update timer
+        UPDATE logs e
+        SET e.timer =
+            LPAD(EXTRACT(HOUR   FROM SYSTIMESTAMP - e.created_at), 2, '0') || ':' ||
+            LPAD(EXTRACT(MINUTE FROM SYSTIMESTAMP - e.created_at), 2, '0') || ':' ||
+            RPAD(REGEXP_REPLACE(
+                REGEXP_REPLACE(EXTRACT(SECOND FROM SYSTIMESTAMP - e.created_at), '^[\.,]', '00,'),
+                '^(\d)[\.,]', '0\1,'
+            ), 9, '0'),
+            e.arguments = REGEXP_REPLACE(
+                tree.get_arguments(
+                    CASE WHEN in_rows_inserted > 0 THEN 'INSERTED:' || in_rows_inserted END,
+                    CASE WHEN in_rows_inserted = 1 THEN in_last_rowid END,
+                    --
+                    CASE WHEN in_rows_updated  > 0 THEN 'UPDATED:'  || in_rows_updated  END,
+                    CASE WHEN in_rows_updated  = 1 THEN in_last_rowid END,
+                    --
+                    CASE WHEN in_rows_deleted  > 0 THEN 'DELETED:'  || in_rows_deleted  END,
+                    CASE WHEN in_rows_deleted  = 1 THEN in_last_rowid END
+                ),
+                '^\[(null,)+', '[')
+        WHERE e.log_id  = in_log_id;
         --
         COMMIT;
     EXCEPTION

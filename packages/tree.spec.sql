@@ -50,6 +50,8 @@ CREATE OR REPLACE PACKAGE tree AS
     flag_longops            CONSTANT logs.flag%TYPE     := 'L';     -- longops row
     flag_scheduler          CONSTANT logs.flag%TYPE     := 'S';     -- scheduler run planned
     flag_session            CONSTANT logs.flag%TYPE     := 'X';     -- SESS package calls (so you can ignore them)
+    --
+    flag_trigger            CONSTANT logs.flag%TYPE     := 'G';     -- called from trigger
 
     -- specify maximum length for trim
     length_action           CONSTANT PLS_INTEGER        := 48;      -- logs.action%TYPE
@@ -349,6 +351,19 @@ CREATE OR REPLACE PACKAGE tree AS
     --
     PROCEDURE update_timer (
         in_log_id           logs.log_id%TYPE    := NULL
+    );
+
+
+
+    --
+    -- Update `logs.message` for triggers so we can have module line with results
+    --
+    PROCEDURE update_trigger (
+        in_log_id               logs.log_id%TYPE,
+        in_rows_inserted        NUMBER              := NULL,
+        in_rows_updated         NUMBER              := NULL,
+        in_rows_deleted         NUMBER              := NULL,
+        in_last_rowid           VARCHAR2            := NULL
     );
 
 

@@ -73,18 +73,14 @@ COMPOUND TRIGGER
 
     AFTER STATEMENT IS
     BEGIN
-        -- store affected rows and time needed
-        tree.log_result (
-            CASE WHEN rows_inserted > 0 THEN 'INSERTED:' || rows_inserted END,
-            CASE WHEN rows_inserted = 1 THEN TO_CHAR(last_rowid) END,
-            --
-            CASE WHEN rows_updated  > 0 THEN 'UPDATED:'  || rows_updated  END,
-            CASE WHEN rows_updated  = 1 THEN TO_CHAR(last_rowid) END,
-            --
-            CASE WHEN rows_deleted  > 0 THEN 'DELETED:'  || rows_deleted  END,
-            CASE WHEN rows_deleted  = 1 THEN TO_CHAR(last_rowid) END
+        -- store affected rows and time needed to process trigger
+        tree.update_trigger (
+            in_log_id           => root_log_id,
+            in_rows_inserted    => rows_inserted,
+            in_rows_updated     => rows_updated,
+            in_rows_deleted     => rows_deleted,
+            in_last_rowid       => TO_CHAR(last_rowid)
         );
-        tree.update_timer();
     EXCEPTION
     WHEN tree.app_exception THEN
         RAISE;
