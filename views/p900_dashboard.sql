@@ -1,6 +1,7 @@
 CREATE OR REPLACE FORCE VIEW p900_dashboard AS
 SELECT
     TO_CHAR(l.created_at, 'YYYY-MM-DD')                         AS today,
+    --
     NULLIF(SUM(CASE WHEN l.flag = 'M' THEN 1 ELSE 0 END), 0)    AS modules,
     NULLIF(SUM(CASE WHEN l.flag = 'A' THEN 1 ELSE 0 END), 0)    AS actions,
     NULLIF(SUM(CASE WHEN l.flag = 'D' THEN 1 ELSE 0 END), 0)    AS debugs,
@@ -11,10 +12,16 @@ SELECT
     NULLIF(SUM(CASE WHEN l.flag = 'L' THEN 1 ELSE 0 END), 0)    AS longops,
     NULLIF(SUM(CASE WHEN l.flag = 'S' THEN 1 ELSE 0 END), 0)    AS schedulers,
     NULLIF(COUNT(b.log_id), 0)                                  AS lobs,
-    NULLIF(COUNT(l.log_id), 0)                                  AS total,
+    --
+    NULLIF(SUM(CASE WHEN l.flag = 'G' THEN 1 ELSE 0 END), 0)    AS triggers,
+    NULLIF(SUM(CASE WHEN l.flag = 'P' THEN 1 ELSE 0 END), 0)    AS pages,
+    NULLIF(SUM(CASE WHEN l.flag = 'F' THEN 1 ELSE 0 END), 0)    AS forms,
+    --
+    COUNT(l.log_id)                                             AS total,
     apex.get_icon('fa-trash-o', 'Delete related logs')          AS action
 FROM logs l
 LEFT JOIN logs_lobs b
     ON b.log_parent     = l.log_id
 WHERE l.app_id          = sess.get_app_id()
 GROUP BY TO_CHAR(l.created_at, 'YYYY-MM-DD');
+
