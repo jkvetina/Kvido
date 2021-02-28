@@ -70,7 +70,18 @@ CREATE OR REPLACE PACKAGE apex AS
     --
 
     --
-    -- Internal function to convert item name and check if it exists
+    -- Internal function to convert item name depending on current page
+    --
+    FUNCTION get_item_name (
+        in_name             VARCHAR2,
+        in_check            BOOLEAN         := FALSE
+    )
+    RETURN VARCHAR2;
+
+
+
+    --
+    -- Internal function to check if item name exists
     --
     FUNCTION check_item_name (
         in_name             VARCHAR2
@@ -85,6 +96,16 @@ CREATE OR REPLACE PACKAGE apex AS
     PROCEDURE set_item (
         in_name             VARCHAR2,
         in_value            VARCHAR2        := NULL
+    );
+
+
+
+    --
+    -- Set item (date)
+    --
+    PROCEDURE set_item_date (
+        in_name             VARCHAR2,
+        in_value            DATE
     );
 
 

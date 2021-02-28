@@ -59,6 +59,17 @@ CREATE OR REPLACE PACKAGE BODY apex AS
 
 
 
+    FUNCTION get_item_name (
+        in_name             VARCHAR2,
+        in_check            BOOLEAN         := FALSE
+    )
+    RETURN VARCHAR2 AS
+    BEGIN
+        RETURN REPLACE(in_name, apex.item_prefix, 'P' || sess.get_page_id() || '_');
+    END;
+
+
+
     FUNCTION check_item_name (
         in_name             VARCHAR2
     )
@@ -88,17 +99,19 @@ CREATE OR REPLACE PACKAGE BODY apex AS
             END;
         END IF;
         --
-        BEGIN
-            SELECT 'Y' INTO out_item_exists
-            FROM apex_application_items g
-            WHERE g.application_id      = sess.get_app_id()
-                AND g.item_name         = out_item_name;
-            --
-            RETURN out_item_name;
-        EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-            NULL;
-        END;
+        IF out_item_name LIKE 'G%' THEN
+            BEGIN
+                SELECT 'Y' INTO out_item_exists
+                FROM apex_application_items g
+                WHERE g.application_id      = sess.get_app_id()
+                    AND g.item_name         = out_item_name;
+                --
+                RETURN out_item_name;
+            EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                NULL;
+            END;
+        END IF;
         --
         tree.log_error('APEX_ITEM_NOT_FOUND', in_name, out_item_name);
         --
@@ -122,6 +135,21 @@ CREATE OR REPLACE PACKAGE BODY apex AS
 
 
 
+    PROCEDURE set_item_date (
+        in_name             VARCHAR2,
+        in_value            DATE
+    ) AS
+        item_name           VARCHAR2(30);
+    BEGIN
+        item_name := apex.check_item_name(in_name);
+        --
+        IF item_name IS NOT NULL THEN
+            APEX_UTIL.SET_SESSION_STATE(item_name, TO_CHAR(in_value, sess.format_date));
+        END IF;
+    END;
+
+
+
     FUNCTION get_item (
         in_name             VARCHAR2
         --
@@ -131,7 +159,7 @@ CREATE OR REPLACE PACKAGE BODY apex AS
     RETURN VARCHAR2 AS
         item_name           VARCHAR2(30);
     BEGIN
-        item_name := apex.check_item_name(in_name);
+        item_name := apex.get_item_name(in_name);
         --
         IF item_name IS NOT NULL THEN
             RETURN APEX_UTIL.GET_SESSION_STATE(item_name);
