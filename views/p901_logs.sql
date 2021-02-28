@@ -60,7 +60,9 @@ LEFT JOIN filter_modules m      ON m.log_id = l.log_id
 LEFT JOIN filter_lines i        ON i.log_id = l.log_id
 LEFT JOIN filter_sessions s     ON s.log_id = l.log_id
 WHERE
-        (f.log_id IS NOT NULL OR apex.get_item('$FLAG')         IS NULL)
+    (l.log_id >= apex.get_item('$MAX_LOG_ID') OR apex.get_item('$MAX_LOG_ID') IS NULL)
+    --
+    AND (f.log_id IS NOT NULL OR apex.get_item('$FLAG')         IS NULL)
     AND (p.log_id IS NOT NULL OR apex.get_item('$PAGE_ID')      IS NULL)
     AND (u.log_id IS NOT NULL OR apex.get_item('$USER_ID')      IS NULL)
     AND (a.log_id IS NOT NULL OR apex.get_item('$ACTION')       IS NULL)
