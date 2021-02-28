@@ -995,7 +995,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             --
             IF rec.action_name = 'ON_LOAD:BEFORE_HEADER' THEN
                 rec.flag := tree.flag_apex_page;
-            ELSIF rec.action_name = 'ON_SUBMIT' THEN
+            ELSIF rec.action_name LIKE 'ON_SUBMIT%' THEN
                 rec.flag := tree.flag_apex_form;
             END IF;
         END IF;
