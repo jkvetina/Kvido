@@ -17,11 +17,24 @@ SELECT
     NULLIF(SUM(CASE WHEN l.flag = 'P' THEN 1 ELSE 0 END), 0)    AS pages,
     NULLIF(SUM(CASE WHEN l.flag = 'F' THEN 1 ELSE 0 END), 0)    AS forms,
     --
+    MAX(s.sessions_)                                            AS sessions_,
+    MAX(s.users_)                                               AS users_,
+    --
     COUNT(l.log_id)                                             AS total,
     apex.get_icon('fa-trash-o', 'Delete related logs')          AS action
 FROM logs l
 LEFT JOIN logs_lobs b
     ON b.log_parent     = l.log_id
-WHERE l.app_id          = sess.get_app_id()
+LEFT JOIN (
+    SELECT
+        TO_CHAR(s.created_at, 'YYYY-MM-DD') AS today,
+        COUNT(s.session_id)                 AS sessions_,
+        COUNT(DISTINCT s.user_id)           AS users_
+    FROM sessions s
+    WHERE s.app_id          = sess.get_app_id()
+    GROUP BY TO_CHAR(s.created_at, 'YYYY-MM-DD')
+) s
+    ON s.today      = TO_CHAR(l.created_at, 'YYYY-MM-DD')
+WHERE l.app_id      = sess.get_app_id()
 GROUP BY TO_CHAR(l.created_at, 'YYYY-MM-DD');
 

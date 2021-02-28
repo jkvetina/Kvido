@@ -33,6 +33,6 @@ LEFT JOIN r
 WHERE s.app_id          = sess.get_app_id()
     AND s.session_id    = NVL(apex.get_item('$SESSION_ID'), s.session_id)
     AND s.user_id       = NVL(apex.get_item('$USER_ID'),    s.user_id)
-    AND s.updated_at    >= app.get_date()
-    AND s.updated_at    <  app.get_date() + 1;
+    AND s.created_at   >= app.get_date()
+    AND s.created_at    < app.get_date() + 1;
 
