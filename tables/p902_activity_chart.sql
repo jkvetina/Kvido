@@ -1,5 +1,6 @@
 --DROP TABLE p902_activity_chart;
-CREATE GLOBAL TEMPORARY TABLE p902_activity_chart (
+--CREATE GLOBAL TEMPORARY TABLE p902_activity_chart (
+CREATE TABLE p902_activity_chart (
     user_id             VARCHAR2(30)    NOT NULL,
     bucket_id           NUMBER(4)       NOT NULL,
     --
@@ -13,6 +14,6 @@ CREATE GLOBAL TEMPORARY TABLE p902_activity_chart (
     --
     CONSTRAINT pk_p902_activity_chart
         PRIMARY KEY (user_id, bucket_id)
-)
-ON COMMIT PRESERVE ROWS;
+);
+--ON COMMIT PRESERVE ROWS;
 
