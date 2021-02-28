@@ -984,6 +984,22 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             rec.flag := tree.flag_session;
         END IF;
 
+        -- override flags for APEX calls
+        IF rec.flag = tree.flag_session AND rec.module_name IN (
+            'SESS.CREATE_SESSION',
+            'SESS.UPDATE_SESSION'
+        ) THEN
+            rec.arguments   := SUBSTR(in_arguments, 1, tree.length_arguments);
+            rec.action_name := REGEXP_SUBSTR(rec.arguments, '^\[\"([^\"]+)\"', 1, 1, NULL, 1);
+            rec.arguments   := REGEXP_REPLACE(rec.arguments, '^\[\"([^\"]+)\",?', '[');
+            --
+            IF rec.action_name = 'ON_LOAD:BEFORE_HEADER' THEN
+                rec.flag := tree.flag_apex_page;
+            ELSIF rec.action_name = 'ON_SUBMIT' THEN
+                rec.flag := tree.flag_apex_form;
+            END IF;
+        END IF;
+
         -- override flag for triggers
         IF rec.flag = tree.flag_module AND rec.module_name LIKE '%\_\_' ESCAPE '\' THEN
             rec.flag := tree.flag_trigger;
@@ -1018,7 +1034,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         rec.app_id          := sess.get_app_id();
         rec.page_id         := sess.get_page_id();
         rec.action_name     := SUBSTR(COALESCE(rec.action_name, in_action_name, tree.empty_action), 1, tree.length_action);
-        rec.arguments       := SUBSTR(in_arguments, 1, tree.length_arguments);
+        rec.arguments       := SUBSTR(COALESCE(rec.arguments, in_arguments), 1, tree.length_arguments);
         rec.message         := SUBSTR(in_message,   1, tree.length_message);  -- may be overwritten later
         rec.session_id      := sess.get_session_id();
         rec.created_at      := SYSTIMESTAMP;
