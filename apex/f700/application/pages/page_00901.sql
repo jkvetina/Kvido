@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210218070349'
+,p_last_upd_yyyymmddhh24miss=>'20210228180650'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(54460393951350516)
@@ -992,7 +992,7 @@ wwv_flow_api.create_region_column(
 ,p_name=>'CREATED_AT'
 ,p_source_type=>'DB_COLUMN'
 ,p_source_expression=>'CREATED_AT'
-,p_data_type=>'TIMESTAMP'
+,p_data_type=>'DATE'
 ,p_is_query_only=>false
 ,p_item_type=>'NATIVE_DATE_PICKER'
 ,p_heading=>'Created At'
@@ -1498,18 +1498,6 @@ wwv_flow_api.create_page_process(
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
 ,p_process_when=>'P901_LOG_ID'
 ,p_process_when_type=>'ITEM_IS_NOT_NULL'
-);
-wwv_flow_api.create_page_process(
- p_id=>wwv_flow_api.id(12480179328064840)
-,p_process_sequence=>30
-,p_process_point=>'AFTER_HEADER'
-,p_process_type=>'NATIVE_PLSQL'
-,p_process_name=>'FIX_LOGS'
-,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'tree_logs_fix();',
-''))
-,p_process_clob_language=>'PLSQL'
-,p_error_display_location=>'INLINE_IN_NOTIFICATION'
 );
 wwv_flow_api.create_page_process(
  p_id=>wwv_flow_api.id(31312163502840733)
