@@ -16,6 +16,7 @@ prompt --install
 @@application/shared_components/security/authorizations/nobody_hidden.sql
 @@application/shared_components/security/authorizations/is_developer.sql
 @@application/shared_components/navigation/navigation_bar.sql
+@@application/shared_components/logic/application_processes/after_footer.sql
 @@application/shared_components/logic/application_processes/after_auth.sql
 @@application/shared_components/logic/application_processes/on_load_before_header.sql
 @@application/shared_components/logic/application_processes/on_ajax_callback.sql

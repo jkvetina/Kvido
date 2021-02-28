@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210228180650'
+,p_last_upd_yyyymmddhh24miss=>'20210228230257'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(54460393951350516)
@@ -1472,7 +1472,7 @@ wwv_flow_api.create_page_process(
 '    FROM logs l',
 '    WHERE l.created_at >= TRUNC(SYSDATE)',
 ') LOOP',
-'    apex.set_item(''P901_MAX_LOG_FLAG'', NULL);',
+'    apex.set_item(''P901_MAX_LOG_FLAG'');',
 '    apex.redirect (',
 '        in_names  => ''P901_MAX_LOG_ID,P901_RESET'',',
 '        in_values => c.log_id || '',''',
