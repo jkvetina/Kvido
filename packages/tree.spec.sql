@@ -50,7 +50,6 @@ CREATE OR REPLACE PACKAGE tree AS
     flag_longops            CONSTANT logs.flag%TYPE     := 'L';     -- longops row
     flag_scheduler          CONSTANT logs.flag%TYPE     := 'S';     -- scheduler run planned
     flag_session            CONSTANT logs.flag%TYPE     := 'X';     -- SESS package calls (so you can ignore them)
-    flag_profiler           CONSTANT logs.flag%TYPE     := 'P';     -- profiler initiated
 
     -- specify maximum length for trim
     length_action           CONSTANT PLS_INTEGER        := 48;      -- logs.action%TYPE
@@ -611,63 +610,6 @@ CREATE OR REPLACE PACKAGE tree AS
     --
     PROCEDURE set_tree_id (
         in_log_id       logs.log_id%TYPE
-    );
-
-
-
-
-
-    -- ### Working with `DBMS_PROFILER`
-    --
-
-    --
-    -- Start profiler manually
-    --
-    PROCEDURE start_profiler (
-        in_log_id           logs.log_id%TYPE
-    );
-
-
-
-    --
-    -- Stop running profiler
-    --
-    PROCEDURE stop_profiler (
-        in_log_id           logs.log_id%TYPE := NULL
-    );
-
-
-
-    --
-    -- Returns `log_id` used by `LOGS_PROFILER` view
-    --
-    FUNCTION get_profiler_id
-    RETURN logs.log_id%TYPE;
-
-
-
-    --
-    -- Set `log_id` for `LOGS_PROFILER` view
-    --
-    PROCEDURE set_profiler_id (
-        in_log_id       logs.log_id%TYPE        := NULL
-    );
-
-
-
-    --
-    -- Returns `log_id` used by `LOGS_PROFILER` view
-    --
-    FUNCTION get_coverage_id
-    RETURN logs.log_id%TYPE;
-
-
-
-    --
-    -- Set `log_id` for `LOGS_PROFILER` view
-    --
-    PROCEDURE set_coverage_id (
-        in_log_id       logs.log_id%TYPE        := NULL
     );
 
 

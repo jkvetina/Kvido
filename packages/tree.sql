@@ -3,8 +3,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
     recent_log_id           logs.log_id%TYPE;    -- last log_id in session (any flag)
     recent_error_id         logs.log_id%TYPE;    -- last real log_id in session (with E flag)
     recent_tree_id          logs.log_id%TYPE;    -- selected log_id for LOGS_TREE view
-    recent_profiler_id      logs.log_id%TYPE;    -- selected log_id for LOGS_PROFILER view
-    recent_coverage_id      logs.log_id%TYPE;    -- selected log_id for LOGS_PROFILER view
 
     -- array to hold recent log_id; array[depth + module] = log_id
     TYPE arr_map_module_to_id IS
@@ -25,13 +23,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
     rows_blacklist          arr_log_setup := arr_log_setup();
     --
     rows_limit              CONSTANT PLS_INTEGER                := 100;  -- match arr_log_setup VARRAY
-
-    -- log_id where profiler started
-    curr_profiler_id        PLS_INTEGER;
-    curr_coverage_id        PLS_INTEGER;
-    --
-    parent_profiler_id      PLS_INTEGER;
-    parent_coverage_id      PLS_INTEGER;
 
     -- possible exception when parsing call stack
     BAD_DEPTH EXCEPTION;
@@ -134,66 +125,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
     ) AS
     BEGIN
         recent_tree_id := in_log_id;
-    END;
-
-
-
-    FUNCTION get_profiler_id
-    RETURN logs.log_id%TYPE AS
-    BEGIN
-        RETURN recent_profiler_id;
-    END;
-
-
-
-    PROCEDURE set_profiler_id (
-        in_log_id       logs.log_id%TYPE        := NULL
-    ) AS
-        log_id          logs.log_id%TYPE;
-    BEGIN
-        IF in_log_id IS NULL THEN
-            SELECT MAX(TO_NUMBER(e.arguments)) INTO log_id
-            FROM (
-                SELECT e.action_name, e.flag, e.arguments
-                FROM logs e
-                CONNECT BY PRIOR e.log_id   = e.log_parent
-                START WITH e.log_id         = tree.get_tree_id()
-            ) e
-            WHERE e.flag            = tree.flag_profiler
-                AND e.action_name   = 'START_PROFILER';
-        END IF;
-        --
-        recent_profiler_id := COALESCE(log_id, in_log_id);
-    END;
-
-
-
-    FUNCTION get_coverage_id
-    RETURN logs.log_id%TYPE AS
-    BEGIN
-        RETURN recent_coverage_id;
-    END;
-
-
-
-    PROCEDURE set_coverage_id (
-        in_log_id       logs.log_id%TYPE        := NULL
-    ) AS
-        log_id          logs.log_id%TYPE;
-    BEGIN
-        IF in_log_id IS NULL THEN
-            SELECT MAX(TO_NUMBER(e.arguments)) INTO log_id
-            FROM (
-                SELECT e.action_name, e.flag, e.arguments
-                FROM logs e
-                CONNECT BY PRIOR e.log_id   = e.log_parent
-                START WITH e.log_id         = tree.get_tree_id()
-            ) e
-            WHERE e.flag            = tree.flag_profiler
-                AND e.action_name   = 'START_COVERAGE';
-        END IF;
-        --
-        recent_coverage_id := COALESCE(log_id, in_log_id);
     END;
 
 
@@ -1239,62 +1170,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
 
 
-    PROCEDURE start_profiler (
-        in_log_id           logs.log_id%TYPE
-    ) AS
-        out_log_id          logs.log_id%TYPE;
-    BEGIN
-        $IF $$PROFILER_INSTALLED $THEN
-            DBMS_PROFILER.START_PROFILER(in_log_id, run_number => curr_profiler_id);
-            $IF $$OUTPUT_ENABLED $THEN
-                DBMS_OUTPUT.PUT_LINE('  > START_PROFILER ' || curr_profiler_id);
-            $END
-            --
-            out_log_id := tree.log__ (                  -- be aware that this may cause infinite loop
-                in_action_name  => 'START_PROFILER',    -- used in logs_profiler view
-                in_flag         => tree.flag_profiler,
-                in_arguments    => curr_profiler_id,
-                in_parent_id    => in_log_id
-            );
-            --
-            curr_profiler_id    := out_log_id;          -- store current and parent log_id so we can stop profiler later
-            parent_profiler_id  := in_log_id;
-        $END
-        RETURN;
-    END;
-
-
-
-    PROCEDURE stop_profiler (
-        in_log_id           logs.log_id%TYPE        := NULL
-    ) AS
-        out_log_id          logs.log_id%TYPE;
-    BEGIN
-        $IF $$PROFILER_INSTALLED $THEN
-            $IF $$OUTPUT_ENABLED $THEN
-                DBMS_OUTPUT.PUT_LINE('  > STOP_PROFILER');
-            $END
-            BEGIN
-                DBMS_PROFILER.STOP_PROFILER;
-            EXCEPTION
-            WHEN OTHERS THEN
-                NULL;
-            END;
-            --
-            out_log_id := tree.log__ (                  -- be aware that this may cause infinite loop
-                in_action_name  => 'STOP_PROFILER',
-                in_flag         => tree.flag_profiler,
-                in_arguments    => tree.get_arguments(curr_profiler_id, parent_profiler_id),
-                in_parent_id    => in_log_id
-            );
-        $END
-        --
-        curr_profiler_id    := NULL;
-        parent_profiler_id  := NULL;
-    END;
-
-
-
     PROCEDURE update_timer (
         in_log_id           logs.log_id%TYPE        := NULL
     ) AS
@@ -1674,28 +1549,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                     ' DROP PARTITION ' || c.partition_name || ' UPDATE GLOBAL INDEXES';
             END IF;
         END LOOP;
-
-        -- delete profiler data
-        BEGIN
-            EXECUTE IMMEDIATE
-                'DELETE FROM plsql_profiler_data;' ||
-                'DELETE FROM plsql_profiler_units;' ||
-                'DELETE FROM plsql_profiler_runs;';
-        EXCEPTION
-        WHEN OTHERS THEN
-            tree.log_warning('PLSQL_PROFILER_MISSING');
-        END;
-
-        -- delete code coverage data
-        BEGIN
-            EXECUTE IMMEDIATE
-                'DELETE FROM dbmspcc_blocks;' ||
-                'DELETE FROM dbmspcc_units;' ||
-                'DELETE FROM dbmspcc_runs;';
-        EXCEPTION
-        WHEN OTHERS THEN
-            tree.log_warning('CODE_COVERAGE_MISSING');
-        END;
         --
         COMMIT;
     END;
