@@ -19,6 +19,7 @@ SELECT
     s.session_db,
     s.created_at,
     s.updated_at,
+    s.log_id,
     --
     CASE WHEN (s.updated_at - s.created_at) >= 1 THEN '23:59'
         ELSE TO_CHAR(TRUNC(SYSDATE) + (s.updated_at - s.created_at), 'HH24:MI')

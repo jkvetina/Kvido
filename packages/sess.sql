@@ -397,14 +397,15 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
         -- log request, except for login page
         IF rec.page_id != 9999 THEN
-            tree.log_module (
+            rec.log_id := tree.log_module (
                 in_note,
-                --
-                -- @TODO: FIRST ARG^ USE AS ACTION NAME ???
-                --
                 APEX_APPLICATION.G_REQUEST,                                 -- button name
                 REGEXP_REPLACE(req, '^/[^/]+/[^/]+/f[?]p=([^:]*:){6}', '')  -- arguments in URL
             );
+            --
+            UPDATE sessions s
+            SET s.log_id        = rec.log_id
+            WHERE s.session_id  = rec.session_id;
         END IF;
         --
         COMMIT;
@@ -525,8 +526,8 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         WITH x AS (
             SELECT
                 LEVEL AS group_id,
-                TRUNC(in_date) + NUMTODSINTERVAL((LEVEL - 1) * in_interval, 'MINUTE') AS start_at,
-                TRUNC(in_date) + NUMTODSINTERVAL( LEVEL      * in_interval, 'MINUTE') AS end_at
+                CAST(TRUNC(in_date) + NUMTODSINTERVAL((LEVEL - 1) * in_interval, 'MINUTE') AS DATE) AS start_at,
+                CAST(TRUNC(in_date) + NUMTODSINTERVAL( LEVEL      * in_interval, 'MINUTE') AS DATE) AS end_at
             FROM DUAL
             CONNECT BY LEVEL <= (1440 / in_interval)
         )

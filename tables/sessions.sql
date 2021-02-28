@@ -7,11 +7,10 @@ CREATE TABLE sessions (
     page_id             NUMBER(6)       CONSTRAINT nn_sessions_page_id      NOT NULL,       -- FK to app_pages
     --
     apex_items          VARCHAR2(4000),
-    --
     session_db          NUMBER          CONSTRAINT nn_sessions_session_db   NOT NULL,
-    --
     created_at          DATE            CONSTRAINT nn_sessions_created_at   NOT NULL,
     updated_at          DATE            CONSTRAINT nn_sessions_updated_at   NOT NULL,
+    log_id              INTEGER,
     --
     CONSTRAINT pk_sessions
         PRIMARY KEY (session_id),
@@ -28,7 +27,11 @@ CREATE TABLE sessions (
     CONSTRAINT fk_sessions_app_id
         FOREIGN KEY (app_id)
         REFERENCES apps (app_id),
-
+    --
+    CONSTRAINT fk_sessions_logs
+        FOREIGN KEY (log_id)
+        REFERENCES logs (log_id),
+    --
     CONSTRAINT ch_sessions_apex_items_json
         CHECK (apex_items IS JSON)
 )
@@ -44,9 +47,8 @@ COMMENT ON COLUMN sessions.app_id           IS 'APEX application ID';
 COMMENT ON COLUMN sessions.page_id          IS 'APEX page ID';
 --
 COMMENT ON COLUMN sessions.apex_items       IS 'APEX global items';
---
 COMMENT ON COLUMN sessions.session_db       IS 'Database session ID';
---
 COMMENT ON COLUMN sessions.created_at       IS 'Time of creation';
 COMMENT ON COLUMN sessions.updated_at       IS 'Time of last update';
+COMMENT ON COLUMN sessions.log_id           IS 'Log ID of page request start';
 
