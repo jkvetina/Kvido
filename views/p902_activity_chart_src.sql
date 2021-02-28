@@ -1,4 +1,4 @@
-CREATE OR REPLACE FORCE VIEW p902_activity_chart AS
+CREATE OR REPLACE FORCE VIEW p902_activity_chart_src AS
 WITH x AS (
     SELECT
         LEVEL AS bucket_id,
@@ -46,17 +46,30 @@ SELECT
     NULLIF(SUM(CASE WHEN l.flag = 'P' THEN 1 ELSE 0 END), 0)    AS count_pages,
     NULLIF(SUM(CASE WHEN l.flag = 'F' THEN 1 ELSE 0 END), 0)    AS count_forms,
     --
-    NULLIF(COUNT(DISTINCT l.user_id), 0)                        AS count_users
+    NULLIF(COUNT(DISTINCT l.user_id), 0)                        AS count_users,
+    --
+    NULL AS count_business#1,
+    NULL AS count_business#2
 FROM x
-LEFT JOIN l                     ON l.bucket_id = x.bucket_id
-LEFT JOIN filter_pages p        ON p.log_id = l.log_id
-LEFT JOIN filter_users u        ON u.log_id = l.log_id
-LEFT JOIN filter_sessions s     ON s.log_id = l.log_id
---
-WHERE 1 = 1
-    AND (u.log_id IS NOT NULL OR apex.get_item('$USER_ID')      IS NULL)
-    AND (p.log_id IS NOT NULL OR apex.get_item('$PAGE_ID')      IS NULL)
-    AND (s.log_id IS NOT NULL OR apex.get_item('$SESSION_ID')   IS NULL)
---
+LEFT JOIN l
+    ON l.bucket_id = x.bucket_id
+LEFT JOIN filter_pages p
+    ON p.log_id = l.log_id
+    AND (
+        p.log_id IS NOT NULL
+        OR apex.get_item('$PAGE_ID') IS NULL
+    )
+LEFT JOIN filter_users u
+    ON u.log_id = l.log_id
+    AND (
+        u.log_id IS NOT NULL
+        OR apex.get_item('$USER_ID') IS NULL
+    )
+LEFT JOIN filter_sessions s
+    ON s.log_id = l.log_id
+    AND (
+        s.log_id IS NOT NULL
+        OR apex.get_item('$SESSION_ID') IS NULL
+    )
 GROUP BY x.bucket_id, x.start_at;
 

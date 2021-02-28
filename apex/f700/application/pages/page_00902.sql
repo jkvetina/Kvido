@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210217223342'
+,p_last_upd_yyyymmddhh24miss=>'20210228202842'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(12341489114558320)
@@ -69,7 +69,9 @@ wwv_flow_api.create_jet_chart_series(
 ,p_name=>'Pages'
 ,p_data_source_type=>'SQL'
 ,p_data_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'SELECT * FROM p902_activity_chart;',
+'SELECT s.*',
+'FROM p902_activity_chart s',
+'WHERE s.user_id = sess.get_user_id();',
 ''))
 ,p_items_value_column_name=>'COUNT_PAGES'
 ,p_items_label_column_name=>'CHART_LABEL'
@@ -87,7 +89,9 @@ wwv_flow_api.create_jet_chart_series(
 ,p_name=>'Forms'
 ,p_data_source_type=>'SQL'
 ,p_data_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'SELECT * FROM p902_activity_chart;',
+'SELECT s.*',
+'FROM p902_activity_chart s',
+'WHERE s.user_id = sess.get_user_id();',
 ''))
 ,p_items_value_column_name=>'COUNT_FORMS'
 ,p_items_label_column_name=>'CHART_LABEL'
@@ -105,7 +109,9 @@ wwv_flow_api.create_jet_chart_series(
 ,p_name=>'Users'
 ,p_data_source_type=>'SQL'
 ,p_data_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'SELECT * FROM p902_activity_chart;',
+'SELECT s.*',
+'FROM p902_activity_chart s',
+'WHERE s.user_id = sess.get_user_id();',
 ''))
 ,p_items_value_column_name=>'COUNT_USERS'
 ,p_items_label_column_name=>'CHART_LABEL'
@@ -120,12 +126,14 @@ wwv_flow_api.create_jet_chart_series(
  p_id=>wwv_flow_api.id(12342185590558327)
 ,p_chart_id=>wwv_flow_api.id(12341509114558321)
 ,p_seq=>40
-,p_name=>'Errors'
+,p_name=>'Business #1'
 ,p_data_source_type=>'SQL'
 ,p_data_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'SELECT * FROM p902_activity_chart;',
+'SELECT s.*',
+'FROM p902_activity_chart s',
+'WHERE s.user_id = sess.get_user_id();',
 ''))
-,p_items_value_column_name=>'COUNT_ERRORS'
+,p_items_value_column_name=>'COUNT_BUSINESS#1'
 ,p_items_label_column_name=>'CHART_LABEL'
 ,p_line_style=>'solid'
 ,p_line_type=>'none'
@@ -139,12 +147,14 @@ wwv_flow_api.create_jet_chart_series(
  p_id=>wwv_flow_api.id(12342271269558328)
 ,p_chart_id=>wwv_flow_api.id(12341509114558321)
 ,p_seq=>50
-,p_name=>'Warnings'
+,p_name=>'Business #2'
 ,p_data_source_type=>'SQL'
 ,p_data_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'SELECT * FROM p902_activity_chart;',
+'SELECT s.*',
+'FROM p902_activity_chart s',
+'WHERE s.user_id = sess.get_user_id();',
 ''))
-,p_items_value_column_name=>'COUNT_WARNINGS'
+,p_items_value_column_name=>'COUNT_BUSINESS#2'
 ,p_items_label_column_name=>'CHART_LABEL'
 ,p_line_style=>'solid'
 ,p_line_type=>'none'
@@ -757,7 +767,7 @@ wwv_flow_api.create_page_process(
 '    in_created_at => app.get_date()',
 ');',
 '--',
-'apex.set_item(''$DELETE'', NULL);',
+'apex.set_item(''$DELETE'');',
 'apex.redirect(',
 '    in_names => ''P902_RESET'',  -- keep current filters',
 '    in_values => ''''',
@@ -769,13 +779,33 @@ wwv_flow_api.create_page_process(
 ,p_process_when_type=>'ITEM_IS_NOT_NULL'
 );
 wwv_flow_api.create_page_process(
- p_id=>wwv_flow_api.id(12715802519683256)
+ p_id=>wwv_flow_api.id(15350886310894540)
 ,p_process_sequence=>20
 ,p_process_point=>'AFTER_HEADER'
 ,p_process_type=>'NATIVE_PLSQL'
-,p_process_name=>'FIX_LOGS'
+,p_process_name=>'PREPARE_CHARTS'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'tree_logs_fix();',
+'-- refresh temp table for charts',
+'DELETE FROM p902_activity_chart s',
+'WHERE s.user_id = sess.get_user_id();',
+'--',
+'INSERT INTO p902_activity_chart (',
+'    user_id, bucket_id,',
+'    chart_label, count_pages, count_forms, count_users,',
+'    count_business#1, count_business#2',
+')',
+'SELECT',
+'    sess.get_user_id(),',
+'    s.bucket_id,',
+'    s.chart_label,',
+'    s.count_pages,',
+'    s.count_forms,',
+'    s.count_users,',
+'    s.count_business#1,',
+'    s.count_business#2',
+'FROM p902_activity_chart_src s;',
+'--',
+'COMMIT;',
 ''))
 ,p_process_clob_language=>'PLSQL'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
