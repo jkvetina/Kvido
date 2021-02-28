@@ -56,25 +56,14 @@
 
 
 --
--- PROFILER + COVERAGE TABLES
---
-/*
-@./proftab.sql
-EXEC DBMS_PLSQL_CODE_COVERAGE.CREATE_COVERAGE_TABLES(force_it => TRUE);
-*/
-
-
-
---
 -- CREATE VIEWS
 --
 @../views/apex_app_items.sql
 @../views/apex_page_items.sql
 @../views/code_coverage_report.sql
 @../views/logs_dml_errors.sql
+-----------@../views/logs_modules_src.sql
 @../views/logs_modules.sql
-@../views/logs_profiler_sum.sql
-@../views/logs_profiler.sql
 @../views/logs_tree_extended.sql
 @../views/logs_tree.sql
 @../views/nav_badges.sql
