@@ -3544,7 +3544,7 @@ wwv_flow_api.create_page_process(
 'END IF;',
 '',
 '-- hide other targets',
-'IF apex.get_item(''$TARGET'') IS NOT NULL THEN',
+'IF apex.get_item(''$SHEET'') IS NOT NULL AND apex.get_item(''$TARGET'') IS NOT NULL THEN',
 '    apex.set_item(''$SHOW_TARGETS'');',
 '    apex.set_item(''$SHOW_PREVIEW'', ''Y'');',
 'END IF;',
