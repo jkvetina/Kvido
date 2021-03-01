@@ -236,9 +236,8 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         in_uploader_id      uploaders.uploader_id%TYPE,
         in_header_name      VARCHAR2                    := '$HEADER_'  -- to rename cols from apex_collections view
     ) AS
-        in_collection       CONSTANT VARCHAR2(30)       := 'SQL_' || in_uploader_id;
+        in_collection       CONSTANT VARCHAR2(30)       := 'SQL_' || sess.get_session_id();  -- used in view p800_sheet_rows
         in_query            VARCHAR2(32767);
-        in_table_name       uploaders.target_table%TYPE;
         --
         out_cols            PLS_INTEGER;
         out_cursor          PLS_INTEGER                 := DBMS_SQL.OPEN_CURSOR;
@@ -247,12 +246,24 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         tree.log_module(in_uploader_id, in_header_name);
 
         -- get target table
-        SELECT u.target_table INTO in_table_name
+        SELECT
+            'SELECT t.' ||
+            LISTAGG(CASE WHEN c.column_id > 5 THEN LOWER(c.column_name) ELSE c.column_name END, ', t.') WITHIN GROUP (ORDER BY c.column_id) ||
+            ' FROM ' || uploader.get_u$_table_name(u.target_table) || ' t'
+        INTO in_query
         FROM uploaders u
+        JOIN user_tab_cols c
+            ON c.table_name         = uploader.get_u$_table_name(u.target_table)
         WHERE u.app_id              = sess.get_app_id()
-            AND u.uploader_id       = in_uploader_id;
+            AND u.uploader_id       = in_uploader_id
+            AND c.column_name       NOT IN (
+                'ORA_ERR_TAG$',
+                'ORA_ERR_ROWID$',
+                'UPDATED_BY',
+                'UPDATED_AT'
+            )
+        GROUP BY u.target_table;
         --
-        in_query := 'SELECT * FROM ' || uploader.get_u$_table_name(in_table_name);
         tree.log_debug(in_query);
 
         -- initialize and populate collection
@@ -270,7 +281,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         DBMS_SQL.CLOSE_CURSOR(out_cursor);
 
         -- populate APEX items
-        FOR i IN 6 .. out_desc.COUNT LOOP       -- skip first 5 (internal) rows
+        FOR i IN 4 .. out_desc.COUNT LOOP       -- skip first 3 (internal) rows
             apex.set_item (
                 in_name      => in_header_name || LPAD(i, 3, 0),
                 in_value     => out_desc(i).col_name
