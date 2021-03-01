@@ -623,7 +623,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             p.line_number - 1       AS ORA_ERR_NUMBER$,    -- NUMBER            -- used for row number
             NULL                    AS ORA_ERR_MESG$,      -- VARCHAR2(2000)    -- used for error code
             NULL                    AS ORA_ERR_ROWID$,     -- UROWID
-            p.col014                AS ORA_ERR_OPTYP$,     -- VARCHAR2(2)       -- used for delete flag at start, type of operation at the end
+            NULL                    AS ORA_ERR_OPTYP$,     -- VARCHAR2(2)       -- used for delete flag at start, type of operation at the end
             /**
                 ^ delete_flag_col
             */
@@ -940,7 +940,8 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
                 AND u.uploader_id       = in_uploader_id
             ORDER BY d.column_id
         ) LOOP
-            out_ := out_ || 'uploader.get_column_value(in_file_name, in_sheet_id, in_uploader_id, ''' ||
+            out_ := out_ || CASE WHEN in_indentation > 0 THEN RPAD(' ', 4 * NVL(in_indentation, 0), ' ') END ||
+                'uploader.get_column_value(in_file_name, in_sheet_id, in_uploader_id, ''' ||
                 c.column_name || ''') AS ' || LOWER(c.column_name) ||
                 CASE WHEN c.is_last IS NULL THEN ',' END || CHR(10);
         END LOOP;
