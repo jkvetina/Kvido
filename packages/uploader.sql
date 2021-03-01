@@ -642,6 +642,8 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
                 p_skip_rows         => 1
             )) p
         WHERE f.file_name = in_file_name;
+        --
+        tree.log_debug('COLLECTION READY', target_table.COUNT);
 
         -- split rows into rows for delete or insert
         FOR i IN 1 .. target_table.COUNT LOOP
@@ -672,6 +674,8 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             --
             idx := rows_to_delete.NEXT(idx);
         END LOOP;
+        --
+        tree.log_debug('DELETE DONE', rows_deleted#);
 
         -- prepare index maps for exceptions
         idx := rows_to_insert.FIRST;
@@ -741,6 +745,8 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             --
             idx := rows_to_insert.NEXT(idx);
         END LOOP;
+        --
+        tree.log_debug('INSERT DONE', rows_inserted#);
 
         -- prepare index maps for exceptions
         idx := rows_to_update.FIRST;
@@ -788,6 +794,8 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             --
             idx := rows_to_update.NEXT(idx);
         END LOOP;
+        --
+        tree.log_debug('UPDATE DONE', rows_updated#);
 
         -- rollback changes if not committing changes
         IF in_commit IS NULL THEN
