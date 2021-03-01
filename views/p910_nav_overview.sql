@@ -26,13 +26,21 @@ SELECT
     --
     CASE WHEN p.page_id IS NOT NULL
         THEN apex.get_developer_page_link(n.page_id)
-        END AS page_link,
+        END AS apex_url,
     --
     CASE WHEN p.authorization_scheme LIKE '%MUST_NOT_BE_PUBLIC_USER%'
         THEN apex.get_icon('fa-check-square', 'MUST_NOT_BE_PUBLIC_USER')
         ELSE p.authorization_scheme
         END AS auth_scheme,
     q.seq#,
+    --
+    CASE WHEN n.parent_id IS NOT NULL
+        THEN REPLACE('    ', ' ', '&' || 'nbsp; ')
+        END || p.page_name
+        AS page_name__,
+    --
+    apex.get_icon('fa-play')        AS run_page,
+    apex.get_page_link(n.page_id)   AS run_page_url,
     --
     'UD' AS allow_changes  -- U = update, D = delete
 FROM navigation n
@@ -61,13 +69,21 @@ SELECT
     p.is_hidden,
     p.page_group,
     --
-    apex.get_developer_page_link(p.page_id) AS page_link,
+    apex.get_developer_page_link(p.page_id) AS apex_url,
     --
     CASE WHEN p.auth_scheme LIKE '%MUST_NOT_BE_PUBLIC_USER%'
         THEN apex.get_icon('fa-check-square', 'MUST_NOT_BE_PUBLIC_USER')
         ELSE p.auth_scheme
         END AS auth_scheme,
     NULL AS seq#,
+    --
+    CASE WHEN p.parent_id IS NOT NULL
+        THEN REPLACE('    ', ' ', '&' || 'nbsp; ')
+        END || p.page_name
+        AS page_name__,
+    --
+    apex.get_icon('fa-play')        AS run_page,
+    apex.get_page_link(p.page_id)   AS run_page_url,
     --
     NULL AS allow_changes  -- no changes allowed
 FROM p910_nav_pages_to_add p
