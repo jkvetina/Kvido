@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210228233947'
+,p_last_upd_yyyymmddhh24miss=>'20210301203046'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(12341489114558320)
@@ -295,7 +295,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_LINK'
 ,p_heading=>'Pages'
 ,p_heading_alignment=>'RIGHT'
-,p_display_sequence=>80
+,p_display_sequence=>90
 ,p_value_alignment=>'RIGHT'
 ,p_link_target=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.::P901_SESSION_ID,P901_FLAG,P901_RESET:&SESSION_ID.,P,Y'
 ,p_link_text=>'&PAGES.'
@@ -321,7 +321,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_LINK'
 ,p_heading=>'Forms'
 ,p_heading_alignment=>'RIGHT'
-,p_display_sequence=>90
+,p_display_sequence=>100
 ,p_value_alignment=>'RIGHT'
 ,p_link_target=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.::P901_SESSION_ID,P901_FLAG,P901_RESET:&SESSION_ID.,F,Y'
 ,p_link_text=>'&FORMS.'
@@ -347,7 +347,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_LINK'
 ,p_heading=>'Triggers'
 ,p_heading_alignment=>'RIGHT'
-,p_display_sequence=>100
+,p_display_sequence=>80
 ,p_value_alignment=>'RIGHT'
 ,p_link_target=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.::P901_SESSION_ID,P901_FLAG,P901_RESET:&SESSION_ID.,G,Y'
 ,p_link_text=>'&TRIGGERS.'
@@ -710,7 +710,7 @@ wwv_flow_api.create_ig_report_column(
 wwv_flow_api.create_ig_report_column(
  p_id=>wwv_flow_api.id(16173185202249576)
 ,p_view_id=>wwv_flow_api.id(54515368426621838)
-,p_display_seq=>6
+,p_display_seq=>7
 ,p_column_id=>wwv_flow_api.id(15351189129894543)
 ,p_is_visible=>true
 ,p_is_frozen=>false
@@ -718,7 +718,7 @@ wwv_flow_api.create_ig_report_column(
 wwv_flow_api.create_ig_report_column(
  p_id=>wwv_flow_api.id(16174064450249581)
 ,p_view_id=>wwv_flow_api.id(54515368426621838)
-,p_display_seq=>7
+,p_display_seq=>8
 ,p_column_id=>wwv_flow_api.id(15351292780894544)
 ,p_is_visible=>true
 ,p_is_frozen=>false
@@ -726,7 +726,7 @@ wwv_flow_api.create_ig_report_column(
 wwv_flow_api.create_ig_report_column(
  p_id=>wwv_flow_api.id(16174944601249584)
 ,p_view_id=>wwv_flow_api.id(54515368426621838)
-,p_display_seq=>8
+,p_display_seq=>6
 ,p_column_id=>wwv_flow_api.id(15351357263894545)
 ,p_is_visible=>true
 ,p_is_frozen=>false
