@@ -102,7 +102,9 @@ FROM (
 ) t;
 /*
 BEGIN
-    DBMS_SNAPSHOT.REFRESH('NAV_TOP_MVW');   -- 6sec
+    sess.create_session('DEV', 700, 910);
+    --
+    DBMS_SNAPSHOT.REFRESH('NAV_TOP_SRC');   -- 6sec
 END;
 /
 --
