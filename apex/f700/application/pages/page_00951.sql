@@ -1497,6 +1497,18 @@ wwv_flow_api.create_page_button(
 ,p_button_position=>'RIGHT_OF_TITLE'
 ,p_button_redirect_url=>'f?p=&APP_ID.:951:&SESSION.::&DEBUG.::P951_RESET:Y'
 );
+wwv_flow_api.create_page_button(
+ p_id=>wwv_flow_api.id(16188155678424205)
+,p_button_sequence=>20
+,p_button_plug_id=>wwv_flow_api.id(11205893952964003)
+,p_button_name=>'PURGE'
+,p_button_action=>'REDIRECT_PAGE'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>wwv_flow_api.id(63744470351014400)
+,p_button_image_alt=>'Purge'
+,p_button_position=>'RIGHT_OF_TITLE'
+,p_button_redirect_url=>'f?p=&APP_ID.:951:&SESSION.::&DEBUG.::P951_PURGE:Y'
+);
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(11205928208964004)
 ,p_name=>'P951_RESET'
@@ -1529,6 +1541,16 @@ wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(12777896314713331)
 ,p_name=>'P951_SHRINK'
 ,p_item_sequence=>40
+,p_item_plug_id=>wwv_flow_api.id(11205893952964003)
+,p_use_cache_before_default=>'NO'
+,p_display_as=>'NATIVE_HIDDEN'
+,p_is_persistent=>'N'
+,p_attribute_01=>'Y'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(16188351515424207)
+,p_name=>'P951_PURGE'
+,p_item_sequence=>50
 ,p_item_plug_id=>wwv_flow_api.id(11205893952964003)
 ,p_use_cache_before_default=>'NO'
 ,p_display_as=>'NATIVE_HIDDEN'
@@ -1625,6 +1647,31 @@ wwv_flow_api.create_page_process(
 ,p_process_clob_language=>'PLSQL'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
 ,p_process_when=>'P951_SHRINK'
+,p_process_when_type=>'ITEM_IS_NOT_NULL'
+,p_security_scheme=>wwv_flow_api.id(64828317424644703)
+);
+wwv_flow_api.create_page_process(
+ p_id=>wwv_flow_api.id(16188242868424206)
+,p_process_sequence=>30
+,p_process_point=>'BEFORE_HEADER'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'PURGE'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'EXECUTE IMMEDIATE',
+'    ''PURGE RECYCLEBIN'';',
+'--',
+'FOR c IN (',
+'    SELECT t.table_name',
+'    FROM user_unused_col_tabs t',
+') LOOP',
+'    EXECUTE IMMEDIATE',
+'        ''ALTER TABLE '' || c.table_name ||',
+'        '' DROP UNUSED COLUMNS CHECKPOINT 10000'';',
+'END LOOP;',
+''))
+,p_process_clob_language=>'PLSQL'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
+,p_process_when=>'P951_PURGE'
 ,p_process_when_type=>'ITEM_IS_NOT_NULL'
 ,p_security_scheme=>wwv_flow_api.id(64828317424644703)
 );
