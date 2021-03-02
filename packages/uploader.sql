@@ -109,7 +109,8 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
                 APEX_DATA_PARSER.DISCOVER (
                     p_content           => f.blob_content,
                     p_file_name         => f.file_name,
-                    p_xlsx_sheet_name   => p.sheet_file_name
+                    p_xlsx_sheet_name   => p.sheet_file_name,
+                    p_max_rows          => 100000
                 )                       AS profile_json
             FROM uploaded_files f,
                 TABLE(APEX_DATA_PARSER.GET_XLSX_WORKSHEETS(
@@ -128,7 +129,8 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
                 --
                 APEX_DATA_PARSER.DISCOVER (
                     p_content           => f.blob_content,
-                    p_file_name         => f.file_name
+                    p_file_name         => f.file_name,
+                    p_max_rows          => 100000
                 )                       AS profile_json
             FROM uploaded_files f
             WHERE f.file_name           = in_file_name
