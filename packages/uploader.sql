@@ -384,12 +384,12 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             SELECT p.table_name, p.page_id
             INTO rec.target_table, rec.target_page_id
             FROM p805_uploaders_possible p
-            WHERE p.uploader_id = in_uploader_id;
+            WHERE NVL(p.uploader_id, p.table_name) = in_uploader_id;
         EXCEPTION
         WHEN NO_DATA_FOUND THEN
             tree.raise_error('UPLOADER_NOT_POSSIBLE');
         END;
-        --        
+        --
         rec.app_id              := sess.get_app_id();
         rec.uploader_id         := in_uploader_id;
         --
@@ -399,7 +399,13 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         WHEN DUP_VAL_ON_INDEX THEN
             NULL;
         END;
-        --
+
+        -- rebuild DML Err table
+        uploader.rebuild_dml_err_table (
+            in_table_name       => rec.target_table
+        );
+
+        -- update mappings and procedure
         uploader.create_uploader_mappings (
             in_uploader_id      => in_uploader_id,
             in_clear_current    => TRUE
@@ -419,18 +425,10 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         in_uploader_id      uploaders_mapping.uploader_id%TYPE,
         in_clear_current    BOOLEAN                                 := FALSE
     ) AS
-        in_table_name       uploaders.target_table%TYPE;
-        --
         TYPE list_mappings  IS TABLE OF uploaders_mapping%ROWTYPE INDEX BY PLS_INTEGER;
         curr_mappings       list_mappings;
     BEGIN
         tree.log_module(in_uploader_id, CASE WHEN in_clear_current THEN 'Y' END);
-
-        -- get target table
-        SELECT u.target_table INTO in_table_name
-        FROM uploaders u
-        WHERE u.app_id              = sess.get_app_id()
-            AND u.uploader_id       = in_uploader_id;
 
         -- store current mappings
         IF NOT in_clear_current THEN
@@ -483,11 +481,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             END LOOP;
         END IF;
 
-        -- rebuild DML Err table and uploader procedure
-        uploader.rebuild_dml_err_table (
-            in_table_name       => in_table_name
-        );
-        --
+        -- rebuild uploader procedure
         uploader.generate_procedure (
             in_uploader_id      => in_uploader_id
         );
@@ -540,9 +534,6 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         END;
 
         -- refresh ERR table
-        --
-        -- @TODO: create this as PTT (private temp table) just for current user and transaction
-        --
         DBMS_ERRLOG.CREATE_ERROR_LOG (
             dml_table_name          => in_table_name,
             err_log_table_name      => err_table_name,
