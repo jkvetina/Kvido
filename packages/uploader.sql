@@ -574,15 +574,11 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
+        in_target_table     uploaders.target_table%TYPE;
         in_sheet_name       uploaded_file_sheets.sheet_name%TYPE;
         in_user_id          CONSTANT uploaded_files.created_by%TYPE     := sess.get_user_id();
         in_app_id           CONSTANT uploaded_files.app_id%TYPE         := sess.get_app_id();
         in_sysdate          CONSTANT DATE                               := SYSDATE;
-        --
-        TYPE target_table_t
-            IS TABLE OF     uploaders_u$%ROWTYPE INDEX BY PLS_INTEGER;  /** STAGE_TABLE */
-        --
-        target_table        target_table_t;
         --
         rows_to_insert      uploader.target_rows_t      := uploader.target_rows_t();
         rows_to_update      uploader.target_rows_t      := uploader.target_rows_t();
@@ -598,6 +594,17 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         --
         idx                 PLS_INTEGER;
         delete_flag_col     VARCHAR2(30);
+        --
+        TYPE target_table_t
+            IS TABLE OF     uploaders_u$%ROWTYPE INDEX BY PLS_INTEGER;  /** STAGE_TABLE */
+        --
+        target_table        target_table_t;
+        r                   SYS_REFCURSOR;
+        --
+        q_start             VARCHAR2(4000);
+        q_end               VARCHAR2(4000);
+        q_dynamic           VARCHAR2(32767);
+        --
     BEGIN
         tree.log_module(in_file_name, in_sheet_id, in_uploader_id, in_commit);
         --
@@ -605,8 +612,12 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
         -- get sheet name for possible use in rows replacements
         BEGIN
-            SELECT s.sheet_name INTO in_sheet_name
+            SELECT s.sheet_name, uploader.get_u$_table_name(u.target_table)
+            INTO in_sheet_name, in_target_table
             FROM uploaded_file_sheets s
+            JOIN uploaders u
+                ON u.app_id         = s.app_id
+                AND u.uploader_id   = s.uploader_id
             WHERE s.file_name       = in_file_name
                 AND s.sheet_id      = in_sheet_id;
         EXCEPTION
@@ -615,6 +626,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         END;
 
         -- get delete_flag column name
+        /*
         BEGIN
             SELECT 'COL' || LPAD(c.column_id, 3, '0') INTO delete_flag_col
             FROM uploaded_file_cols c
@@ -624,42 +636,59 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         WHEN NO_DATA_FOUND THEN
             NULL;
         END;
+        */
+
+        -- create query for bulk operation
+        q_start :=  'SELECT'                                            || CHR(10) ||
+                    '    p.line_number - 1       AS ORA_ERR_NUMBER$,'   || CHR(10) ||
+                    '    NULL                    AS ORA_ERR_MESG$,'     || CHR(10) ||
+                    '    NULL                    AS ORA_ERR_ROWID$,'    || CHR(10) ||
+                    '    NULL                    AS ORA_ERR_OPTYP$,'    || CHR(10) ||
+                    '    sess.get_session_id()   AS ORA_ERR_TAG$,'      || CHR(10);
+        --
+        q_end :=    'FROM uploaded_files f'                             || CHR(10) ||
+                    'JOIN uploaded_file_sheets s'                       || CHR(10) ||
+                    '    ON s.file_name          = f.file_name'         || CHR(10) ||
+                    '    AND s.sheet_id          = ' || in_sheet_id     || CHR(10) ||
+                    'CROSS JOIN TABLE(APEX_DATA_PARSER.PARSE('          || CHR(10) ||
+                    '        p_content           => f.blob_content,'    || CHR(10) ||
+                    '        p_file_name         => f.file_name,'       || CHR(10) ||
+                    '        p_xlsx_sheet_name   => s.sheet_xml_id,'    || CHR(10) ||
+                    '        p_skip_rows         => 1'                  || CHR(10) ||
+                    '    )) p'                                          || CHR(10) ||
+                    'WHERE f.file_name = ''' || in_file_name || '''';
 
         -- bulk collect rows from uploaded file into memory
-        SELECT
-            p.line_number - 1       AS ORA_ERR_NUMBER$,    -- NUMBER            -- used for row number
-            NULL                    AS ORA_ERR_MESG$,      -- VARCHAR2(2000)    -- used for error code
-            NULL                    AS ORA_ERR_ROWID$,     -- UROWID
-            NULL                    AS ORA_ERR_OPTYP$,     -- VARCHAR2(2)       -- used for delete flag at start, type of operation at the end
-            /**
-                ^ delete_flag_col
-            */
-            sess.get_session_id()   AS ORA_ERR_TAG$,       -- VARCHAR2(2000)    -- used for session_id
-            --
-            /** GENERATE_MAPPINGS:START(2) */
-            sess.get_app_id()                       AS app_id,
-            NULLIF(p.col002, '[Data Error: N/A]')   AS uploader_id,
-            NULLIF(p.col002, '[Data Error: N/A]')   AS target_table,
-            NULLIF(p.col007, '[Data Error: N/A]')   AS target_page_id,
-            NULLIF(p.col009, '[Data Error: N/A]')   AS pre_procedure,
-            NULLIF(p.col010, '[Data Error: N/A]')   AS post_procedure,
-            NULLIF(p.col011, '[Data Error: N/A]')   AS is_active,
-            --
-            sess.get_user_id()      AS updated_by,
-            SYSDATE                 AS updated_at
-            /** GENERATE_MAPPINGS:END */
-        BULK COLLECT INTO target_table
-        FROM uploaded_files f
-        JOIN uploaded_file_sheets s
-            ON s.file_name          = f.file_name
-            AND s.sheet_id          = in_sheet_id
-        CROSS JOIN TABLE(APEX_DATA_PARSER.PARSE(
-                p_content           => f.blob_content,
-                p_file_name         => f.file_name,
-                p_xlsx_sheet_name   => s.sheet_xml_id,                          -- @TODO: fix CSV later
-                p_skip_rows         => 1
-            )) p
-        WHERE f.file_name = in_file_name;
+        FOR c IN (
+            SELECT
+                CASE WHEN f.column_id > 0
+                    THEN 'p.COL' || LPAD(f.column_id, 3, '0')
+                    ELSE 'NULL'
+                    END || ' AS ' || LOWER(c.column_name) || ',' AS line_
+            FROM user_tab_cols c
+            LEFT JOIN uploaders_mapping m
+                ON m.app_id             = sess.get_app_id()
+                AND m.uploader_id       = in_uploader_id
+                AND m.target_column     = c.column_name
+            LEFT JOIN uploaded_file_cols f
+                ON f.column_name        = m.source_column
+                AND f.file_name         = in_file_name
+                AND f.sheet_id          = in_sheet_id
+            WHERE c.table_name          = in_target_table
+                AND c.column_name       NOT LIKE 'ORA\_%\_%$' ESCAPE '\'
+            ORDER BY c.column_id
+        ) LOOP
+            q_dynamic := q_dynamic || c.line_ || CHR(10);
+        END LOOP;
+        --
+        q_dynamic := q_start || RTRIM(RTRIM(q_dynamic, CHR(10)), ',') || CHR(10) || q_end;
+        --
+        tree.attach_clob(q_dynamic, 'DYNAMIC');
+        --
+        r := uploader.get_cursor_from_query(q_dynamic);
+        --
+        FETCH r BULK COLLECT INTO target_table;
+        CLOSE r;
         --
         tree.log_debug('COLLECTION READY', target_table.COUNT);
 
