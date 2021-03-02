@@ -14,7 +14,7 @@ wwv_flow_api.component_begin (
 wwv_flow_api.create_page(
  p_id=>800
 ,p_user_interface_id=>wwv_flow_api.id(63766922917014449)
-,p_name=>'#fa-file-excel-o'
+,p_name=>'#fa-cloud-upload'
 ,p_alias=>'UPLOADER'
 ,p_step_title=>'Uploader'
 ,p_autocomplete_on_off=>'OFF'
@@ -61,7 +61,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210301223335'
+,p_last_upd_yyyymmddhh24miss=>'20210302221032'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(13647015415013517)
@@ -2818,6 +2818,18 @@ wwv_flow_api.create_page_button(
 ,p_button_execute_validations=>'N'
 );
 wwv_flow_api.create_page_button(
+ p_id=>wwv_flow_api.id(13649081128013537)
+,p_button_sequence=>20
+,p_button_plug_id=>wwv_flow_api.id(35497554466984055)
+,p_button_name=>'CLOSE_COLS'
+,p_button_action=>'REDIRECT_PAGE'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>wwv_flow_api.id(63744470351014400)
+,p_button_image_alt=>'<span class="fa fa-times" title="Hide Sheet Cols"></span>'
+,p_button_position=>'BELOW_BOX'
+,p_button_redirect_url=>'f?p=&APP_ID.:800:&SESSION.::&DEBUG.::P800_SHOW_COLS:'
+);
+wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(13436940974622234)
 ,p_button_sequence=>10
 ,p_button_plug_id=>wwv_flow_api.id(35499407546984073)
@@ -2920,18 +2932,6 @@ wwv_flow_api.create_page_button(
 ,p_button_redirect_url=>'f?p=&APP_ID.:800:&SESSION.::&DEBUG.::P800_DELETE:&P800_FILE.'
 );
 wwv_flow_api.create_page_button(
- p_id=>wwv_flow_api.id(13649081128013537)
-,p_button_sequence=>20
-,p_button_plug_id=>wwv_flow_api.id(35497554466984055)
-,p_button_name=>'CLOSE_COLS'
-,p_button_action=>'REDIRECT_PAGE'
-,p_button_template_options=>'#DEFAULT#'
-,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_image_alt=>'<span class="fa fa-times" title="Hide Sheet Cols"></span>'
-,p_button_position=>'RIGHT_OF_TITLE'
-,p_button_redirect_url=>'f?p=&APP_ID.:800:&SESSION.::&DEBUG.::P800_SHOW_COLS:'
-);
-wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(14561555614631317)
 ,p_button_sequence=>20
 ,p_button_plug_id=>wwv_flow_api.id(35387743581829181)
@@ -2939,7 +2939,7 @@ wwv_flow_api.create_page_button(
 ,p_button_action=>'REDIRECT_PAGE'
 ,p_button_template_options=>'#DEFAULT#'
 ,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_image_alt=>'<span class="fa fa-upload" title="Upload"></span>'
+,p_button_image_alt=>'<span class="fa fa-cloud-upload" title="Upload"></span>'
 ,p_button_position=>'RIGHT_OF_TITLE'
 ,p_button_redirect_url=>'f?p=&APP_ID.:800:&SESSION.::&DEBUG.::P800_TARGET,P800_RESET:&P800_TARGET.,Y'
 ,p_button_condition=>'P800_SHEET'
@@ -2958,6 +2958,19 @@ wwv_flow_api.create_page_button(
 ,p_button_redirect_url=>'f?p=&APP_ID.:&P800_TARGET_PAGE.:&SESSION.::&DEBUG.:::'
 ,p_button_condition=>'P800_COMMIT'
 ,p_button_condition_type=>'ITEM_IS_NOT_NULL'
+);
+wwv_flow_api.create_page_button(
+ p_id=>wwv_flow_api.id(16902433067657129)
+,p_button_sequence=>20
+,p_button_plug_id=>wwv_flow_api.id(35499407546984073)
+,p_button_name=>'GOTO_SETUP'
+,p_button_action=>'REDIRECT_PAGE'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>wwv_flow_api.id(63744470351014400)
+,p_button_image_alt=>'<span class="fa fa-table-wrench" title="Open in Uploaders"></span>'
+,p_button_position=>'RIGHT_OF_TITLE'
+,p_button_redirect_url=>'f?p=&APP_ID.:805:&SESSION.::&DEBUG.::P805_TABLE_NAME,P805_UPLOADER_ID,P805_RESET:&P800_TARGET.,&P800_TARGET.,Y'
+,p_security_scheme=>wwv_flow_api.id(63770652250014528)
 );
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(13048640589981119)
@@ -3260,6 +3273,18 @@ wwv_flow_api.create_page_item(
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'N'
 );
+wwv_flow_api.component_end;
+end;
+/
+begin
+wwv_flow_api.component_begin (
+ p_version_yyyy_mm_dd=>'2020.10.01'
+,p_release=>'20.2.0.00.20'
+,p_default_workspace_id=>9526531750928358
+,p_default_application_id=>700
+,p_default_id_offset=>28323188538908472
+,p_default_owner=>'DEV'
+);
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(15184489305721636)
 ,p_name=>'P800_HEADER_022'
@@ -3283,18 +3308,6 @@ wwv_flow_api.create_page_item(
 ,p_item_plug_id=>wwv_flow_api.id(15332199956843924)
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'N'
-);
-wwv_flow_api.component_end;
-end;
-/
-begin
-wwv_flow_api.component_begin (
- p_version_yyyy_mm_dd=>'2020.10.01'
-,p_release=>'20.2.0.00.20'
-,p_default_workspace_id=>9526531750928358
-,p_default_application_id=>700
-,p_default_id_offset=>28323188538908472
-,p_default_owner=>'DEV'
 );
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(15185595015721647)
