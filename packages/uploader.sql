@@ -541,6 +541,20 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             err_log_table_space     => NULL,
             skip_unsupported        => TRUE
         );
+
+        -- fix unsupported datatype
+        DBMS_UTILITY.EXEC_DDL_STATEMENT('ALTER TABLE ' || err_table_name || ' MODIFY ORA_ERR_ROWID$ VARCHAR2(30)');
+
+        -- fix too long columns
+        FOR c IN (
+            SELECT c.column_name
+            FROM user_tab_cols c
+            WHERE c.table_name      = err_table_name
+                AND c.column_name   NOT LIKE 'ORA\_%\_%$' ESCAPE '\'
+                AND c.data_length   > 4000
+        ) LOOP
+            DBMS_UTILITY.EXEC_DDL_STATEMENT('ALTER TABLE ' || err_table_name || ' MODIFY ' || c.column_name || ' VARCHAR2(4000)');
+        END LOOP;
         --
         tree.update_timer();
     EXCEPTION
