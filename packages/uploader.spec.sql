@@ -134,27 +134,16 @@ CREATE OR REPLACE PACKAGE uploader AS
 
 
 
-    FUNCTION generate_mappings (
-        in_uploader_id      uploaders.uploader_id%TYPE,
-        in_indentation      PLS_INTEGER                             := NULL
-    )
-    RETURN VARCHAR2;
-
-
-
     PROCEDURE generate_procedure (
         in_uploader_id      uploaders.uploader_id%TYPE
     );
 
 
 
-    FUNCTION get_column_value (
-        in_file_name        uploaded_file_sheets.file_name%TYPE,
-        in_sheet_id         uploaded_file_sheets.sheet_id%TYPE,
-        in_uploader_id      uploaded_file_sheets.uploader_id%TYPE,
-        in_column_name      uploaders_mapping.target_column%TYPE
+    FUNCTION get_cursor_from_query (
+        in_query VARCHAR2
     )
-    RETURN VARCHAR2;
+    RETURN SYS_REFCURSOR;
 
 END;
 /

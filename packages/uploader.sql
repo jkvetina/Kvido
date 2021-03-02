@@ -928,38 +928,6 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
 
-    FUNCTION generate_mappings (
-        in_uploader_id      uploaders.uploader_id%TYPE,
-        in_indentation      PLS_INTEGER                             := NULL
-    )
-    RETURN VARCHAR2 AS
-        out_                VARCHAR2(32767);
-    BEGIN
-        tree.log_module(in_uploader_id, in_indentation);
-
-        -- map uploaded columns to target columns (and use all of them)
-        FOR c IN (
-            SELECT d.column_name, d.is_last
-            FROM p805_table_columns d
-            JOIN uploaders u
-                ON u.target_table       = d.table_name
-            WHERE u.app_id              = sess.get_app_id()
-                AND u.uploader_id       = in_uploader_id
-            ORDER BY d.column_id
-        ) LOOP
-            out_ := out_ || CASE WHEN in_indentation > 0 THEN RPAD(' ', 4 * NVL(in_indentation, 0), ' ') END ||
-                'uploader.get_column_value(in_file_name, in_sheet_id, in_uploader_id, ''' ||
-                c.column_name || ''') AS ' || LOWER(c.column_name) ||
-                CASE WHEN c.is_last IS NULL THEN ',' END || CHR(10);
-        END LOOP;
-        --
-        tree.update_timer();
-        --
-        RETURN out_;
-    END;
-
-
-
     PROCEDURE generate_procedure (
         in_uploader_id      uploaders.uploader_id%TYPE
     ) AS
@@ -1035,18 +1003,11 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             IF c.action LIKE 'GENERATE_%:START%' THEN
                 skipping_flag := REGEXP_REPLACE(c.action, ':START.*$', ':END');
                 --
-                IF c.action LIKE 'GENERATE_MAPPINGS:START%' THEN
-                    line_ := uploader.generate_mappings (
-                        in_uploader_id      => in_uploader_id,
-                        in_indentation      => REGEXP_SUBSTR(c.action, ':START[(](\d+)[)]', 1, 1, NULL, 1)
-                    );
-                ELSE
-                    line_ := uploader.generate_columns (
-                        in_uploader_id      => in_uploader_id,
-                        in_type             => REGEXP_SUBSTR(c.action, 'GENERATE_([^:]+):', 1, 1, NULL, 1),
-                        in_indentation      => REGEXP_SUBSTR(c.action, ':START[(](\d+)[)]', 1, 1, NULL, 1)
-                    );
-                END IF;
+                line_ := uploader.generate_columns (
+                    in_uploader_id      => in_uploader_id,
+                    in_type             => REGEXP_SUBSTR(c.action, 'GENERATE_([^:]+):', 1, 1, NULL, 1),
+                    in_indentation      => REGEXP_SUBSTR(c.action, ':START[(](\d+)[)]', 1, 1, NULL, 1)
+                );
                 --
                 out_ := out_ || REGEXP_REPLACE(line_, '\s+$', '') || CHR(10);
             END IF;
@@ -1071,15 +1032,15 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
 
-    FUNCTION get_column_value (
-        in_file_name        uploaded_file_sheets.file_name%TYPE,
-        in_sheet_id         uploaded_file_sheets.sheet_id%TYPE,
-        in_uploader_id      uploaded_file_sheets.uploader_id%TYPE,
-        in_column_name      uploaders_mapping.target_column%TYPE
+    FUNCTION get_cursor_from_query (
+        in_query VARCHAR2
     )
-    RETURN VARCHAR2 AS
+    RETURN SYS_REFCURSOR
+    AS
+        r SYS_REFCURSOR;
     BEGIN
-        RETURN NULL;
+        OPEN r FOR in_query;
+        RETURN r;
     END;
 
 END;
