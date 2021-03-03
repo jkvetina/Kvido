@@ -617,7 +617,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             FROM uploaded_file_sheets s
             JOIN uploaders u
                 ON u.app_id         = s.app_id
-                AND u.uploader_id   = s.uploader_id
+                AND u.uploader_id   = in_uploader_id
             WHERE s.file_name       = in_file_name
                 AND s.sheet_id      = in_sheet_id;
         EXCEPTION
