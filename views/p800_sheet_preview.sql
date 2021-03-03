@@ -1,7 +1,11 @@
 CREATE OR REPLACE FORCE VIEW p800_sheet_preview AS
 WITH s AS (
-    SELECT s.*
+    SELECT
+        s.*,
+        l.timer
     FROM uploaded_file_sheets s
+    LEFT JOIN logs l
+        ON l.log_id             = s.result_log_id
     WHERE s.file_name           = apex.get_item('$FILE')
         AND s.sheet_id          = apex.get_item('$SHEET')
         AND s.app_id            = sess.get_app_id()
@@ -12,7 +16,9 @@ SELECT
     --
     CASE WHEN ROWNUM = 1 THEN
         TO_CHAR(s.updated_at, 'YYYY-MM-DD HH24:MI') ||
-        CASE WHEN s.commited_at IS NOT NULL THEN ' COMMIT' END
+        CASE WHEN s.commited_at IS NOT NULL THEN ' COMMIT' END ||
+        CASE WHEN s.updated_at IS NOT NULL THEN '<br />' END ||
+        s.timer
         END AS supplemental_,
     --
     t.counter_,
