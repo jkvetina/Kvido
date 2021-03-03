@@ -43,6 +43,12 @@ filter_modules AS (
     WHERE l.module_name = apex.get_item('$MODULE')
         AND apex.get_item('$MODULE') IS NOT NULL
 ),
+filter_packages AS (
+    SELECT l.log_id
+    FROM l
+    WHERE l.module_name LIKE apex.get_item('$PACKAGE') || '.%'
+        AND apex.get_item('$PACKAGE') IS NOT NULL
+),
 filter_lines AS (
     SELECT l.log_id
     FROM l
@@ -57,6 +63,7 @@ LEFT JOIN filter_pages p        ON p.log_id = l.log_id
 LEFT JOIN filter_users u        ON u.log_id = l.log_id
 LEFT JOIN filter_actions a      ON a.log_id = l.log_id
 LEFT JOIN filter_modules m      ON m.log_id = l.log_id
+LEFT JOIN filter_packages g     ON g.log_id = l.log_id
 LEFT JOIN filter_lines i        ON i.log_id = l.log_id
 LEFT JOIN filter_sessions s     ON s.log_id = l.log_id
 WHERE
@@ -68,5 +75,6 @@ WHERE
     AND (a.log_id IS NOT NULL OR apex.get_item('$ACTION')       IS NULL)
     AND (m.log_id IS NOT NULL OR apex.get_item('$MODULE')       IS NULL)
     AND (i.log_id IS NOT NULL OR apex.get_item('$MODULE_LINE')  IS NULL)
+    AND (g.log_id IS NOT NULL OR apex.get_item('$PACKAGE')      IS NULL)
     AND (s.log_id IS NOT NULL OR apex.get_item('$SESSION_ID')   IS NULL);
 
