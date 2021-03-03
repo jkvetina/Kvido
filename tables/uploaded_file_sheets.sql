@@ -18,6 +18,7 @@ CREATE TABLE uploaded_file_sheets (
     result_deleted      NUMBER(8),
     result_errors       NUMBER(8),
     result_unmatched    NUMBER(8),
+    result_log_id       INTEGER,
     --
     updated_by          VARCHAR2(30),
     updated_at          DATE,
