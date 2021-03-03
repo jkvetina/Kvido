@@ -914,7 +914,7 @@ wwv_flow_api.create_page_process(
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
 'sess.delete_session (',
 '    in_session_id => apex.get_item(''$DELETE''),',
-'    in_created_at => app.get_date()',
+'    in_created_at => app.get_date() - 1',
 ');',
 '--',
 'apex.set_item(''$DELETE'');',
