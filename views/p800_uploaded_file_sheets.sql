@@ -26,7 +26,7 @@ SELECT
     s.uploader_id
 FROM uploaded_file_sheets s
 WHERE (
-    s.file_name = apex.get_item('$FILE')
+    s.file_name             = apex.get_item('$FILE')
     OR (
         sess.get_page_id()  = 802
         AND s.uploader_id   = NVL(apex.get_item('$UPLOADER'), s.uploader_id)
