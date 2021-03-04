@@ -416,10 +416,14 @@ CREATE OR REPLACE PACKAGE BODY sess AS
                 APEX_APPLICATION.G_REQUEST,                                 -- button name
                 REGEXP_REPLACE(req, '^/[^/]+/[^/]+/f[?]p=([^:]*:){6}', '')  -- arguments in URL
             );
-            --
+
+            -- store log_id to use it as parent for all further requests
             UPDATE sessions s
             SET s.log_id        = rec.log_id
             WHERE s.session_id  = rec.session_id;
+            --
+            tree.curr_page_log_id   := rec.log_id;
+            tree.curr_page_stamp    := SYSTIMESTAMP;
         END IF;
         --
         COMMIT;

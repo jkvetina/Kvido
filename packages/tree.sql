@@ -1051,6 +1051,13 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             rec.message     := SUBSTR(rec.message || tree.get_error_stack(), 1, tree.length_message);
         END IF;
 
+        -- fill log_id from recent page visit
+        IF rec.flag = 'P' THEN
+            curr_page_log_id := NULL;
+        END IF;
+        --
+        rec.log_parent := NVL(rec.log_parent, curr_page_log_id);
+
         -- finally store record in table
         INSERT INTO logs VALUES rec;
         COMMIT;
