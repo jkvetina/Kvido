@@ -1038,6 +1038,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         rec.message         := SUBSTR(in_message,   1, tree.length_message);  -- may be overwritten later
         rec.session_id      := sess.get_session_id();
         rec.created_at      := SYSTIMESTAMP;
+        rec.today           := TO_CHAR(SYSDATE, 'YYYY-MM-DD');
 
         -- add call stack
         IF SQLCODE != 0 OR INSTR(tree.track_callstack, rec.flag) > 0 OR tree.track_callstack = '%' OR in_parent_id IS NOT NULL THEN

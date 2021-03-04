@@ -22,6 +22,8 @@ CREATE TABLE logs_lobs (
         CHECK (payload_json IS JSON)
 );
 --
+CREATE INDEX fk_logs_lobs_logs ON logs_lobs (log_parent);
+--
 -- STORE INLINE OF POSSIBLE -> ENABLE STORAGE IN ROW, DB_BLOCK_SIZE 8K
 --
 COMMENT ON TABLE  logs_lobs                  IS 'Large objects storage for LOGS table';
@@ -34,7 +36,4 @@ COMMENT ON COLUMN logs_lobs.payload_blob     IS 'BLOB payload';
 COMMENT ON COLUMN logs_lobs.payload_clob     IS 'CLOB payload';
 COMMENT ON COLUMN logs_lobs.payload_xml      IS 'XML payload';
 COMMENT ON COLUMN logs_lobs.payload_json     IS 'JSON payload';
-
--- missing index on log_parent
-CREATE INDEX fk_logs_lobs_logs ON logs_lobs (log_parent);
 

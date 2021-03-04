@@ -1,8 +1,8 @@
 --DROP TABLE logs_setup CASCADE CONSTRAINTS PURGE;
 CREATE TABLE logs_setup (
     app_id              NUMBER(4)       CONSTRAINT nn_logs_setup_app_id         NOT NULL,
-    page_id             NUMBER(6),
     user_id             VARCHAR2(30),
+    page_id             NUMBER(6),
     flag                CHAR(1),
     module_name         VARCHAR2(30),
     --

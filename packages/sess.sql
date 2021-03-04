@@ -203,6 +203,9 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             RETURN;
         END IF;
 
+        -- log request
+        tree.log_module('START');
+
         -- load APEX items from recent (previous) session
         BEGIN
             apex.apply_items(sess.get_recent_items());
@@ -211,8 +214,18 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             NULL;
         END;
 
-        -- log request
-        tree.log_module('START');
+        --
+        BEGIN
+            INSERT INTO calendar (app_id, today, today__)
+            VALUES (
+                sess.get_app_id(),
+                TO_CHAR(SYSDATE, 'YYYY-MM-DD'),
+                TRUNC(SYSDATE)
+            );
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+            NULL;
+        END;
 
         -- insert or update sessions table
         sess.update_session();
@@ -353,6 +366,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         rec.page_id         := sess.get_page_id();
         rec.session_db      := sess.get_session_db();
         rec.updated_at      := SYSDATE;
+        rec.today           := TO_CHAR(rec.updated_at, 'YYYY-MM-DD');
         --
         IF rec.page_id BETWEEN sess.app_min_page AND sess.app_max_page THEN
             -- automatic items reset, co no need for reset page process
