@@ -1078,5 +1078,31 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         RETURN r;
     END;
 
+
+
+    PROCEDURE update_mapping (
+        in_uploader_id          uploaders_mapping.uploader_id%TYPE,
+        in_source_column        uploaders_mapping.source_column%TYPE,
+        in_target_column        uploaders_mapping.target_column%TYPE,
+        in_overwrite_value      uploaders_mapping.overwrite_value%TYPE
+    ) AS
+    BEGIN
+        tree.log_module(in_uploader_id, in_source_column, in_target_column, in_overwrite_value);
+        --
+        UPDATE uploaders_mapping m
+        SET m.source_column         = in_source_column,
+            m.overwrite_value       = in_overwrite_value
+        WHERE m.app_id              = sess.get_app_id()
+            AND m.uploader_id       = in_uploader_id
+            AND m.target_column     = in_target_column;
+        --
+        tree.update_timer();
+    EXCEPTION
+    WHEN tree.app_exception THEN
+        RAISE;
+    WHEN OTHERS THEN
+        tree.raise_error();
+    END;
+
 END;
 /

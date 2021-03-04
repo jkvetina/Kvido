@@ -145,5 +145,14 @@ CREATE OR REPLACE PACKAGE uploader AS
     )
     RETURN SYS_REFCURSOR;
 
+
+
+    PROCEDURE update_mapping (
+        in_uploader_id          uploaders_mapping.uploader_id%TYPE,
+        in_source_column        uploaders_mapping.source_column%TYPE,
+        in_target_column        uploaders_mapping.target_column%TYPE,
+        in_overwrite_value      uploaders_mapping.overwrite_value%TYPE
+    );
+
 END;
 /
