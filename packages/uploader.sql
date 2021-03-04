@@ -397,7 +397,11 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             INSERT INTO uploaders VALUES rec;
         EXCEPTION
         WHEN DUP_VAL_ON_INDEX THEN
-            NULL;
+            UPDATE uploaders u
+            SET u.target_table      = rec.target_table,
+                u.target_page_id    = rec.target_page_id
+            WHERE u.app_id          = rec.app_id
+                AND u.uploader_id   = rec.uploader_id;
         END;
 
         -- rebuild DML Err table
