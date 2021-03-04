@@ -609,8 +609,9 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         q_end               VARCHAR2(4000);
         q_dynamic           VARCHAR2(32767);
         --
+        module_id           logs.log_id%TYPE;
     BEGIN
-        tree.log_module(in_file_name, in_sheet_id, in_uploader_id, in_commit);
+        module_id := tree.log_module(in_file_name, in_sheet_id, in_uploader_id, in_commit);
         --
         SAVEPOINT before_merge;
 
@@ -882,6 +883,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             s.result_deleted    = rows_deleted#,
             s.result_errors     = rows_errors#,
             s.result_unmatched  = s.sheet_rows - rows_inserted# - rows_updated# - rows_deleted# - rows_errors#,
+            s.result_log_id     = module_id,
             --
             s.commited_by       = CASE WHEN in_commit = 'Y' THEN sess.get_user_id() END,
             s.commited_at       = CASE WHEN in_commit = 'Y' THEN SYSDATE END
@@ -896,9 +898,9 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             CASE WHEN rows_errors#   > 0 THEN ', ERRORS: '   || rows_errors#   END
         );
         --
-        COMMIT;
+        tree.update_timer(module_id);
         --
-        tree.update_timer();
+        COMMIT;
     EXCEPTION
     WHEN tree.app_exception THEN
         ROLLBACK;
