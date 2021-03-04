@@ -34,8 +34,9 @@ wwv_flow_api.create_page_plug(
 ,p_include_in_reg_disp_sel_yn=>'Y'
 ,p_plug_display_point=>'BODY'
 ,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
-,p_plug_display_condition_type=>'ITEM_IS_NULL'
-,p_plug_display_when_condition=>'P901_HIDE_FACETS'
+,p_plug_display_condition_type=>'EXPRESSION'
+,p_plug_display_when_condition=>'apex.get_item(''$HIDE_FACETS'') IS NULL AND apex.get_item(''$TREE_ID'') IS NULL'
+,p_plug_display_when_cond2=>'PLSQL'
 ,p_attribute_01=>'N'
 ,p_attribute_02=>'HTML'
 );
@@ -74,7 +75,7 @@ wwv_flow_api.create_page_plug(
 ,p_region_template_options=>'#DEFAULT#'
 ,p_escape_on_http_output=>'Y'
 ,p_plug_template=>wwv_flow_api.id(64142195941700285)
-,p_plug_display_sequence=>40
+,p_plug_display_sequence=>30
 ,p_plug_new_grid_row=>false
 ,p_plug_grid_column_span=>3
 ,p_plug_display_point=>'BODY'
@@ -93,21 +94,6 @@ wwv_flow_api.create_page_plug(
 ,p_attribute_02=>'LABEL_'
 ,p_attribute_08=>'COUNTER_'
 ,p_attribute_16=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.::P901_USER_ID:&LABEL_.'
-);
-wwv_flow_api.create_page_plug(
- p_id=>wwv_flow_api.id(16805936847916022)
-,p_plug_name=>'Pages (by time)'
-,p_parent_plug_id=>wwv_flow_api.id(16903927767657144)
-,p_region_css_classes=>'NO_ARROWS FLOATING_ICONS'
-,p_region_template_options=>'#DEFAULT#'
-,p_plug_template=>wwv_flow_api.id(64142195941700285)
-,p_plug_display_sequence=>30
-,p_plug_new_grid_row=>false
-,p_plug_grid_column_span=>2
-,p_plug_display_point=>'BODY'
-,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
-,p_attribute_01=>'N'
-,p_attribute_02=>'HTML'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(16902812140657133)
@@ -179,7 +165,7 @@ wwv_flow_api.create_page_plug(
 ,p_plug_template=>wwv_flow_api.id(64142195941700285)
 ,p_plug_display_sequence=>50
 ,p_plug_new_grid_row=>false
-,p_plug_new_grid_column=>false
+,p_plug_grid_column_span=>2
 ,p_plug_display_point=>'BODY'
 ,p_query_type=>'SQL'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
@@ -837,9 +823,27 @@ wwv_flow_api.create_page_plug(
 ''))
 ,p_plug_source_type=>'NATIVE_IG'
 ,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_plug_display_condition_type=>'ITEM_IS_NULL'
+,p_plug_display_when_condition=>'P901_TREE_ID'
 ,p_plug_footer=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<span class="timing">#TIMING#s</span>',
 ''))
+);
+wwv_flow_api.create_region_column(
+ p_id=>wwv_flow_api.id(23396995663484746)
+,p_name=>'TODAY'
+,p_source_type=>'DB_COLUMN'
+,p_source_expression=>'TODAY'
+,p_data_type=>'VARCHAR2'
+,p_is_query_only=>true
+,p_item_type=>'NATIVE_HIDDEN'
+,p_display_sequence=>150
+,p_attribute_01=>'Y'
+,p_use_as_row_header=>false
+,p_enable_sort_group=>true
+,p_enable_control_break=>true
+,p_is_primary_key=>false
+,p_include_in_export=>false
 );
 wwv_flow_api.create_region_column(
  p_id=>wwv_flow_api.id(54457611666350488)
@@ -1209,18 +1213,15 @@ wwv_flow_api.create_region_column(
 ,p_name=>'CREATED_AT'
 ,p_source_type=>'DB_COLUMN'
 ,p_source_expression=>'CREATED_AT'
-,p_data_type=>'DATE'
-,p_is_query_only=>false
-,p_item_type=>'NATIVE_DATE_PICKER'
+,p_data_type=>'TIMESTAMP'
+,p_is_query_only=>true
+,p_item_type=>'NATIVE_DISPLAY_ONLY'
 ,p_heading=>'Created At'
-,p_heading_alignment=>'CENTER'
+,p_heading_alignment=>'LEFT'
 ,p_display_sequence=>140
-,p_value_alignment=>'CENTER'
-,p_attribute_04=>'button'
-,p_attribute_05=>'N'
-,p_attribute_07=>'NONE'
-,p_format_mask=>'YYYY-MM-DD HH24:MI:SS'
-,p_is_required=>true
+,p_value_alignment=>'LEFT'
+,p_attribute_02=>'VALUE'
+,p_format_mask=>'HH24:MI:SS.FF6'
 ,p_enable_filter=>true
 ,p_filter_is_required=>false
 ,p_filter_date_ranges=>'ALL'
@@ -1230,8 +1231,8 @@ wwv_flow_api.create_region_column(
 ,p_enable_control_break=>true
 ,p_enable_hide=>true
 ,p_is_primary_key=>false
-,p_duplicate_value=>true
 ,p_include_in_export=>true
+,p_escape_on_http_output=>true
 );
 wwv_flow_api.create_interactive_grid(
  p_id=>wwv_flow_api.id(54457531474350487)
@@ -1279,6 +1280,14 @@ wwv_flow_api.create_ig_report_view(
 ,p_srv_exclude_null_values=>false
 ,p_srv_only_display_columns=>true
 ,p_edit_mode=>false
+);
+wwv_flow_api.create_ig_report_column(
+ p_id=>wwv_flow_api.id(24493351376710029)
+,p_view_id=>wwv_flow_api.id(54510347605598359)
+,p_display_seq=>15
+,p_column_id=>wwv_flow_api.id(23396995663484746)
+,p_is_visible=>true
+,p_is_frozen=>false
 );
 wwv_flow_api.create_ig_report_column(
  p_id=>wwv_flow_api.id(54510768244598363)
@@ -1514,6 +1523,22 @@ wwv_flow_api.create_page_button(
 ,p_button_redirect_url=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.:RP,:P901_RESET,P901_MAX_LOG_ID:Y,&P901_MAX_LOG_ID.'
 );
 wwv_flow_api.create_page_button(
+ p_id=>wwv_flow_api.id(11209781214964042)
+,p_button_sequence=>20
+,p_button_plug_id=>wwv_flow_api.id(74737587071256293)
+,p_button_name=>'SHOW_INCREMENT'
+,p_button_action=>'REDIRECT_PAGE'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>wwv_flow_api.id(63744470351014400)
+,p_button_is_hot=>'Y'
+,p_button_image_alt=>'<span class="fa fa-redo-arrow" title="Show only new rows"></span>'
+,p_button_position=>'RIGHT_OF_TITLE'
+,p_button_redirect_url=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.::P901_MAX_LOG_FLAG:Y'
+,p_button_condition=>'app.get_date() = TRUNC(SYSDATE)'
+,p_button_condition2=>'PLSQL'
+,p_button_condition_type=>'EXPRESSION'
+);
+wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(17103655260764449)
 ,p_button_sequence=>20
 ,p_button_plug_id=>wwv_flow_api.id(16190317927424227)
@@ -1528,24 +1553,8 @@ wwv_flow_api.create_page_button(
 ,p_button_condition_type=>'ITEM_IS_NOT_NULL'
 );
 wwv_flow_api.create_page_button(
- p_id=>wwv_flow_api.id(11209781214964042)
-,p_button_sequence=>40
-,p_button_plug_id=>wwv_flow_api.id(74737587071256293)
-,p_button_name=>'SHOW_INCREMENT'
-,p_button_action=>'REDIRECT_PAGE'
-,p_button_template_options=>'#DEFAULT#'
-,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_is_hot=>'Y'
-,p_button_image_alt=>'<span class="fa fa-trigger fa-rotate-270" title="Show only rows from last reload"></span>'
-,p_button_position=>'RIGHT_OF_TITLE'
-,p_button_redirect_url=>'f?p=&APP_ID.:901:&SESSION.::&DEBUG.::P901_MAX_LOG_FLAG:Y'
-,p_button_condition=>'app.get_date() = TRUNC(SYSDATE)'
-,p_button_condition2=>'PLSQL'
-,p_button_condition_type=>'EXPRESSION'
-);
-wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(13047040249981103)
-,p_button_sequence=>50
+,p_button_sequence=>30
 ,p_button_plug_id=>wwv_flow_api.id(74737587071256293)
 ,p_button_name=>'TODAY'
 ,p_button_action=>'REDIRECT_PAGE'
