@@ -1074,14 +1074,14 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         END IF;
 
         -- print message to console
-        $IF $$OUTPUT_ENABLED $THEN
+        IF apex.is_developer() THEN
             DBMS_OUTPUT.PUT_LINE(
                 rec.log_id || ' ^' || COALESCE(rec.log_parent, 0) || ' [' || rec.flag || ']: ' ||
                 --RPAD(' ', (rec.module_depth - 1) * 2, ' ') ||
                 rec.module_name || ' [' || rec.module_line || '] ' || NULLIF(rec.action_name, tree.empty_action) ||
                 RTRIM(': ' || SUBSTR(in_arguments, 1, 40), ': ')
             );
-        $END
+        END IF;
         --
         RETURN rec.log_id;
     EXCEPTION
