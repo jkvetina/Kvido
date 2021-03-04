@@ -353,6 +353,17 @@ CREATE OR REPLACE PACKAGE tree AS
     --
 
     --
+    -- Calculate human readable difference within two timestamps
+    --
+    FUNCTION get_timestamp_diff (
+        in_start        TIMESTAMP,
+        in_end          TIMESTAMP       := NULL
+    )
+    RETURN VARCHAR2;
+
+
+
+    --
     -- Update `logs.timer` for current/requested record
     --
     PROCEDURE update_timer (

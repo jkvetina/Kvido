@@ -1058,6 +1058,12 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         --
         rec.log_parent := NVL(rec.log_parent, curr_page_log_id);
 
+        /*
+        IF rec.flag = 'W' THEN
+            rec.timer := tree.get_timestamp_diff(curr_page_stamp, rec.created_at);
+        END IF;
+        */
+
         -- finally store record in table
         INSERT INTO logs VALUES rec;
         COMMIT;
@@ -1202,6 +1208,26 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
 
 
+    FUNCTION get_timestamp_diff (
+        in_start        TIMESTAMP,
+        in_end          TIMESTAMP       := NULL
+    )
+    RETURN VARCHAR2 AS
+        diff            INTERVAL DAY TO SECOND;
+    BEGIN
+        diff := COALESCE(in_end, SYSTIMESTAMP) - in_start;
+        --
+        RETURN
+            LPAD(EXTRACT(HOUR   FROM diff), 2, '0') || ':' ||
+            LPAD(EXTRACT(MINUTE FROM diff), 2, '0') || ':' ||
+            RPAD(REGEXP_REPLACE(
+                REGEXP_REPLACE(EXTRACT(SECOND FROM diff), '^[\.,]', '00,'),
+                '^(\d)[\.,]', '0\1,'
+            ), 9, '0');
+    END;
+
+
+
     PROCEDURE update_timer (
         in_log_id           logs.log_id%TYPE        := NULL
     ) AS
@@ -1219,15 +1245,9 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         END IF;
 
         -- update timer
-        UPDATE logs e
-        SET e.timer =
-            LPAD(EXTRACT(HOUR   FROM SYSTIMESTAMP - e.created_at), 2, '0') || ':' ||
-            LPAD(EXTRACT(MINUTE FROM SYSTIMESTAMP - e.created_at), 2, '0') || ':' ||
-            RPAD(REGEXP_REPLACE(
-                REGEXP_REPLACE(EXTRACT(SECOND FROM SYSTIMESTAMP - e.created_at), '^[\.,]', '00,'),
-                '^(\d)[\.,]', '0\1,'
-            ), 9, '0')
-        WHERE e.log_id = COALESCE(in_log_id, rec.log_parent);
+        UPDATE logs l
+        SET l.timer = tree.get_timestamp_diff(l.created_at)
+        WHERE l.log_id = COALESCE(in_log_id, rec.log_parent);
         --
         COMMIT;
     EXCEPTION
@@ -1248,15 +1268,9 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         PRAGMA AUTONOMOUS_TRANSACTION;
     BEGIN
         -- update timer
-        UPDATE logs e
-        SET e.timer =
-            LPAD(EXTRACT(HOUR   FROM SYSTIMESTAMP - e.created_at), 2, '0') || ':' ||
-            LPAD(EXTRACT(MINUTE FROM SYSTIMESTAMP - e.created_at), 2, '0') || ':' ||
-            RPAD(REGEXP_REPLACE(
-                REGEXP_REPLACE(EXTRACT(SECOND FROM SYSTIMESTAMP - e.created_at), '^[\.,]', '00,'),
-                '^(\d)[\.,]', '0\1,'
-            ), 9, '0'),
-            e.arguments = REGEXP_REPLACE(
+        UPDATE logs l
+        SET l.timer = tree.get_timestamp_diff(l.created_at),
+            l.arguments = REGEXP_REPLACE(
                 tree.get_arguments(
                     CASE WHEN in_rows_inserted > 0 THEN 'INSERTED:' || in_rows_inserted END,
                     CASE WHEN in_rows_inserted = 1 THEN in_last_rowid END,
@@ -1268,7 +1282,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                     CASE WHEN in_rows_deleted  = 1 THEN in_last_rowid END
                 ),
                 '^\[(null,)+', '[')
-        WHERE e.log_id  = in_log_id;
+        WHERE l.log_id  = in_log_id;
         --
         COMMIT;
     EXCEPTION
