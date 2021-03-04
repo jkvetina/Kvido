@@ -1007,7 +1007,7 @@ wwv_flow_api.create_page_button(
 ,p_button_action=>'REDIRECT_PAGE'
 ,p_button_template_options=>'#DEFAULT#'
 ,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_image_alt=>'Delete (7 days old)'
+,p_button_image_alt=>'<span class="fa fa-trash-o" title="Delete old logs"></span>'
 ,p_button_position=>'RIGHT_OF_TITLE'
 ,p_button_redirect_url=>'f?p=&APP_ID.:900:&SESSION.::&DEBUG.:RP:P900_DELETE_OLD:Y'
 );
@@ -1019,7 +1019,7 @@ wwv_flow_api.create_page_button(
 ,p_button_action=>'REDIRECT_PAGE'
 ,p_button_template_options=>'#DEFAULT#'
 ,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_image_alt=>'Shrink'
+,p_button_image_alt=>'<span class="fa fa-cut" title="Shrink table"></span>'
 ,p_button_position=>'RIGHT_OF_TITLE'
 ,p_button_redirect_url=>'f?p=&APP_ID.:900:&SESSION.::&DEBUG.::P900_SHRINK:Y'
 );
