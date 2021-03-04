@@ -1,9 +1,20 @@
 CREATE OR REPLACE FORCE VIEW p920_users AS
-WITH s AS (
+WITH x AS (
+    SELECT
+        c.today,
+        c.app_id
+    FROM calendar c
+    WHERE c.app_id          = sess.get_app_id()
+        AND c.today         = app.get_date()
+),
+s AS (
     SELECT
         s.user_id,
         COUNT(*) AS sessions_
     FROM sessions s
+    JOIN x
+        ON x.app_id         = s.app_id
+        AND x.today         = s.today
     GROUP BY s.user_id
 ),
 l AS (
@@ -11,9 +22,9 @@ l AS (
         l.user_id,
         COUNT(*) AS logs_
     FROM logs l
-    WHERE l.app_id          = sess.get_app_id()
-        AND l.created_at    >= app.get_date()
-        AND l.created_at    <  app.get_date() + 1
+    JOIN x
+        ON x.app_id         = l.app_id
+        AND x.today         = l.today
     GROUP BY l.user_id
 ),
 r AS (
@@ -25,16 +36,19 @@ r AS (
     GROUP BY r.user_id
 )
 SELECT
-    u.*,
+    u.user_id,
+    u.user_login,
+    u.user_name,
+    u.lang,
+    u.is_active,
+    u.updated_by,
+    u.updated_at,
     s.sessions_,
     l.logs_,
     r.roles_,
     u.ROWID AS rid
 FROM users u
-LEFT JOIN s
-    ON s.user_id = u.user_id
-LEFT JOIN l
-    ON l.user_id = u.user_id
-LEFT JOIN r
-    ON r.user_id = u.user_id;
+LEFT JOIN s ON s.user_id = u.user_id
+LEFT JOIN l ON l.user_id = u.user_id
+LEFT JOIN r ON r.user_id = u.user_id;
 

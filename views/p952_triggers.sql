@@ -1,5 +1,13 @@
 CREATE OR REPLACE FORCE VIEW p952_triggers AS
-WITH r AS (
+WITH x AS (
+    SELECT
+        c.app_id,
+        c.today
+    FROM calendar c
+    WHERE c.app_id      = sess.get_app_id()
+        AND c.today     = app.get_date_str()
+),
+r AS (
     SELECT
         l.module_name,
         COUNT(l.log_id)                                                                     AS calls_,
@@ -7,9 +15,9 @@ WITH r AS (
         SUM(TO_NUMBER(REGEXP_SUBSTR(l.arguments, '^[[]"UPDATED:(\d+)"',  1, 1, NULL, 1)))   AS updated_,
         SUM(TO_NUMBER(REGEXP_SUBSTR(l.arguments, '^[[]"DELETED:(\d+)"',  1, 1, NULL, 1)))   AS deleted_
     FROM logs l
-    WHERE l.app_id          = sess.get_app_id()
-        AND l.created_at    >= app.get_date()
-        AND l.created_at    <  app.get_date() + 1
+    JOIN x
+        ON x.app_id         = l.app_id
+        AND x.today         = l.today
         AND l.flag          = 'G'
         AND l.module_name   = CASE WHEN apex.get_item('$TABLE') IS NOT NULL THEN apex.get_item('$TABLE') || '__' ELSE l.module_name END
         AND l.arguments     IS NOT NULL
