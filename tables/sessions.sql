@@ -9,9 +9,9 @@ CREATE TABLE sessions (
     apex_items          VARCHAR2(4000),
     created_at          DATE            CONSTRAINT nn_sessions_created_at   NOT NULL,
     updated_at          DATE            CONSTRAINT nn_sessions_updated_at   NOT NULL,
-    log_id              INTEGER,
+    log_id              INTEGER,                                                            -- no FK on purpose
     --
-    today               VARCHAR2(10)    CONSTRAINT nn_sessions_today        NOT NULL,
+    today               VARCHAR2(10)    CONSTRAINT nn_sessions_today        NOT NULL,       -- no FK on purpose
     --
     CONSTRAINT pk_sessions
         PRIMARY KEY (session_id),
@@ -29,13 +29,13 @@ CREATE TABLE sessions (
         FOREIGN KEY (user_id)
         REFERENCES users (user_id),
     --
-    CONSTRAINT fk_sessions_logs
-        FOREIGN KEY (log_id)
-        REFERENCES logs (log_id),
+    --CONSTRAINT fk_sessions_logs
+    --    FOREIGN KEY (log_id)
+    --    REFERENCES logs (log_id),
     --
-    CONSTRAINT fk_sessions_today
-        FOREIGN KEY (app_id, today)
-        REFERENCES calendar (app_id, today),
+    --CONSTRAINT fk_sessions_today
+    --    FOREIGN KEY (app_id, today)
+    --    REFERENCES calendar (app_id, today),
     --
     CONSTRAINT ch_sessions_apex_items_json
         CHECK (apex_items IS JSON)
