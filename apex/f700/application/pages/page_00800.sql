@@ -61,7 +61,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210304193454'
+,p_last_upd_yyyymmddhh24miss=>'20210305202613'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(23397251710484749)
@@ -2941,7 +2941,7 @@ wwv_flow_api.create_page_button(
 ,p_button_action=>'REDIRECT_PAGE'
 ,p_button_template_options=>'#DEFAULT#'
 ,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_image_alt=>'<span class="fa fa-upload fa-rotate-90" title="Redirect to &P800_TARGET_BUTTON."></span>'
+,p_button_image_alt=>'<span class="fa fa-arrow-right" title="Redirect to &P800_TARGET_BUTTON."></span>'
 ,p_button_position=>'RIGHT_OF_TITLE'
 ,p_button_redirect_url=>'f?p=&APP_ID.:&P800_TARGET_PAGE.:&SESSION.::&DEBUG.:::'
 ,p_button_condition=>'P800_COMMIT'
