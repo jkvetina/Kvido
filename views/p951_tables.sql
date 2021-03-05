@@ -91,15 +91,18 @@ SELECT
     CASE WHEN ROUND(t.blocks * 8, 2) > 0 THEN
         ROUND(t.blocks * 8, 2) - ROUND(t.num_rows * t.avg_row_len / 1024, 0) END AS wasted,
     --
-    t.last_analyzed,
     o.last_ddl_time,
+    t.last_analyzed,
     --
-    'RECALC' AS action_recalc,
-    'SKRINK' AS action_shrink
+    CASE WHEN m.mview_name IS NULL THEN 'SKRINK' END AS action_shrink,
+    --
+    'RECALC' AS action_recalc
 FROM user_tables t
 JOIN user_objects o
     ON o.object_name            = t.table_name
     AND o.object_type           = 'TABLE'
+LEFT JOIN user_mviews m                             -- this slows results significantly
+    ON m.mview_name             = t.table_name
 --
 LEFT JOIN s ON s.table_name     = t.table_name
 LEFT JOIN c ON c.table_name     = t.table_name
