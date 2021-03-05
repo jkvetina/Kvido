@@ -131,7 +131,7 @@ CREATE OR REPLACE PACKAGE sess AS
     -- Returns database session id
     --
     FUNCTION get_session_db
-    RETURN sessions.session_db%TYPE;
+    RETURN NUMBER;
 
 
 

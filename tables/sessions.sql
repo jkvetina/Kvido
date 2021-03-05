@@ -7,7 +7,6 @@ CREATE TABLE sessions (
     page_id             NUMBER(6)       CONSTRAINT nn_sessions_page_id      NOT NULL,       -- FK to app_pages
     --
     apex_items          VARCHAR2(4000),
-    session_db          NUMBER,
     created_at          DATE            CONSTRAINT nn_sessions_created_at   NOT NULL,
     updated_at          DATE            CONSTRAINT nn_sessions_updated_at   NOT NULL,
     log_id              INTEGER,
@@ -54,7 +53,6 @@ COMMENT ON COLUMN sessions.user_id          IS 'User ID';
 COMMENT ON COLUMN sessions.page_id          IS 'APEX page ID';
 --
 COMMENT ON COLUMN sessions.apex_items       IS 'APEX global items';
-COMMENT ON COLUMN sessions.session_db       IS 'Database session ID';
 COMMENT ON COLUMN sessions.created_at       IS 'Time of creation';
 COMMENT ON COLUMN sessions.updated_at       IS 'Time of last update';
 COMMENT ON COLUMN sessions.log_id           IS 'Log ID of page request start';

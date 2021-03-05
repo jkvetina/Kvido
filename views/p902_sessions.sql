@@ -42,7 +42,6 @@ SELECT
     l.pages,
     l.forms,
     l.triggers,
-    s.session_db,
     s.created_at,
     s.updated_at,
     s.log_id,

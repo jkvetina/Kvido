@@ -1,7 +1,5 @@
 CREATE OR REPLACE PACKAGE BODY sess AS
 
-    recent_session_db       sessions.session_db%TYPE;       -- to save resources
-    --
     app_user_id             sessions.user_id%TYPE;          -- user_id used when called outside of APEX
 
 
@@ -113,19 +111,18 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
     FUNCTION get_session_db
-    RETURN sessions.session_db%TYPE AS
+    RETURN NUMBER AS
+        out_ NUMBER;
     BEGIN
         --
         -- @TODO: explore DBMS_SESSION.UNIQUE_SESSION_ID
         --
-        IF recent_session_db IS NULL THEN
-            SELECT TO_NUMBER(s.sid || '.' || s.serial#, '9999D999999', 'NLS_NUMERIC_CHARACTERS=''. ''')
-            INTO recent_session_db
-            FROM v$session s
-            WHERE s.audsid = SYS_CONTEXT('USERENV', 'SESSIONID');
-        END IF;
+        SELECT TO_NUMBER(s.sid || '.' || s.serial#, '9999D999999', 'NLS_NUMERIC_CHARACTERS=''. ''')
+        INTO out_
+        FROM v$session s
+        WHERE s.audsid = SYS_CONTEXT('USERENV', 'SESSIONID');
         --
-        RETURN NVL(recent_session_db, 0);
+        RETURN NVL(out_, 0);
     EXCEPTION
     WHEN NO_DATA_FOUND THEN
         RETURN 0;
@@ -364,7 +361,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         rec.session_id      := sess.get_session_id();
         rec.app_id          := sess.get_app_id();
         rec.page_id         := sess.get_page_id();
-        rec.session_db      := sess.get_session_db();
         rec.updated_at      := SYSDATE;
         rec.today           := TO_CHAR(rec.updated_at, 'YYYY-MM-DD');
         --
@@ -389,7 +385,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         UPDATE sessions s
         SET s.page_id       = rec.page_id,
             s.apex_items    = COALESCE(rec.apex_items, s.apex_items),
-            s.session_db    = rec.session_db,
             s.updated_at    = rec.updated_at
         WHERE s.session_id  = rec.session_id
             AND s.user_id   = rec.user_id
