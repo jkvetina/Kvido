@@ -199,6 +199,10 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         IF UPPER(in_user_id) = sess.anonymous_user THEN
             RETURN;
         END IF;
+        --
+        IF sess.get_app_id() = 0 THEN
+            RETURN;
+        END IF;
 
         -- log request
         tree.log_module('START');
@@ -249,6 +253,10 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         is_active           CHAR(1);
     BEGIN
         sess.init_session(in_user_id);
+        --
+        IF UPPER(in_user_id) = sess.anonymous_user THEN
+            RETURN;
+        END IF;
 
         -- check app existance
         BEGIN
@@ -362,6 +370,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         rec.app_id          := sess.get_app_id();
         rec.page_id         := sess.get_page_id();
         rec.updated_at      := SYSDATE;
+        rec.created_at      := rec.updated_at;
         rec.today           := TO_CHAR(rec.updated_at, 'YYYY-MM-DD');
         --
         IF rec.page_id BETWEEN sess.app_min_page AND sess.app_max_page THEN
@@ -392,8 +401,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         RETURNING s.created_at INTO rec.created_at;
         --
         IF SQL%ROWCOUNT = 0 THEN
-            rec.created_at  := rec.updated_at;
-            --
             BEGIN
                 INSERT INTO sessions VALUES rec;
             EXCEPTION
@@ -436,28 +443,31 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
     PROCEDURE delete_session (
-        in_session_id       sessions.session_id%TYPE,
-        in_created_at       sessions.created_at%TYPE
+        in_session_id           sessions.session_id%TYPE,
+        in_created_at           sessions.created_at%TYPE
     ) AS
-        keep_this           logs.log_id%TYPE;
-        rows_to_delete      tree.arr_logs_log_id;
+        module_id               logs.log_id%TYPE;
+        rows_to_delete          tree.arr_logs_log_id;
     BEGIN
-        keep_this := tree.log_module();
+        module_id := tree.log_module();
         --
         SELECT l.log_id
         BULK COLLECT INTO rows_to_delete
         FROM logs l
         WHERE l.session_id      = in_session_id
-            AND l.created_at    >= TRUNC(in_created_at)
-        CONNECT BY l.log_parent = PRIOR l.log_id
-        START WITH l.log_id     = tree.get_tree_id();
+            AND l.created_at    >= TRUNC(in_created_at);
+        --
+        UPDATE sessions s
+        SET s.log_id            = NULL
+        WHERE s.session_id      = in_session_id;
         --
         IF rows_to_delete.FIRST IS NOT NULL THEN
             FOR i IN rows_to_delete.FIRST .. rows_to_delete.LAST LOOP
-                IF keep_this != rows_to_delete(i) THEN
-                    DELETE FROM logs_lobs   WHERE log_parent    = rows_to_delete(i);
-                    DELETE FROM logs        WHERE log_id        = rows_to_delete(i);
-                END IF;
+                CONTINUE WHEN rows_to_delete(i) = module_id;
+                --
+                DELETE FROM logs_lobs       WHERE log_parent    = rows_to_delete(i);
+                DELETE FROM logs_events     WHERE log_parent    = rows_to_delete(i);
+                DELETE FROM logs            WHERE log_id        = rows_to_delete(i);
             END LOOP;
         END IF;
         --
