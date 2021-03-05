@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210219214653'
+,p_last_upd_yyyymmddhh24miss=>'20210305214951'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(13047129913981104)
@@ -510,7 +510,7 @@ wwv_flow_api.create_page_button(
 ,p_button_action=>'REDIRECT_PAGE'
 ,p_button_template_options=>'#DEFAULT#'
 ,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_image_alt=>'Force'
+,p_button_image_alt=>'<span class="fa fa-tank" title="Force recompilation on all objects"></span>'
 ,p_button_position=>'RIGHT_OF_TITLE'
 ,p_button_redirect_url=>'f?p=&APP_ID.:950:&SESSION.::&DEBUG.:RP:P950_FORCE:Y'
 );
@@ -547,7 +547,7 @@ wwv_flow_api.create_page_process(
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'RECOMPILE'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'tree.log_module();',
+'tree.log_module(''RECOMPILE'');',
 '--',
 'recompile();',
 '--',
@@ -566,7 +566,7 @@ wwv_flow_api.create_page_process(
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'RECOMPILE_FORCE'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'tree.log_module();',
+'tree.log_module(''RECOMPILE_FORCE'');',
 '--',
 'recompile();  -- to reuse settings',
 '--',

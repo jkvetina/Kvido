@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210301203031'
+,p_last_upd_yyyymmddhh24miss=>'20210305215217'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(9544386426654050)
@@ -32,7 +32,7 @@ wwv_flow_api.create_page_plug(
 ,p_region_template_options=>'#DEFAULT#'
 ,p_component_template_options=>'#DEFAULT#'
 ,p_plug_template=>wwv_flow_api.id(64142195941700285)
-,p_plug_display_sequence=>40
+,p_plug_display_sequence=>30
 ,p_include_in_reg_disp_sel_yn=>'Y'
 ,p_plug_display_point=>'BODY'
 ,p_query_type=>'SQL'
@@ -621,7 +621,7 @@ wwv_flow_api.create_page_plug(
 ,p_region_template_options=>'#DEFAULT#'
 ,p_component_template_options=>'#DEFAULT#'
 ,p_plug_template=>wwv_flow_api.id(64142195941700285)
-,p_plug_display_sequence=>30
+,p_plug_display_sequence=>40
 ,p_include_in_reg_disp_sel_yn=>'Y'
 ,p_plug_grid_column_span=>6
 ,p_plug_display_point=>'BODY'
@@ -1892,9 +1892,12 @@ wwv_flow_api.create_page_process(
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'AUTO_UPDATE'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'tree.log_module(''AUTO_UPDATE'');',
+'--',
 'nav.remove_missing_pages(apex.get_item(''$AUTO_ID''));',
 'nav.add_new_pages(apex.get_item(''$AUTO_ID''));',
 '--',
+'tree.update_timer();',
 'apex.redirect();',
 ''))
 ,p_process_clob_language=>'PLSQL'
@@ -1910,10 +1913,11 @@ wwv_flow_api.create_page_process(
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'PUBLISH_CHANGES'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'tree.log_module(''PUBLISH_CHANGES'');',
-'DBMS_SNAPSHOT.REFRESH(''NAV_TOP_SRC'');',
-'tree.update_timer();',
+'tree.log_module(''REBUILD_MVW'', ''NAV_TOP_SRC'');',
 '--',
+'DBMS_SNAPSHOT.REFRESH(''NAV_TOP_SRC'');',
+'--',
+'tree.update_timer();',
 'apex.redirect();',
 ''))
 ,p_process_clob_language=>'PLSQL'
@@ -1929,7 +1933,11 @@ wwv_flow_api.create_page_process(
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'ADJUST_ROLES'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'tree.log_module(''ADJUST_ROLES'');',
+'--',
 'nav.adjust_peek_roles();',
+'--',
+'tree.update_timer();',
 ''))
 ,p_process_clob_language=>'PLSQL'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'

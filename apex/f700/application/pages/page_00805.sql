@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210302222628'
+,p_last_upd_yyyymmddhh24miss=>'20210305215501'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(24516054953743573)
@@ -1556,7 +1556,11 @@ wwv_flow_api.create_page_process(
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'RECOMPILE'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'tree.log_module(''RECOMPILE'');',
+'--',
 'recompile();',
+'--',
+'tree.update_timer();',
 ''))
 ,p_process_clob_language=>'PLSQL'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
