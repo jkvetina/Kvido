@@ -1,5 +1,17 @@
-CREATE OR REPLACE FORCE VIEW p951_tables AS
-WITH c AS (
+--DROP MATERIALIZED VIEW p951_tables;
+CREATE MATERIALIZED VIEW p951_tables
+BUILD DEFERRED
+REFRESH COMPLETE ON DEMAND
+AS
+WITH s AS (
+    -- columns count
+    SELECT
+        c.table_name,
+        COUNT(*) AS cols_
+    FROM user_tab_cols c
+    GROUP BY c.table_name
+),
+c AS (
     -- constraints overview
     SELECT
         c.table_name,
@@ -8,18 +20,16 @@ WITH c AS (
         NULLIF(SUM(CASE WHEN c.constraint_type = 'R' THEN 1 ELSE 0 END), 0) AS fk_
     FROM user_constraints c
     WHERE c.constraint_type     IN ('P', 'U', 'R')
-        AND c.table_name        = NVL(apex.get_item('$TABLE'), c.table_name)
     GROUP BY c.table_name
 ),
-x AS (
+i AS (
     -- indexes overview
     SELECT
-        x.table_name,
-        COUNT(x.table_name) AS ix_
-    FROM user_indexes x
-    WHERE x.index_type          != 'LOB'
-        AND x.table_name        = NVL(apex.get_item('$TABLE'), x.table_name)
-    GROUP BY x.table_name
+        i.table_name,
+        COUNT(i.table_name) AS ix_
+    FROM user_indexes i
+    WHERE i.index_type          != 'LOB'
+    GROUP BY i.table_name
 ),
 g AS (
     -- triggers overview
@@ -27,7 +37,6 @@ g AS (
         g.table_name,
         COUNT(g.table_name) AS trg_
     FROM user_triggers g
-    WHERE g.table_name          = NVL(apex.get_item('$TABLE'), g.table_name)
     GROUP BY g.table_name
 ),
 p AS (
@@ -36,22 +45,12 @@ p AS (
         p.table_name,
         COUNT(*) AS partitions
     FROM user_tab_partitions p
-    WHERE p.table_name          = NVL(apex.get_item('$TABLE'), p.table_name)
     GROUP BY p.table_name
-),
-o AS (
-    -- columns count
-    SELECT
-        o.table_name,
-        COUNT(*) AS cols_
-    FROM user_tab_cols o
-    WHERE o.table_name          = NVL(apex.get_item('$TABLE'), o.table_name)
-    GROUP BY o.table_name
 )
+--
 SELECT
     t.table_name,
-    --
-    o.cols_,
+    s.cols_,
     t.num_rows          AS rows_,
     --
     CASE WHEN c.pk_ IS NOT NULL
@@ -63,7 +62,7 @@ SELECT
         END AS uq_,
     --
     c.fk_,
-    x.ix_,
+    i.ix_,
     g.trg_,
     --
     p.partitions,
@@ -79,32 +78,34 @@ SELECT
         END AS is_iot,
     --
     CASE
+        WHEN t.read_only = 'YES'
+            THEN apex.get_icon('fa-check-square', '')
+        END AS is_read_only,
+    --
+    CASE
         WHEN t.row_movement = 'ENABLED'
             THEN apex.get_icon('fa-check-square', 'Row Movement enabled')
         END AS row_mov,
     --
-    ROUND(t.num_rows * t.avg_row_len / 1024, 2) AS size_,
+    ROUND(t.num_rows * t.avg_row_len / 1024, 0) AS size_,
     CASE WHEN ROUND(t.blocks * 8, 2) > 0 THEN
-        ROUND(t.blocks * 8, 2) - ROUND(t.num_rows * t.avg_row_len / 1024, 2) END AS wasted,
+        ROUND(t.blocks * 8, 2) - ROUND(t.num_rows * t.avg_row_len / 1024, 0) END AS wasted,
     --
     t.last_analyzed,
+    o.last_ddl_time,
     --
     'RECALC' AS action_recalc,
     'SKRINK' AS action_shrink
 FROM user_tables t
-LEFT JOIN user_mviews m
-    ON m.mview_name     = t.table_name
-LEFT JOIN c
-    ON c.table_name     = t.table_name
-LEFT JOIN x
-    ON x.table_name     = t.table_name
-LEFT JOIN g
-    ON g.table_name     = t.table_name
-LEFT JOIN p
-    ON p.table_name     = t.table_name
-LEFT JOIN o
-    ON o.table_name     = t.table_name
-WHERE t.table_name      = NVL(apex.get_item('$TABLE'), t.table_name)
-    AND t.table_name    NOT LIKE '%\__$' ESCAPE '\'
-    AND m.mview_name    IS NULL;
+JOIN user_objects o
+    ON o.object_name            = t.table_name
+    AND o.object_type           = 'TABLE'
+--
+LEFT JOIN s ON s.table_name     = t.table_name
+LEFT JOIN c ON c.table_name     = t.table_name
+LEFT JOIN i ON i.table_name     = t.table_name
+LEFT JOIN g ON g.table_name     = t.table_name
+LEFT JOIN p ON p.table_name     = t.table_name
+--
+WHERE t.table_name              NOT LIKE '%\__$' ESCAPE '\';
 

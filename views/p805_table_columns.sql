@@ -19,6 +19,7 @@ SELECT
         END AS data_type,
     --
     c.nullable,
+    c.data_default,
     --
     CASE WHEN c.column_id = 1 THEN 'Y' END AS is_first,
     CASE WHEN LEAD(c.column_id) OVER(PARTITION BY c.table_name ORDER BY c.column_id) IS NULL THEN 'Y' END AS is_last,

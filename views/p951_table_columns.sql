@@ -1,8 +1,13 @@
-CREATE OR REPLACE FORCE VIEW p951_table_columns AS
+--DROP MATERIALIZED VIEW p951_table_columns;
+CREATE MATERIALIZED VIEW p951_table_columns
+BUILD DEFERRED
+REFRESH COMPLETE ON DEMAND
+AS
 SELECT
-    d.column_id,
-    d.column_name,
-    d.data_type,
+    c.table_name,
+    c.column_id,
+    c.column_name,
+    c.data_type,
     --
     n.pk_,
     n.uq_,
@@ -21,10 +26,7 @@ SELECT
     m.comments,
     --
     apex.get_icon('fa-database-search', 'Show column dependencies') AS dep
-FROM user_tab_columns c
-JOIN p805_table_columns d
-    ON d.table_name     = c.table_name
-    AND d.column_id     = c.column_id
+FROM p805_table_columns c
 LEFT JOIN (
     SELECT
         m.table_name,
@@ -37,13 +39,11 @@ LEFT JOIN (
     JOIN user_constraints n
         ON n.constraint_name    = m.constraint_name
         AND n.constraint_type   IN ('P', 'R', 'U', 'C')
-    WHERE m.table_name          = apex.get_item('$TABLE')
     GROUP BY m.table_name, m.column_name
 ) n
     ON n.table_name     = c.table_name
     AND n.column_name   = c.column_name
 LEFT JOIN user_col_comments m
     ON m.table_name     = c.table_name
-    AND m.column_name   = c.column_name
-WHERE c.table_name      = apex.get_item('$TABLE');
+    AND m.column_name   = c.column_name;
 
