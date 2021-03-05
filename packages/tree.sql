@@ -989,15 +989,24 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             'SESS.CREATE_SESSION',
             'SESS.UPDATE_SESSION'
         ) THEN
-            rec.arguments   := SUBSTR(in_arguments, 1, tree.length_arguments);
-            rec.action_name := REGEXP_SUBSTR(rec.arguments, '^\[\"([^\"]+)\"', 1, 1, NULL, 1);
-            rec.arguments   := REGEXP_REPLACE(rec.arguments, '^\[\"([^\"]+)\",?', '[');
+            --rec.arguments   := SUBSTR(in_arguments, 1, tree.length_arguments);
+            --rec.action_name := REGEXP_SUBSTR(rec.arguments, '^\[\"([^\"]+)\"', 1, 1, NULL, 1);
+            --rec.arguments   := REGEXP_REPLACE(rec.arguments, '^\[\"([^\"]+)\",?', '[');
             --
-            IF rec.action_name = 'ON_LOAD:BEFORE_HEADER' THEN
-                rec.flag := tree.flag_apex_page;
-            ELSIF rec.action_name LIKE 'ON_SUBMIT%' THEN
-                rec.flag := tree.flag_apex_form;
+            IF in_arguments LIKE '["ON_LOAD:BEFORE_HEADER%' THEN
+                rec.flag            := tree.flag_apex_page;
+                curr_page_log_id    := NULL;
+            ELSIF in_arguments LIKE '["ON_SUBMIT%' THEN
+                rec.flag            := tree.flag_apex_form;
             END IF;
+        END IF;
+
+        -- fill log_id from recent page visit
+        rec.log_parent := NVL(rec.log_parent, curr_page_log_id);
+
+        -- use first argument as action_name for anonymous calls
+        IF rec.flag = tree.flag_module AND rec.module_name = '__anonymous_block' THEN
+            rec.action_name := SUBSTR(COALESCE(REGEXP_SUBSTR(rec.arguments, '^\["([^"]+)', 1, 1, NULL, 1), tree.empty_action), 1, tree.length_action);
         END IF;
 
         -- override flag for triggers
@@ -1050,13 +1059,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             rec.action_name := COALESCE(NULLIF(rec.action_name, tree.empty_action), 'UNKNOWN_ERROR');
             rec.message     := SUBSTR(rec.message || tree.get_error_stack(), 1, tree.length_message);
         END IF;
-
-        -- fill log_id from recent page visit
-        IF rec.flag = 'P' THEN
-            curr_page_log_id := NULL;
-        END IF;
-        --
-        rec.log_parent := NVL(rec.log_parent, curr_page_log_id);
 
         /*
         IF rec.flag = 'W' THEN
