@@ -82,11 +82,6 @@ SELECT
         END AS is_iot,
     --
     CASE
-        WHEN t.read_only = 'YES'
-            THEN apex.get_icon('fa-check-square', '')
-        END AS is_read_only,
-    --
-    CASE
         WHEN t.row_movement = 'ENABLED'
             THEN apex.get_icon('fa-check-square', 'Row Movement enabled')
         END AS row_mov,
