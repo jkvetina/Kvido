@@ -13,6 +13,7 @@ WITH p AS (
 SELECT
     p.partition_position,
     p.partition_name,
+    p.partition_name        AS partition_name_old,
     p.high_value,
     --
     LTRIM(REGEXP_SUBSTR(r.high_value, '[^,' || ']+', 1, 1)) AS header_1,
@@ -25,12 +26,10 @@ SELECT
         'FROM ' || p.table_name || ' PARTITION (' || p.partition_name || ') p'
         )), '/ROWSET/ROW/R')) AS count_rows,
     --
-    p.subpartition_count AS subpartitions,
+    p.subpartition_count    AS subpartitions,
     --
-    CASE
-        WHEN p.read_only = 'YES'
-            THEN apex.get_icon('fa-check-square', '')
-            END AS read_only,
+    p.read_only,
+    p.read_only             AS read_only_old,
     --
     apex.get_icon('fa-trash-o', 'Truncate partition (delete also data)') AS truncate_
 FROM p
