@@ -359,7 +359,7 @@ CREATE OR REPLACE PACKAGE tree AS
         in_start        TIMESTAMP,
         in_end          TIMESTAMP       := NULL
     )
-    RETURN VARCHAR2;
+    RETURN logs.timer%TYPE;
 
 
 

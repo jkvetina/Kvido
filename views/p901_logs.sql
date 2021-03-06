@@ -63,7 +63,22 @@ filter_lines AS (
         AND apex.get_item('$MODULE_LINE') IS NOT NULL
 )
 --
-SELECT l.*
+SELECT
+    l.log_id,
+    l.log_parent,
+    l.app_id,
+    l.user_id,
+    l.page_id,
+    l.flag,
+    l.action_name,
+    l.module_name,
+    l.module_line,
+    l.arguments,
+    l.message,
+    l.session_id,
+    app.get_duration(l.timer) AS timer,
+    l.created_at,
+    l.today
 FROM l
 LEFT JOIN filter_flags f        ON f.log_id = l.log_id
 LEFT JOIN filter_users u        ON u.log_id = l.log_id

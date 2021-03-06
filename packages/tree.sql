@@ -894,20 +894,11 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             units           => '%'
         );
 
-        -- calculate time spend since start
-        rec.timer :=
-            LPAD(EXTRACT(HOUR   FROM SYSTIMESTAMP - rec.created_at), 2, '0') || ':' ||
-            LPAD(EXTRACT(MINUTE FROM SYSTIMESTAMP - rec.created_at), 2, '0') || ':' ||
-            RPAD(REGEXP_REPLACE(
-                REGEXP_REPLACE(EXTRACT(SECOND FROM SYSTIMESTAMP - rec.created_at), '^[\.,]', '00,'),
-                '^(\d)[\.,]', '0\1,'
-            ), 9, '0');
-
         -- update progress in log
         UPDATE logs e
         SET e.message       = rec.message,
             e.arguments     = ROUND(in_progress * 100, 2) || '%',
-            e.timer         = rec.timer
+            e.timer         = tree.get_timestamp_diff(rec.created_at)
         WHERE e.log_id      = rec.log_id;
         --
         COMMIT;
@@ -1214,18 +1205,9 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         in_start        TIMESTAMP,
         in_end          TIMESTAMP       := NULL
     )
-    RETURN VARCHAR2 AS
-        diff            INTERVAL DAY TO SECOND;
+    RETURN logs.timer%TYPE AS
     BEGIN
-        diff := COALESCE(in_end, SYSTIMESTAMP) - in_start;
-        --
-        RETURN
-            LPAD(EXTRACT(HOUR   FROM diff), 2, '0') || ':' ||
-            LPAD(EXTRACT(MINUTE FROM diff), 2, '0') || ':' ||
-            RPAD(REGEXP_REPLACE(
-                REGEXP_REPLACE(EXTRACT(SECOND FROM diff), '^[\.,]', '00,'),
-                '^(\d)[\.,]', '0\1,'
-            ), 9, '0');
+        RETURN COALESCE(in_end, SYSTIMESTAMP) - in_start;
     END;
 
 
