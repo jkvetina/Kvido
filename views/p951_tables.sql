@@ -53,6 +53,10 @@ SELECT
     s.cols_,
     t.num_rows          AS rows_,
     --
+    CASE WHEN m.mview_name IS NOT NULL
+        THEN apex.get_icon('fa-check-square', 'Materialized view')
+        END AS mvw,
+    --
     CASE WHEN c.pk_ IS NOT NULL
         THEN apex.get_icon('fa-check-square', 'Table has Primary key')
         END AS pk_,
@@ -94,15 +98,15 @@ SELECT
     o.last_ddl_time,
     t.last_analyzed,
     --
-    CASE WHEN m.mview_name IS NULL THEN 'SKRINK' END AS action_shrink,
-    --
-    'RECALC' AS action_recalc
+    c.comments
 FROM user_tables t
 JOIN user_objects o
     ON o.object_name            = t.table_name
     AND o.object_type           = 'TABLE'
 LEFT JOIN user_mviews m                             -- this slows results significantly
     ON m.mview_name             = t.table_name
+LEFT JOIN user_tab_comments c
+    ON c.table_name             = t.table_name
 --
 LEFT JOIN s ON s.table_name     = t.table_name
 LEFT JOIN c ON c.table_name     = t.table_name
