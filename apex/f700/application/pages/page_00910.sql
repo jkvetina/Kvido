@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210305215217'
+,p_last_upd_yyyymmddhh24miss=>'20210306113623'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(9544386426654050)
@@ -1024,7 +1024,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_DISPLAY_ONLY'
 ,p_heading=>'SEQ'
 ,p_heading_alignment=>'LEFT'
-,p_display_sequence=>190
+,p_display_sequence=>200
 ,p_value_alignment=>'LEFT'
 ,p_attribute_02=>'VALUE'
 ,p_enable_filter=>true
@@ -1048,7 +1048,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_DISPLAY_ONLY'
 ,p_heading=>'Page Title'
 ,p_heading_alignment=>'LEFT'
-,p_display_sequence=>160
+,p_display_sequence=>170
 ,p_value_alignment=>'LEFT'
 ,p_attribute_02=>'VALUE'
 ,p_enable_filter=>true
@@ -1072,7 +1072,7 @@ wwv_flow_api.create_region_column(
 ,p_data_type=>'VARCHAR2'
 ,p_is_query_only=>true
 ,p_item_type=>'NATIVE_HIDDEN'
-,p_display_sequence=>200
+,p_display_sequence=>210
 ,p_attribute_01=>'Y'
 ,p_use_as_row_header=>false
 ,p_enable_sort_group=>true
@@ -1179,6 +1179,32 @@ wwv_flow_api.create_region_column(
 ,p_enable_hide=>true
 ,p_is_primary_key=>false
 ,p_include_in_export=>true
+);
+wwv_flow_api.create_region_column(
+ p_id=>wwv_flow_api.id(36801037677232737)
+,p_name=>'RESET_'
+,p_source_type=>'DB_COLUMN'
+,p_source_expression=>'RESET_'
+,p_data_type=>'VARCHAR2'
+,p_is_query_only=>true
+,p_item_type=>'NATIVE_DISPLAY_ONLY'
+,p_heading=>'Reset'
+,p_heading_alignment=>'CENTER'
+,p_display_sequence=>160
+,p_value_alignment=>'CENTER'
+,p_attribute_02=>'VALUE'
+,p_enable_filter=>true
+,p_filter_operators=>'C:S:CASE_INSENSITIVE:REGEXP'
+,p_filter_is_required=>false
+,p_filter_text_case=>'MIXED'
+,p_filter_lov_type=>'NONE'
+,p_use_as_row_header=>false
+,p_enable_sort_group=>true
+,p_enable_control_break=>true
+,p_enable_hide=>true
+,p_is_primary_key=>false
+,p_include_in_export=>false
+,p_escape_on_http_output=>false
 );
 wwv_flow_api.create_region_column(
  p_id=>wwv_flow_api.id(54991957621137372)
@@ -1373,7 +1399,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_LINK'
 ,p_heading=>'Page Group'
 ,p_heading_alignment=>'LEFT'
-,p_display_sequence=>170
+,p_display_sequence=>180
 ,p_value_alignment=>'LEFT'
 ,p_link_target=>'f?p=&APP_ID.:910:&SESSION.::&DEBUG.:RP:P910_PAGE_GROUP:&PAGE_GROUP.'
 ,p_link_text=>'&PAGE_GROUP.'
@@ -1401,7 +1427,7 @@ wwv_flow_api.create_region_column(
 ,p_item_type=>'NATIVE_LINK'
 ,p_heading=>'Auth Scheme'
 ,p_heading_alignment=>'LEFT'
-,p_display_sequence=>180
+,p_display_sequence=>190
 ,p_value_alignment=>'LEFT'
 ,p_link_target=>'f?p=&APP_ID.:910:&SESSION.::&DEBUG.:RP:P910_AUTH_SCHEME:&AUTH_SCHEME.'
 ,p_link_text=>'&AUTH_SCHEME.'
@@ -1532,7 +1558,7 @@ wwv_flow_api.create_ig_report_view(
 wwv_flow_api.create_ig_report_column(
  p_id=>wwv_flow_api.id(9550759550721192)
 ,p_view_id=>wwv_flow_api.id(67854543386757508)
-,p_display_seq=>15
+,p_display_seq=>16
 ,p_column_id=>wwv_flow_api.id(9539953848654006)
 ,p_is_visible=>false
 ,p_is_frozen=>false
@@ -1603,7 +1629,7 @@ wwv_flow_api.create_ig_report_column(
 wwv_flow_api.create_ig_report_column(
  p_id=>wwv_flow_api.id(31252058322896095)
 ,p_view_id=>wwv_flow_api.id(67854543386757508)
-,p_display_seq=>14
+,p_display_seq=>15
 ,p_column_id=>wwv_flow_api.id(54992802104137381)
 ,p_is_visible=>true
 ,p_is_frozen=>false
@@ -1612,11 +1638,20 @@ wwv_flow_api.create_ig_report_column(
 wwv_flow_api.create_ig_report_column(
  p_id=>wwv_flow_api.id(31252599510896097)
 ,p_view_id=>wwv_flow_api.id(67854543386757508)
-,p_display_seq=>17
+,p_display_seq=>18
 ,p_column_id=>wwv_flow_api.id(54992866211137382)
 ,p_is_visible=>true
 ,p_is_frozen=>false
 ,p_width=>163
+);
+wwv_flow_api.create_ig_report_column(
+ p_id=>wwv_flow_api.id(40193442600196811)
+,p_view_id=>wwv_flow_api.id(67854543386757508)
+,p_display_seq=>14
+,p_column_id=>wwv_flow_api.id(36801037677232737)
+,p_is_visible=>true
+,p_is_frozen=>false
+,p_width=>70
 );
 wwv_flow_api.create_ig_report_column(
  p_id=>wwv_flow_api.id(55179435935361672)

@@ -39,6 +39,10 @@ SELECT
         END || p.page_name
         AS page_name__,
     --
+    CASE WHEN i.item_name IS NOT NULL
+        THEN apex.get_icon('fa-check-square', 'Page contains RESET item')
+        END AS reset_,
+    --
     apex.get_icon('fa-play')        AS run_page,
     apex.get_page_link(n.page_id)   AS run_page_url,
     --
@@ -47,6 +51,10 @@ FROM navigation n
 LEFT JOIN apex_application_pages p
     ON p.application_id         = n.app_id
     AND p.page_id               = n.page_id
+LEFT JOIN apex_application_page_items i
+    ON i.application_id         = n.app_id
+    AND i.page_id               = n.page_id
+    AND i.item_name             = 'P' || n.page_id || '_RESET'
 LEFT JOIN p910_nav_pages_to_remove r
     ON r.app_id                 = n.app_id
     AND r.page_id               = n.page_id
@@ -81,6 +89,8 @@ SELECT
         THEN REPLACE('    ', ' ', '&' || 'nbsp; ')
         END || p.page_name
         AS page_name__,
+    --
+    NULL AS reset_,
     --
     apex.get_icon('fa-play')        AS run_page,
     apex.get_page_link(p.page_id)   AS run_page_url,
