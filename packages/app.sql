@@ -63,7 +63,7 @@ CREATE OR REPLACE PACKAGE BODY app AS
 
 
     FUNCTION manipulate_page_label (
-        in_page_name VARCHAR2
+        in_page_name        VARCHAR2
     )
     RETURN VARCHAR2 AS
     BEGIN
@@ -73,6 +73,26 @@ CREATE OR REPLACE PACKAGE BODY app AS
             '${ENV_NAME}',      app.get_env_name()),
             '${LOGOUT}',        apex.get_icon('fa-coffee', 'Logout')  -- app.get_logout_label
         );
+    END;
+
+
+
+    FUNCTION get_duration (
+        in_interval         INTERVAL DAY TO SECOND
+    )
+    RETURN VARCHAR2 AS
+    BEGIN
+        RETURN REGEXP_SUBSTR(in_interval, '(\d{2}:\d{2}:\d{2}\.\d{3})');
+    END;
+
+
+
+    FUNCTION get_duration (
+        in_interval         NUMBER
+    )
+    RETURN VARCHAR2 AS
+    BEGIN
+        RETURN TO_CHAR(TRUNC(SYSDATE) + in_interval, 'HH24:MI:SS');
     END;
 
 END;

@@ -46,9 +46,7 @@ SELECT
     s.updated_at,
     s.log_id,
     --
-    CASE WHEN (s.updated_at - s.created_at) >= 1 THEN '23:59'
-        ELSE TO_CHAR(TRUNC(SYSDATE) + (s.updated_at - s.created_at), 'HH24:MI')
-        END AS timer,
+    app.get_duration(s.updated_at - s.created_at) AS duration,
     --
     apex.get_icon('fa-external-link', 'Open same page with same global items')  AS redirect_,
     apex.get_icon('fa-trash-o',       'Delete session and logs')                AS delete_

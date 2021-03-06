@@ -21,7 +21,21 @@ CREATE OR REPLACE PACKAGE app AS
 
 
     FUNCTION manipulate_page_label (
-        in_page_name VARCHAR2
+        in_page_name        VARCHAR2
+    )
+    RETURN VARCHAR2;
+
+
+
+    FUNCTION get_duration (
+        in_interval         INTERVAL DAY TO SECOND
+    )
+    RETURN VARCHAR2;
+
+
+
+    FUNCTION get_duration (
+        in_interval         NUMBER
     )
     RETURN VARCHAR2;
 
