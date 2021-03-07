@@ -48,6 +48,13 @@ CREATE OR REPLACE PACKAGE apex AS
 
 
 
+    FUNCTION is_developer_y_null (
+        in_username         VARCHAR2        := NULL
+    )
+    RETURN CHAR;
+
+
+
     --
     -- Check if DEBUG is on
     --

@@ -3,8 +3,8 @@ SELECT
     t.role_name AS role_name
 FROM (
     SELECT
-        'IS_DEVELOPER'          AS role_name,
-        auth.is_developer()     AS assigned
+        'IS_DEVELOPER'                  AS role_name,
+        apex.is_developer_y_null()      AS assigned
     FROM DUAL
     --
     --UNION ALL  -- more roles

@@ -319,7 +319,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
         in_user_id          CONSTANT users.user_id%TYPE := sess.get_user_id();
-        is_developer        CONSTANT CHAR(1)            := CASE WHEN apex.is_developer() THEN 'Y' END;
         --
         is_active           CHAR(1);
         rec                 sessions%ROWTYPE;
@@ -337,7 +336,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             SELECT 'Y' INTO is_active
             FROM apps a
             WHERE a.app_id          = sess.get_app_id()
-                AND (a.is_active    = 'Y' OR is_developer = 'Y');
+                AND (a.is_active    = 'Y' OR apex.is_developer_y_null() = 'Y');
         EXCEPTION
         WHEN NO_DATA_FOUND THEN
             RAISE_APPLICATION_ERROR(tree.app_exception_code, 'APPLICATION_OFFLINE');

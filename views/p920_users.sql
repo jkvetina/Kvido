@@ -41,12 +41,19 @@ SELECT
     u.user_name,
     u.lang,
     u.is_active,
-    u.updated_by,
-    u.updated_at,
+    --
+    CASE
+        WHEN apex.is_developer_y_null(u.user_id) = 'Y'
+            THEN apex.get_icon('fa-check-square', 'Welcome to the club')
+            END AS is_dev,
+    --
     s.sessions_,
     l.logs_,
     r.roles_,
-    u.ROWID AS rid
+    --
+    u.updated_by,
+    u.updated_at,
+    u.ROWID             AS rid
 FROM users u
 LEFT JOIN s ON s.user_id = u.user_id
 LEFT JOIN l ON l.user_id = u.user_id

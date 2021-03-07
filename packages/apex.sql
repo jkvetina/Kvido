@@ -1,7 +1,7 @@
 CREATE OR REPLACE PACKAGE BODY apex AS
 
     FUNCTION is_developer (
-        in_username         VARCHAR2
+        in_username         VARCHAR2        := NULL
     )
     RETURN BOOLEAN AS
         valid               VARCHAR2(1);
@@ -19,6 +19,16 @@ CREATE OR REPLACE PACKAGE BODY apex AS
     EXCEPTION
     WHEN NO_DATA_FOUND THEN
         RETURN FALSE;
+    END;
+
+
+
+    FUNCTION is_developer_y_null (
+        in_username         VARCHAR2        := NULL
+    )
+    RETURN CHAR AS
+    BEGIN
+        RETURN CASE WHEN apex.is_developer(in_username) THEN 'Y' END;
     END;
 
 
