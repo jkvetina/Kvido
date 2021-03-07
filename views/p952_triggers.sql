@@ -27,8 +27,6 @@ SELECT
     t.table_name,
     g.trigger_name,
     --
-    apex.get_icon('fa-database-pointer', 'Show table details') AS table_,
-    --
     CASE
         WHEN g.trigger_name         = t.table_name || '__'  -- get_trigger_name(), used in TREE package too
             AND g.trigger_type      = 'COMPOUND'
