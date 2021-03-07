@@ -2,7 +2,7 @@ CREATE OR REPLACE FORCE VIEW p800_sheet_preview AS
 WITH s AS (
     SELECT
         s.*,
-        l.timer
+        app.get_duration(l.timer) AS timer
     FROM uploaded_file_sheets s
     LEFT JOIN logs l
         ON l.log_id             = s.result_log_id

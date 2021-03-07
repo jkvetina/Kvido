@@ -10,7 +10,11 @@ SELECT
     p.page_name,
     p.region_name,
     p.page_group,
-    p.auth_scheme,
+    --
+    CASE WHEN p.auth_scheme LIKE '%MUST_NOT_BE_PUBLIC_USER%'
+        THEN apex.get_icon('fa-check-square', 'MUST_NOT_BE_PUBLIC_USER')
+        ELSE p.auth_scheme
+        END AS auth_scheme,
     --
     apex.get_page_link(u.target_page_id) AS page_link,
     --
@@ -39,7 +43,11 @@ SELECT
     p.page_name,
     p.region_name,
     p.page_group,
-    p.auth_scheme,
+    --
+    CASE WHEN p.auth_scheme LIKE '%MUST_NOT_BE_PUBLIC_USER%'
+        THEN apex.get_icon('fa-check-square', 'MUST_NOT_BE_PUBLIC_USER')
+        ELSE p.auth_scheme
+        END AS auth_scheme,
     --
     apex.get_page_link(p.page_id)                                   AS page_link,
     --
