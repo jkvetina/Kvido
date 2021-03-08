@@ -31,6 +31,8 @@ prompt --install
 @@application/shared_components/user_interface/lovs/email_username_format.sql
 @@application/shared_components/user_interface/lovs/login_remember_username.sql
 @@application/shared_components/user_interface/lovs/timeframe_4_weeks.sql
+@@application/shared_components/user_interface/lovs/lov_roles.sql
+@@application/shared_components/user_interface/lovs/lov_users.sql
 @@application/shared_components/user_interface/lovs/user_theme_preference.sql
 @@application/shared_components/user_interface/lovs/view_as_report_chart.sql
 @@application/pages/page_groups.sql
@@ -131,6 +133,7 @@ prompt --install
 @@application/pages/page_00910.sql
 @@application/pages/page_00920.sql
 @@application/pages/page_00930.sql
+@@application/pages/page_00940.sql
 @@application/pages/page_00950.sql
 @@application/pages/page_00951.sql
 @@application/pages/page_00952.sql

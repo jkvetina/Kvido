@@ -24,7 +24,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210307172948'
+,p_last_upd_yyyymmddhh24miss=>'20210308214311'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(51084378175768182)
@@ -58,13 +58,20 @@ wwv_flow_api.create_page_plug(
 ,p_plug_display_point=>'BODY'
 ,p_query_type=>'SQL'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'SELECT role_name',
-'FROM user_roles_assigned',
-'ORDER BY 1;'))
+'SELECT r.role_id',
+'FROM user_roles r',
+'WHERE r.app_id      = sess.get_app_id()',
+'    AND r.is_active = ''Y''',
+'UNION ALL',
+'SELECT ''IS_DEVELOPER''',
+'FROM DUAL',
+'WHERE apex.is_developer_y_null() = ''Y''',
+'ORDER BY 1;',
+''))
 ,p_plug_source_type=>'NATIVE_JQM_LIST_VIEW'
 ,p_plug_query_num_rows=>15
 ,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
-,p_attribute_02=>'ROLE_NAME'
+,p_attribute_02=>'ROLE_ID'
 );
 wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(51085852844768197)

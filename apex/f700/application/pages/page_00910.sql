@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210306113623'
+,p_last_upd_yyyymmddhh24miss=>'20210308215749'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(9544386426654050)
@@ -964,7 +964,7 @@ wwv_flow_api.create_page_plug(
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(55683505945970082)
-,p_plug_name=>'Auth Schemes &nbsp; <span class="fa fa-user-magnifying-glass fa-lg"></span>'
+,p_plug_name=>'Application Roles'
 ,p_parent_plug_id=>wwv_flow_api.id(55228539480963586)
 ,p_region_template_options=>'#DEFAULT#'
 ,p_plug_template=>wwv_flow_api.id(64142195941700285)
@@ -1789,11 +1789,11 @@ wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(13646637503013513)
 ,p_button_sequence=>30
 ,p_button_plug_id=>wwv_flow_api.id(55228539480963586)
-,p_button_name=>'SWITCH_TO_GRID'
+,p_button_name=>'CLOSE_ROLE_PEEK'
 ,p_button_action=>'REDIRECT_PAGE'
 ,p_button_template_options=>'#DEFAULT#'
 ,p_button_template_id=>wwv_flow_api.id(63744470351014400)
-,p_button_image_alt=>'<span class="fa fa-table-edit" title="Switch to grid edit"></span>'
+,p_button_image_alt=>'<span class="fa fa-times" title="Close Role Peek"></span>'
 ,p_button_position=>'RIGHT_OF_TITLE'
 ,p_button_redirect_url=>'f?p=&APP_ID.:910:&SESSION.::&DEBUG.:RP:P910_TREE_MODE,P910_PEEK_PAGE,P910_PEEK_ROLES:,,'
 );
