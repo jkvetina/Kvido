@@ -31,8 +31,15 @@ COMPOUND TRIGGER
     BEFORE EACH ROW IS
     BEGIN
         IF NOT DELETING THEN
+            -- sequence
+            IF :NEW.setup_id IS NULL THEN
+                :NEW.setup_id   := setup_id.NEXTVAL;
+            END IF;
+            
             -- overwrite some values
-            :NEW.updated_by     := COALESCE(in_updated_by, :NEW.updated_by);
+            :NEW.app_id         := COALESCE(:NEW.app_id, sess.get_app_id());
+            --
+            :NEW.updated_by     := in_updated_by;
             :NEW.updated_at     := in_updated_at;
         END IF;
     EXCEPTION
