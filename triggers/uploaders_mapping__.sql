@@ -37,7 +37,7 @@ COMPOUND TRIGGER
             :NEW.is_nn          := NULLIF(:NEW.is_nn,       'N');
             :NEW.is_hidden      := NULLIF(:NEW.is_hidden,   'N');
             --
-            :NEW.updated_by     := COALESCE(in_updated_by, :NEW.updated_by);
+            :NEW.updated_by     := in_updated_by;
             :NEW.updated_at     := in_updated_at;
         END IF;
     EXCEPTION

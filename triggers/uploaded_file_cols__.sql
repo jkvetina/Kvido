@@ -32,7 +32,7 @@ COMPOUND TRIGGER
     BEGIN
         IF NOT DELETING THEN
             -- overwrite some values
-            --:NEW.updated_by     := COALESCE(in_updated_by, :NEW.updated_by);
+            --:NEW.updated_by     := in_updated_by;
             --:NEW.updated_at     := in_updated_at;
             NULL;
         END IF;

@@ -35,7 +35,7 @@ COMPOUND TRIGGER
             :NEW.user_id        := sess.get_user_name(:NEW.user_id);
             :NEW.is_active      := NULLIF(:NEW.is_active, 'N');
             --
-            :NEW.updated_by     := COALESCE(in_updated_by, :NEW.updated_by);
+            :NEW.updated_by     := in_updated_by;
             :NEW.updated_at     := in_updated_at;
         END IF;
     EXCEPTION
