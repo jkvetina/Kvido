@@ -32,10 +32,22 @@ COMPOUND TRIGGER
     BEGIN
         IF NOT DELETING THEN
             -- overwrite some values
+            :NEW.app_id         := COALESCE(:NEW.app_id,        sess.get_app_id());
             :NEW.is_active      := NULLIF(:NEW.is_active, 'N');
             --
-            :NEW.updated_by     := COALESCE(in_updated_by, :NEW.updated_by);
+            :NEW.updated_by     := in_updated_by;
             :NEW.updated_at     := in_updated_at;
+        END IF;
+        --
+        IF DELETING THEN
+            -- delete user roles
+            DELETE FROM user_roles r
+            WHERE r.app_id      = :OLD.app_id
+                AND r.role_id   = :OLD.role_id;
+        END IF;
+        --
+        IF INSERTING AND :NEW.role_id = 'IS_DEVELOPER' THEN
+            tree.raise_error('INTERNAL_ROLE_ID');
         END IF;
     EXCEPTION
     WHEN tree.app_exception THEN
