@@ -1564,6 +1564,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         IF in_age < 0 THEN
             EXECUTE IMMEDIATE 'ALTER TABLE logs_lobs DISABLE CONSTRAINT fk_logs_lobs_logs';
             EXECUTE IMMEDIATE 'TRUNCATE TABLE sessions';
+            EXECUTE IMMEDIATE 'TRUNCATE TABLE logs_events';
             EXECUTE IMMEDIATE 'TRUNCATE TABLE logs_lobs';
             EXECUTE IMMEDIATE 'TRUNCATE TABLE ' || tree.table_name || ' CASCADE';
             EXECUTE IMMEDIATE 'ALTER TABLE logs_lobs ENABLE CONSTRAINT fk_logs_lobs_logs';
@@ -1589,20 +1590,25 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
         -- remove old partitions
         FOR c IN (
-            SELECT table_name, partition_name, high_value, partition_position
-            FROM user_tab_partitions p
+            SELECT p.table_name, p.partition_name
+            FROM user_tab_partitions p,
+                -- trick to convert LONG to VARCHAR2 on the fly
+                XMLTABLE('/ROWSET/ROW'
+                    PASSING (DBMS_XMLGEN.GETXMLTYPE(
+                        'SELECT p.high_value'                                       || CHR(10) ||
+                        'FROM user_tab_partitions p'                                || CHR(10) ||
+                        'WHERE p.table_name = ''' || p.table_name || ''''           || CHR(10) ||
+                        '    AND p.partition_name = ''' || p.partition_name || ''''
+                    ))
+                    COLUMNS high_value VARCHAR2(4000) PATH 'HIGH_VALUE'
+                ) h
             WHERE p.table_name = tree.table_name
-                AND p.partition_position > 1
-                AND p.partition_position < (
-                    SELECT MAX(partition_position) - NVL(in_age, tree.table_rows_max_age)
-                    FROM user_tab_partitions
-                    WHERE table_name = tree.table_name
-                )
+                AND TO_DATE(REGEXP_SUBSTR(h.high_value, '(\d{4}-\d{2}-\d{2})'), 'YYYY-MM-DD') < TRUNC(SYSDATE) - COALESCE(in_age, tree.table_rows_max_age)
         ) LOOP
             -- delete old data in batches
             FOR i IN 1 .. 10 LOOP
                 EXECUTE IMMEDIATE
-                    'DELETE FROM ' || tree.table_name ||
+                    'DELETE FROM ' || c.table_name ||
                     ' PARTITION (' || c.partition_name || ') WHERE ROWNUM < 100000';
                 --
                 COMMIT;  -- to reduce UNDO violations
@@ -1610,13 +1616,13 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
             -- check if data in partition exists
             EXECUTE IMMEDIATE
-                'SELECT COUNT(*) FROM ' || tree.table_name ||
+                'SELECT COUNT(*) FROM ' || c.table_name ||
                 ' PARTITION (' || c.partition_name || ') WHERE ROWNUM = 1'
                 INTO data_exists;
             --
             IF data_exists = 0 THEN
                 EXECUTE IMMEDIATE
-                    'ALTER TABLE ' || tree.table_name ||
+                    'ALTER TABLE ' || c.table_name ||
                     ' DROP PARTITION ' || c.partition_name || ' UPDATE GLOBAL INDEXES';
             END IF;
         END LOOP;
