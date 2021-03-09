@@ -610,7 +610,6 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         rows_errors#        SIMPLE_INTEGER := 0;
         --
         idx                 PLS_INTEGER;
-        delete_flag_col     VARCHAR2(30);
         --
         TYPE target_table_t
             IS TABLE OF     uploaders_u$%ROWTYPE INDEX BY PLS_INTEGER;  /** STAGE_TABLE */
@@ -679,8 +678,20 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         -- bulk collect rows from uploaded file into memory
         FOR c IN (
             SELECT
-                CASE WHEN f.column_id > 0
-                    THEN 'p.COL' || LPAD(f.column_id, 3, '0')
+                CASE
+                    WHEN m.overwrite_value IS NOT NULL
+                        THEN REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                            m.overwrite_value,
+                            '${LINE_NUMBER}',   'p.line_number - 1'),
+                            '${FILE_NAME}',     '''' || in_file_name  || ''''),
+                            '${SHEET_NAME}',    '''' || in_sheet_name || ''''),
+                            '${USER_ID}',       'sess.get_user_id()'),
+                            '${APP_ID}',        'sess.get_app_id()'),
+                            '${SYSDATE}',       'SYSDATE'),
+                            '${THIS}',          CASE WHEN f.column_id > 0 THEN 'p.COL' || LPAD(f.column_id, 3, '0') ELSE 'NULL' END
+                        )
+                    WHEN f.column_id > 0
+                        THEN 'p.COL' || LPAD(f.column_id, 3, '0')
                     ELSE 'NULL'
                     END || ' AS ' || LOWER(c.column_name) || ',' AS line_
             FROM user_tab_cols c
@@ -705,7 +716,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         --
         r := uploader.get_cursor_from_query(q_dynamic);
         --
-        FETCH r BULK COLLECT INTO target_table;
+        FETCH r BULK COLLECT INTO target_table LIMIT 100000;
         CLOSE r;
         --
         tree.log_debug('COLLECTION READY', target_table.COUNT);
