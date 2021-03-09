@@ -5,9 +5,26 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         in_file_name        uploaded_files.file_name%TYPE,
         in_target           uploaded_files.uploader_id%TYPE     := NULL
     ) AS
+        rec                 uploaded_files%ROWTYPE;
     BEGIN
         tree.log_module(in_session_id, in_file_name, in_target);
         --
+        rec.app_id := sess.get_app_id();
+
+        -- check uploader
+        IF in_target IS NOT NULL THEN
+            BEGIN
+                SELECT u.uploader_id INTO rec.uploader_id
+                FROM uploaders u
+                WHERE u.app_id          = rec.app_id
+                    AND u.uploader_id   = in_target;
+            EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                tree.raise_error('UPLOADER_MISSING');
+            END;
+        END IF;
+
+        -- store files
         FOR c IN (
             SELECT
                 f.name,
@@ -16,16 +33,12 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             FROM apex_application_temp_files f
             WHERE f.name = in_file_name
         ) LOOP
-            INSERT INTO uploaded_files (
-                file_name, file_size, mime_type, blob_content, uploader_id
-            )
-            VALUES (
-                c.name,
-                DBMS_LOB.GETLENGTH(c.blob_content),
-                c.mime_type,
-                c.blob_content,
-                in_target
-            );
+            rec.file_name       := c.name;
+            rec.file_size       := DBMS_LOB.GETLENGTH(c.blob_content);
+            rec.mime_type       := c.mime_type;
+            rec.blob_content    := c.blob_content;
+            --
+            INSERT INTO uploaded_files VALUES rec;
         END LOOP;
         --
         tree.update_timer();
