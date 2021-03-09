@@ -196,14 +196,30 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         in_uploader_id      uploaded_file_sheets.uploader_id%TYPE,
         in_commit           VARCHAR2                                    := NULL
     ) AS
-        uploader_procedure  VARCHAR2(30);
+        uploader_procedure  user_procedures.object_name%TYPE;
+        pre_procedure       uploaders.pre_procedure%TYPE;
+        post_procedure      uploaders.pre_procedure%TYPE;
     BEGIN
         tree.log_module(in_file_name, in_sheet_id, in_uploader_id, in_commit);
 
-        -- check for pre processing procedure
+        -- check for pre/post processing procedures
+        SELECT u.pre_procedure, u.post_procedure
+        INTO pre_procedure, post_procedure
+        FROM uploaders u
+        WHERE u.app_id          = sess.get_app_id()
+            AND u.uploader_id   = in_uploader_id;
         --
-        -- @TODO:
-        --
+        IF pre_procedure IS NOT NULL THEN
+            BEGIN
+                EXECUTE IMMEDIATE
+                    'BEGIN ' || pre_procedure || '; END;';
+            EXCEPTION
+            WHEN tree.app_exception THEN
+                RAISE;
+            WHEN OTHERS THEN
+                tree.raise_error('PRE_PROCEDURE_FAILED');
+            END;
+        END IF;
 
         -- check if customized upload procedure exists
         BEGIN
@@ -231,11 +247,17 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         uploader.copy_uploaded_data_to_collection(in_uploader_id);
 
         -- check for post processing procedure
-        --
-        -- @TODO:
-        --
-
-        -- redirect ???
+        IF post_procedure IS NOT NULL THEN
+            BEGIN
+                EXECUTE IMMEDIATE
+                    'BEGIN ' || post_procedure || '; END;';
+            EXCEPTION
+            WHEN tree.app_exception THEN
+                RAISE;
+            WHEN OTHERS THEN
+                tree.raise_error('POST_PROCEDURE_FAILED');
+            END;
+        END IF;
         --
         tree.update_timer();
     EXCEPTION
