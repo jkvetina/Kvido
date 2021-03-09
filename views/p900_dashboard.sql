@@ -18,9 +18,9 @@ SELECT
     NULLIF(SUM(CASE WHEN l.flag = 'W' THEN 1 ELSE 0 END), 0)    AS warnings,
     NULLIF(SUM(CASE WHEN l.flag = 'E' THEN 1 ELSE 0 END), 0)    AS errors,
     NULLIF(SUM(CASE WHEN l.flag = 'L' THEN 1 ELSE 0 END), 0)    AS longops,
-    NULLIF(SUM(CASE WHEN l.flag = 'S' THEN 1 ELSE 0 END), 0)    AS schedulers,
-    --NULLIF(COUNT(b.log_id), 0)                                  AS lobs,
-    NULL AS lobs,
+    --
+    NULLIF(MAX(j.jobs_), 0)                                     AS schedulers,
+    NULLIF(MAX(b.lobs_), 0)                                     AS lobs,
     --
     NULLIF(SUM(CASE WHEN l.flag = 'G' THEN 1 ELSE 0 END), 0)    AS triggers,
     NULLIF(SUM(CASE WHEN l.flag = 'P' THEN 1 ELSE 0 END), 0)    AS pages,
@@ -33,19 +33,40 @@ SELECT
     apex.get_icon('fa-trash-o', 'Delete related logs')          AS action
 FROM x
 JOIN logs l
-    ON l.app_id         = x.app_id
-    AND l.today         = x.today
---LEFT JOIN logs_lobs b
---    ON b.log_parent     = l.log_id
+    ON l.app_id             = x.app_id
+    AND l.today             = x.today
 LEFT JOIN (
     SELECT
         s.today,
         COUNT(s.session_id)                 AS sessions_,
         COUNT(DISTINCT s.user_id)           AS users_
     FROM sessions s
-    WHERE s.app_id      = sess.get_app_id()
+    WHERE s.app_id          = sess.get_app_id()
     GROUP BY s.today
 ) s
-    ON s.today          = l.today
+    ON s.today              = x.today
+LEFT JOIN (
+    SELECT
+        x.today,
+        COUNT(d.log_id) AS jobs_
+    FROM user_scheduler_job_run_details d
+    JOIN x
+        ON x.today          = TO_CHAR(d.actual_start_date, 'YYYY-MM-DD')
+    GROUP BY x.today
+) j
+    ON j.today              = x.today
+LEFT JOIN (
+    SELECT
+        x.today,
+        COUNT(b.log_id)     AS lobs_
+    FROM logs_lobs b
+    JOIN logs l
+        ON l.log_id         = b.log_parent
+    JOIN x
+        ON x.app_id         = l.app_id
+        AND x.today         = l.today
+    GROUP BY x.today
+) b
+    ON b.today              = x.today
 GROUP BY x.today;
 
