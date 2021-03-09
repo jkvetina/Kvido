@@ -14,7 +14,7 @@ wwv_flow_api.component_begin (
 wwv_flow_api.create_page(
  p_id=>935
 ,p_user_interface_id=>wwv_flow_api.id(63766922917014449)
-,p_name=>'#fa-badge-list Grants'
+,p_name=>'#fa-id-badge Grants'
 ,p_alias=>'GRANTS'
 ,p_step_title=>'Grants'
 ,p_autocomplete_on_off=>'OFF'
@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210308222818'
+,p_last_upd_yyyymmddhh24miss=>'20210309201317'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(60595177798468928)
