@@ -1,8 +1,8 @@
 CREATE OR REPLACE FORCE VIEW p940_jobs_details AS
 WITH x AS (
     SELECT
-        c.app_id,
-        c.today__
+        c.today,
+        c.app_id
     FROM calendar c
     WHERE c.app_id      = sess.get_app_id()
         AND c.today     = app.get_date_str()
@@ -21,7 +21,5 @@ SELECT
     d.additional_info
 FROM user_scheduler_job_run_details d
 JOIN x
-    ON CAST(d.actual_start_date AS DATE)    >= x.today__
-    AND CAST(d.actual_start_date AS DATE)   < x.today__ + 1
-;
+    ON x.today          = TO_CHAR(d.actual_start_date, 'YYYY-MM-DD');
 
