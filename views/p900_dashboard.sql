@@ -20,6 +20,7 @@ SELECT
     NULLIF(SUM(CASE WHEN l.flag = 'L' THEN 1 ELSE 0 END), 0)    AS longops,
     --
     NULLIF(MAX(j.jobs_), 0)                                     AS schedulers,
+    NULLIF(MAX(j.failed_), 0)                                   AS failed,
     NULLIF(MAX(b.lobs_), 0)                                     AS lobs,
     --
     NULLIF(SUM(CASE WHEN l.flag = 'G' THEN 1 ELSE 0 END), 0)    AS triggers,
@@ -48,7 +49,8 @@ LEFT JOIN (
 LEFT JOIN (
     SELECT
         x.today,
-        COUNT(d.log_id) AS jobs_
+        COUNT(d.log_id)                                         AS jobs_,
+        SUM(CASE WHEN d.status = 'SUCCEEDED' THEN 0 ELSE 1 END) AS failed_
     FROM user_scheduler_job_run_details d
     JOIN x
         ON x.today          = TO_CHAR(d.actual_start_date, 'YYYY-MM-DD')

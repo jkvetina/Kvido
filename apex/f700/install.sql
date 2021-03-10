@@ -33,6 +33,7 @@ prompt --install
 @@application/shared_components/user_interface/lovs/timeframe_4_weeks.sql
 @@application/shared_components/user_interface/lovs/lov_roles.sql
 @@application/shared_components/user_interface/lovs/lov_users.sql
+@@application/shared_components/user_interface/lovs/lov_yn.sql
 @@application/shared_components/user_interface/lovs/user_theme_preference.sql
 @@application/shared_components/user_interface/lovs/view_as_report_chart.sql
 @@application/pages/page_groups.sql
