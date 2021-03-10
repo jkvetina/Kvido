@@ -997,7 +997,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
         -- use first argument as action_name for anonymous calls
         IF rec.flag = tree.flag_module AND rec.module_name = '__anonymous_block' THEN
-            rec.action_name := SUBSTR(COALESCE(REGEXP_SUBSTR(rec.arguments, '^\["([^"]+)', 1, 1, NULL, 1), tree.empty_action), 1, tree.length_action);
+            rec.action_name := SUBSTR(COALESCE(REGEXP_SUBSTR(in_arguments, '^\["([^"]+)', 1, 1, NULL, 1), tree.empty_action), 1, tree.length_action);
         END IF;
 
         -- override flag for triggers
