@@ -1,11 +1,11 @@
 CREATE OR REPLACE PACKAGE BODY uploader AS
 
     PROCEDURE upload_file (
-        in_session_id       sessions.session_id%TYPE,
-        in_file_name        uploaded_files.file_name%TYPE,
-        in_target           uploaded_files.uploader_id%TYPE     := NULL
+        in_session_id           sessions.session_id%TYPE,
+        in_file_name            uploaded_files.file_name%TYPE,
+        in_target               uploaded_files.uploader_id%TYPE     := NULL
     ) AS
-        rec                 uploaded_files%ROWTYPE;
+        rec                     uploaded_files%ROWTYPE;
     BEGIN
         tree.log_module(in_session_id, in_file_name, in_target);
         --
@@ -52,12 +52,21 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
     PROCEDURE upload_files (
-        in_session_id       sessions.session_id%TYPE
+        in_session_id           sessions.session_id%TYPE
     ) AS
-        in_uploader_id      CONSTANT uploaders.uploader_id%TYPE := apex.get_item('$TARGET');
+        in_uploader_id          CONSTANT uploaders.uploader_id%TYPE := apex.get_item('$TARGET');
         --
-        multiple_files      APEX_T_VARCHAR2;
+        multiple_files          APEX_T_VARCHAR2;
     BEGIN
+        /*
+        -- uploader is posted in different session
+        APEX_SESSION.ATTACH (
+            p_app_id        => sess.get_app_id(),
+            p_page_id       => sess.get_page_id(),
+            p_session_id    => in_session_id
+        );
+        */
+        --
         tree.log_module(in_session_id, in_uploader_id);
         --
         multiple_files := APEX_STRING.SPLIT(apex.get_item('$UPLOAD'), ':');
@@ -89,7 +98,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
     FUNCTION get_basename (
-        in_file_name        uploaded_files.file_name%TYPE
+        in_file_name            uploaded_files.file_name%TYPE
     )
     RETURN VARCHAR2 AS
     BEGIN
@@ -99,8 +108,8 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
     PROCEDURE parse_file (
-        in_file_name        uploaded_file_sheets.file_name%TYPE,
-        in_uploader_id      uploaded_file_sheets.uploader_id%TYPE       := NULL
+        in_file_name            uploaded_file_sheets.file_name%TYPE,
+        in_uploader_id          uploaded_file_sheets.uploader_id%TYPE       := NULL
     ) AS
     BEGIN
         tree.log_module(in_file_name, in_uploader_id);
@@ -191,14 +200,14 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
     PROCEDURE process_file_sheet (
-        in_file_name        uploaded_file_sheets.file_name%TYPE,
-        in_sheet_id         uploaded_file_sheets.sheet_id%TYPE,
-        in_uploader_id      uploaded_file_sheets.uploader_id%TYPE,
-        in_commit           VARCHAR2                                    := NULL
+        in_file_name            uploaded_file_sheets.file_name%TYPE,
+        in_sheet_id             uploaded_file_sheets.sheet_id%TYPE,
+        in_uploader_id          uploaded_file_sheets.uploader_id%TYPE,
+        in_commit               VARCHAR2                                    := NULL
     ) AS
-        uploader_procedure  user_procedures.object_name%TYPE;
-        pre_procedure       uploaders.pre_procedure%TYPE;
-        post_procedure      uploaders.pre_procedure%TYPE;
+        uploader_procedure      user_procedures.object_name%TYPE;
+        pre_procedure           uploaders.pre_procedure%TYPE;
+        post_procedure          uploaders.pre_procedure%TYPE;
     BEGIN
         tree.log_module(in_file_name, in_sheet_id, in_uploader_id, in_commit);
 
@@ -270,15 +279,15 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
     PROCEDURE copy_uploaded_data_to_collection (
-        in_uploader_id      uploaders.uploader_id%TYPE,
-        in_header_name      VARCHAR2                    := '$HEADER_'  -- to rename cols from apex_collections view
+        in_uploader_id          uploaders.uploader_id%TYPE,
+        in_header_name          VARCHAR2                    := '$HEADER_'  -- to rename cols from apex_collections view
     ) AS
-        in_collection       CONSTANT VARCHAR2(30)       := 'SQL_' || sess.get_session_id();  -- used in view p800_sheet_rows
-        in_query            VARCHAR2(32767);
+        in_collection           CONSTANT VARCHAR2(30)       := 'SQL_' || sess.get_session_id();  -- used in view p800_sheet_rows
+        in_query                VARCHAR2(32767);
         --
-        out_cols            PLS_INTEGER;
-        out_cursor          PLS_INTEGER                 := DBMS_SQL.OPEN_CURSOR;
-        out_desc            DBMS_SQL.DESC_TAB;
+        out_cols                PLS_INTEGER;
+        out_cursor              PLS_INTEGER                 := DBMS_SQL.OPEN_CURSOR;
+        out_desc                DBMS_SQL.DESC_TAB;
     BEGIN
         tree.log_module(in_uploader_id, in_header_name);
 
@@ -334,9 +343,9 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
     PROCEDURE delete_file (
-        in_file_name        uploaded_files.file_name%TYPE
+        in_file_name            uploaded_files.file_name%TYPE
     ) AS
-        file_exists         CHAR(1) := 'N';
+        file_exists             CHAR(1) := 'N';
     BEGIN
         tree.log_module(in_file_name);
 
@@ -375,10 +384,10 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
     PROCEDURE download_file (
-        in_file_name        uploaded_files.file_name%TYPE
+        in_file_name            uploaded_files.file_name%TYPE
     ) AS
-        out_blob_content    uploaded_files.blob_content%TYPE;
-        out_mime_type       uploaded_files.mime_type%TYPE;
+        out_blob_content        uploaded_files.blob_content%TYPE;
+        out_mime_type           uploaded_files.mime_type%TYPE;
     BEGIN
         tree.log_module(in_file_name);
         --
@@ -545,7 +554,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
     FUNCTION get_procedure_name (
-        in_uploader_id      uploaders.uploader_id%TYPE
+        in_uploader_id          uploaders.uploader_id%TYPE
     )
     RETURN uploaders.target_table%TYPE AS
     BEGIN
@@ -555,7 +564,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
     FUNCTION get_u$_table_name (
-        in_table_name       uploaders.target_table%TYPE
+        in_table_name           uploaders.target_table%TYPE
     )
     RETURN uploaders.target_table%TYPE AS
     BEGIN
@@ -565,11 +574,11 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
     PROCEDURE rebuild_dml_err_table (
-        in_table_name       uploaders.target_table%TYPE
+        in_table_name           uploaders.target_table%TYPE
     ) AS
-        err_table_name      uploaders.target_table%TYPE;
+        err_table_name          uploaders.target_table%TYPE;
     BEGIN
-        err_table_name      := uploader.get_u$_table_name(in_table_name);
+        err_table_name          := uploader.get_u$_table_name(in_table_name);
         --
         tree.log_module(in_table_name, err_table_name, uploader.dml_tables_owner);
 
@@ -615,44 +624,44 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
     PROCEDURE uploader_template (
-        in_file_name        uploaded_file_sheets.file_name%TYPE,
-        in_sheet_id         uploaded_file_sheets.sheet_id%TYPE,
-        in_uploader_id      uploaded_file_sheets.uploader_id%TYPE,
-        in_commit           VARCHAR2                                    := NULL
+        in_file_name            uploaded_file_sheets.file_name%TYPE,
+        in_sheet_id             uploaded_file_sheets.sheet_id%TYPE,
+        in_uploader_id          uploaded_file_sheets.uploader_id%TYPE,
+        in_commit               VARCHAR2                                    := NULL
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
-        in_target_table     uploaders.target_table%TYPE;
-        in_sheet_name       uploaded_file_sheets.sheet_name%TYPE;
-        in_user_id          CONSTANT uploaded_files.created_by%TYPE     := sess.get_user_id();
-        in_app_id           CONSTANT uploaded_files.app_id%TYPE         := sess.get_app_id();
-        in_sysdate          CONSTANT DATE                               := SYSDATE;
+        in_target_table         uploaders.target_table%TYPE;
+        in_sheet_name           uploaded_file_sheets.sheet_name%TYPE;
+        in_user_id              CONSTANT uploaded_files.created_by%TYPE     := sess.get_user_id();
+        in_app_id               CONSTANT uploaded_files.app_id%TYPE         := sess.get_app_id();
+        in_sysdate              CONSTANT DATE                               := SYSDATE;
         --
-        rows_to_insert      uploader.target_rows_t      := uploader.target_rows_t();
-        rows_to_update      uploader.target_rows_t      := uploader.target_rows_t();
-        rows_to_delete      uploader.target_rows_t      := uploader.target_rows_t();
+        rows_to_insert          uploader.target_rows_t      := uploader.target_rows_t();
+        rows_to_update          uploader.target_rows_t      := uploader.target_rows_t();
+        rows_to_delete          uploader.target_rows_t      := uploader.target_rows_t();
         --
-        indexes_insert      uploader.target_ids_t       := uploader.target_ids_t();
-        indexes_update      uploader.target_ids_t       := uploader.target_ids_t();
+        indexes_insert          uploader.target_ids_t       := uploader.target_ids_t();
+        indexes_update          uploader.target_ids_t       := uploader.target_ids_t();
         --
-        rows_inserted#      SIMPLE_INTEGER := 0;
-        rows_updated#       SIMPLE_INTEGER := 0;
-        rows_deleted#       SIMPLE_INTEGER := 0;
-        rows_errors#        SIMPLE_INTEGER := 0;
+        rows_inserted#          SIMPLE_INTEGER := 0;
+        rows_updated#           SIMPLE_INTEGER := 0;
+        rows_deleted#           SIMPLE_INTEGER := 0;
+        rows_errors#            SIMPLE_INTEGER := 0;
         --
-        idx                 PLS_INTEGER;
+        idx                     PLS_INTEGER;
         --
         TYPE target_table_t
-            IS TABLE OF     uploaders_u$%ROWTYPE INDEX BY PLS_INTEGER;  /** STAGE_TABLE */
+            IS TABLE OF         uploaders_u$%ROWTYPE INDEX BY PLS_INTEGER;  /** STAGE_TABLE */
         --
-        target_table        target_table_t;
-        r                   SYS_REFCURSOR;
+        target_table            target_table_t;
+        r                       SYS_REFCURSOR;
         --
-        q_start             VARCHAR2(4000);
-        q_end               VARCHAR2(4000);
-        q_dynamic           VARCHAR2(32767);
+        q_start                 VARCHAR2(4000);
+        q_end                   VARCHAR2(4000);
+        q_dynamic               VARCHAR2(32767);
         --
-        module_id           logs.log_id%TYPE;
+        module_id               logs.log_id%TYPE;
     BEGIN
         module_id := tree.log_module(in_file_name, in_sheet_id, in_uploader_id, in_commit);
         --
@@ -968,12 +977,12 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
     FUNCTION generate_columns (
-        in_uploader_id      uploaders.uploader_id%TYPE,
-        in_type             VARCHAR2,
-        in_indentation      PLS_INTEGER                     := NULL
+        in_uploader_id          uploaders.uploader_id%TYPE,
+        in_type                 VARCHAR2,
+        in_indentation          PLS_INTEGER                     := NULL
     )
     RETURN VARCHAR2 AS
-        out_                VARCHAR2(32767);
+        out_                    VARCHAR2(32767);
     BEGIN
         tree.log_module(in_uploader_id, in_type, in_indentation);
         --
@@ -1019,14 +1028,14 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
     PROCEDURE generate_procedure (
-        in_uploader_id      uploaders.uploader_id%TYPE
+        in_uploader_id          uploaders.uploader_id%TYPE
     ) AS
-        in_template_table   CONSTANT VARCHAR2(30) := 'uploaders';               -- table used in template
-        in_target_table     CONSTANT VARCHAR2(30) := LOWER(in_uploader_id);
+        in_template_table       CONSTANT VARCHAR2(30) := 'uploaders';               -- table used in template
+        in_target_table         CONSTANT VARCHAR2(30) := LOWER(in_uploader_id);
         --
-        skipping_flag       VARCHAR2(64);
-        line_               VARCHAR2(4000);
-        out_                VARCHAR2(32767);
+        skipping_flag           VARCHAR2(64);
+        line_                   VARCHAR2(4000);
+        out_                    VARCHAR2(32767);
     BEGIN
         tree.log_module(in_uploader_id);
         --
@@ -1123,7 +1132,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
     FUNCTION get_cursor_from_query (
-        in_query VARCHAR2
+        in_query                VARCHAR2
     )
     RETURN SYS_REFCURSOR
     AS
