@@ -409,9 +409,10 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
     PROCEDURE create_uploader (
-        in_uploader_id      uploaders.uploader_id%TYPE
+        in_uploader_id          uploaders.uploader_id%TYPE,
+        in_clear_current        BOOLEAN                                 := TRUE
     ) AS
-        rec                 uploaders%ROWTYPE;
+        rec                     uploaders%ROWTYPE;
     BEGIN
         tree.log_module(in_uploader_id);
         --
@@ -447,7 +448,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         -- update mappings and procedure
         uploader.create_uploader_mappings (
             in_uploader_id      => in_uploader_id,
-            in_clear_current    => TRUE
+            in_clear_current    => in_clear_current
         );
         --
         tree.update_timer();
@@ -461,22 +462,20 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
 
 
     PROCEDURE create_uploader_mappings (
-        in_uploader_id      uploaders_mapping.uploader_id%TYPE,
-        in_clear_current    BOOLEAN                                 := FALSE
+        in_uploader_id          uploaders_mapping.uploader_id%TYPE,
+        in_clear_current        BOOLEAN                                 := FALSE
     ) AS
-        TYPE list_mappings  IS TABLE OF uploaders_mapping%ROWTYPE INDEX BY PLS_INTEGER;
-        curr_mappings       list_mappings;
+        TYPE list_mappings      IS TABLE OF uploaders_mapping%ROWTYPE INDEX BY PLS_INTEGER;
+        curr_mappings           list_mappings;
     BEGIN
         tree.log_module(in_uploader_id, CASE WHEN in_clear_current THEN 'Y' END);
 
         -- store current mappings
-        IF NOT in_clear_current THEN
-            SELECT m.*
-            BULK COLLECT INTO curr_mappings
-            FROM uploaders_mapping m
-            WHERE m.app_id          = sess.get_app_id()
-                AND m.uploader_id   = in_uploader_id;
-        END IF;
+        SELECT m.*
+        BULK COLLECT INTO curr_mappings
+        FROM uploaders_mapping m
+        WHERE m.app_id          = sess.get_app_id()
+            AND m.uploader_id   = in_uploader_id;
 
         -- delete not existing columns
         DELETE FROM uploaders_mapping m
@@ -506,18 +505,28 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         END LOOP;
 
         -- set previous values (for some columns)
-        IF NOT in_clear_current AND curr_mappings.FIRST IS NOT NULL THEN
-            FOR i IN curr_mappings.FIRST .. curr_mappings.LAST LOOP
-                UPDATE uploaders_mapping m
-                SET m.is_key                = curr_mappings(i).is_key,
-                    m.is_nn                 = curr_mappings(i).is_nn,
-                    m.is_hidden             = curr_mappings(i).is_hidden,
-                    m.source_column         = curr_mappings(i).source_column,
-                    m.overwrite_value       = curr_mappings(i).overwrite_value
-                WHERE m.app_id              = curr_mappings(i).app_id
-                    AND m.uploader_id       = curr_mappings(i).uploader_id
-                    AND m.target_column     = curr_mappings(i).target_column;
-            END LOOP;
+        IF curr_mappings.FIRST IS NOT NULL THEN
+            IF NOT in_clear_current THEN
+                FOR i IN curr_mappings.FIRST .. curr_mappings.LAST LOOP
+                    UPDATE uploaders_mapping m
+                    SET m.is_key                = curr_mappings(i).is_key,
+                        m.is_nn                 = curr_mappings(i).is_nn,
+                        m.is_hidden             = curr_mappings(i).is_hidden,
+                        m.source_column         = curr_mappings(i).source_column,
+                        m.overwrite_value       = curr_mappings(i).overwrite_value
+                    WHERE m.app_id              = curr_mappings(i).app_id
+                        AND m.uploader_id       = curr_mappings(i).uploader_id
+                        AND m.target_column     = curr_mappings(i).target_column;
+                END LOOP;
+            ELSE
+                FOR i IN curr_mappings.FIRST .. curr_mappings.LAST LOOP
+                    UPDATE uploaders_mapping m
+                    SET m.overwrite_value       = curr_mappings(i).overwrite_value
+                    WHERE m.app_id              = curr_mappings(i).app_id
+                        AND m.uploader_id       = curr_mappings(i).uploader_id
+                        AND m.target_column     = curr_mappings(i).target_column;
+                END LOOP;
+            END IF;
         END IF;
 
         -- rebuild uploader procedure
