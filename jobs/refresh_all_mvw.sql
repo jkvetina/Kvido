@@ -13,7 +13,7 @@ BEGIN
         job_name            => in_job_name,
         job_type            => 'PLSQL_BLOCK',-- STORED_PROCEDURE
         job_action          => q'[BEGIN
-    sess.create_session('JOB', 700);
+    sess.create_session(USER, 700);
     FOR c IN (
         SELECT m.mview_name
         FROM user_mviews m

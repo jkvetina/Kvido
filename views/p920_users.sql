@@ -57,5 +57,8 @@ SELECT
 FROM users u
 LEFT JOIN s ON s.user_id = u.user_id
 LEFT JOIN l ON l.user_id = u.user_id
-LEFT JOIN r ON r.user_id = u.user_id;
+LEFT JOIN r ON r.user_id = u.user_id
+WHERE u.user_id NOT IN (
+    USER
+);
 
