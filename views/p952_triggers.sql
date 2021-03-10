@@ -47,10 +47,14 @@ SELECT
     r.calls_,
     r.inserted_,
     r.updated_,
-    r.deleted_
+    r.deleted_,
+    --
+    o.last_ddl_time
 FROM user_tables t
 LEFT JOIN user_triggers g
     ON g.table_name     = t.table_name
+LEFT JOIN user_objects o
+    ON o.object_name    = g.trigger_name
 LEFT JOIN user_mviews v
     ON v.mview_name     = t.table_name
 LEFT JOIN r
