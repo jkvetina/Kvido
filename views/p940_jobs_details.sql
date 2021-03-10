@@ -16,7 +16,7 @@ SELECT
     d.status,
     --d.session_id,
     d.error#,
-    d.errors,
+    d.errors                            AS error_desc,
     d.output,
     d.additional_info
 FROM user_scheduler_job_run_details d
