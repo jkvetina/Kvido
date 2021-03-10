@@ -1098,11 +1098,8 @@ CREATE OR REPLACE PACKAGE BODY tree AS
     RETURN BOOLEAN AS
     BEGIN
         FOR i IN 1 .. in_list.COUNT LOOP
-            IF (in_row.page_id              = in_list(i).page_id            OR in_list(i).page_id       IS NULL)
-                AND (in_row.user_id         LIKE in_list(i).user_id         OR in_list(i).user_id       IS NULL)
-                AND (in_row.module_name     LIKE in_list(i).module_name     OR in_list(i).module_name   IS NULL)
-                AND (in_row.flag            = in_list(i).flag               OR in_list(i).flag          IS NULL)
-                --AND (sess.get_role_status(in_list(i).role_id)               OR in_list(i).role_id       IS NULL)
+            IF (in_row.module_name  LIKE in_list(i).module_name OR in_list(i).module_name   IS NULL)
+                AND (in_row.flag    = in_list(i).flag           OR in_list(i).flag          IS NULL)
             THEN
                 RETURN TRUE;
             END IF;
@@ -1734,18 +1731,26 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
 
     PROCEDURE init AS
+        is_dev              CONSTANT logs_setup.is_dev%TYPE     := CASE WHEN apex.is_developer()    THEN 'Y' ELSE 'N' END;
+        is_debug            CONSTANT logs_setup.is_debug%TYPE   := CASE WHEN apex.is_debug()        THEN 'Y' ELSE 'N' END;
     BEGIN
         -- clear maps
         map_modules := arr_map_module_to_id();
         map_actions := arr_map_module_to_id();
         --DBMS_SESSION.RESET_PACKAGE;
 
-        -- prepare arrays when session starts
         -- load whitelist/blacklist data from logs_tracing table
+        -- prepare arrays when session starts
+        -- this block is initialized with every APEX request
+        -- so user_id and page_id, debug mode wont change until next request
         SELECT t.*
         BULK COLLECT INTO rows_whitelist
         FROM logs_setup t
         WHERE t.app_id          = sess.get_app_id()
+            AND (t.user_id      = sess.get_user_id()    OR t.user_id    IS NULL)
+            AND (t.page_id      = sess.get_page_id()    OR t.page_id    IS NULL)
+            AND (t.is_dev       = is_dev                OR t.is_dev     IS NULL)
+            AND (t.is_debug     = is_debug              OR t.is_debug   IS NULL)
             AND t.is_tracked    = 'Y'
             AND ROWNUM          <= rows_limit;
         --
@@ -1753,6 +1758,10 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         BULK COLLECT INTO rows_blacklist
         FROM logs_setup t
         WHERE t.app_id          = sess.get_app_id()
+            AND (t.user_id      = sess.get_user_id()    OR t.user_id    IS NULL)
+            AND (t.page_id      = sess.get_page_id()    OR t.page_id    IS NULL)
+            AND (t.is_dev       = is_dev                OR t.is_dev     IS NULL)
+            AND (t.is_debug     = is_debug              OR t.is_debug   IS NULL)
             AND t.is_tracked    = 'N'
             AND ROWNUM          <= rows_limit;
     END;

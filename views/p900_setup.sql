@@ -12,8 +12,11 @@ SELECT
     --
     s.flag,
     s.module_name,
-    s.apex_debug,
+    --
+    s.is_dev,
+    s.is_debug,
     s.is_tracked,
+    --
     s.updated_by,
     s.updated_at
 FROM logs_setup s
