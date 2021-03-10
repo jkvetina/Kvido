@@ -215,18 +215,20 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             NULL;
         END;
 
-        --
-        BEGIN
-            INSERT INTO calendar (app_id, today, today__)
-            VALUES (
-                sess.get_app_id(),
-                TO_CHAR(SYSDATE, 'YYYY-MM-DD'),
-                TRUNC(SYSDATE)
-            );
-        EXCEPTION
-        WHEN DUP_VAL_ON_INDEX THEN
-            NULL;
-        END;
+        -- create record in calendar
+        IF sess.get_app_id() > 0 THEN
+            BEGIN
+                INSERT INTO calendar (app_id, today, today__)
+                VALUES (
+                    sess.get_app_id(),
+                    TO_CHAR(SYSDATE, 'YYYY-MM-DD'),
+                    TRUNC(SYSDATE)
+                );
+            EXCEPTION
+            WHEN DUP_VAL_ON_INDEX THEN
+                NULL;
+            END;
+        END IF;
 
         -- insert or update sessions table
         sess.update_session();
