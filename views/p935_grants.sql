@@ -19,6 +19,7 @@ FROM role_sys_privs r
 LEFT JOIN session_privs s
     ON s.privilege      = r.privilege
 UNION ALL
+--
 SELECT
     u.privilege,
     NULL                AS role,
@@ -37,6 +38,5 @@ SELECT
         END AS admin_option
 FROM user_sys_privs u
 LEFT JOIN session_privs s
-    ON s.privilege      = u.privilege
-ORDER BY 1;
+    ON s.privilege      = u.privilege;
 
