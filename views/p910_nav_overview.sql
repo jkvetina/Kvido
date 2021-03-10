@@ -5,6 +5,9 @@ WITH q AS (
         q.page_id,
         q.order#    AS seq#
     FROM nav_top_src q
+    --
+    -- @TODO: WELL, THIS NEED SOME WORK, NEW/ADDED PAGE IS NOT ON CORRECT PLACE
+    --
 )
 SELECT
     n.app_id,

@@ -12,8 +12,9 @@ SELECT
         END AS name
 FROM roles r
 UNION ALL
+--
 SELECT
-    'IS_DEVELOPER' AS role_id,
+    'IS_DEVELOPER' AS role_id,      -- fixed role
     --
     CASE WHEN nav.is_role_peeking_enabled('IS_DEVELOPER') = 'Y'
         THEN '<b>' || 'IS_DEVELOPER' || '</b>'

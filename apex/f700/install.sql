@@ -26,16 +26,12 @@ prompt --install
 @@application/shared_components/logic/application_settings.sql
 @@application/shared_components/navigation/tabs/standard.sql
 @@application/shared_components/navigation/tabs/parent.sql
-@@application/shared_components/user_interface/lovs/access_roles.sql
-@@application/shared_components/user_interface/lovs/desktop_theme_styles.sql
 @@application/shared_components/user_interface/lovs/email_username_format.sql
 @@application/shared_components/user_interface/lovs/login_remember_username.sql
-@@application/shared_components/user_interface/lovs/timeframe_4_weeks.sql
 @@application/shared_components/user_interface/lovs/lov_roles.sql
 @@application/shared_components/user_interface/lovs/lov_users.sql
 @@application/shared_components/user_interface/lovs/lov_yn.sql
 @@application/shared_components/user_interface/lovs/user_theme_preference.sql
-@@application/shared_components/user_interface/lovs/view_as_report_chart.sql
 @@application/pages/page_groups.sql
 @@application/comments.sql
 @@application/shared_components/navigation/breadcrumbs/breadcrumb.sql
@@ -140,7 +136,6 @@ prompt --install
 @@application/pages/page_00951.sql
 @@application/pages/page_00952.sql
 @@application/pages/page_00955.sql
-@@application/pages/page_00960.sql
 @@application/pages/page_09999.sql
 @@application/deployment/definition.sql
 @@application/deployment/checks.sql
