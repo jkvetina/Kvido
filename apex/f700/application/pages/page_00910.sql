@@ -983,7 +983,7 @@ wwv_flow_api.create_page_plug(
 ,p_plug_query_num_rows=>1000
 ,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
 ,p_attribute_02=>'NAME'
-,p_attribute_16=>'f?p=&APP_ID.:910:&SESSION.::&DEBUG.:RP:P910_PEEK_PAGE,P910_PEEK_ROLES,P910_PEEK_ROLE:&P910_PEEK_PAGE.,&P910_PEEK_ROLES.,&AUTH_SCHEME.'
+,p_attribute_16=>'f?p=&APP_ID.:910:&SESSION.::&DEBUG.:RP,:P910_PEEK_PAGE,P910_PEEK_ROLES,P910_PEEK_ROLE:&P910_PEEK_PAGE.,&P910_PEEK_ROLES.,&ROLE_ID.'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(67834774792737768)
