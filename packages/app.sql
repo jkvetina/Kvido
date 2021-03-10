@@ -62,6 +62,24 @@ CREATE OR REPLACE PACKAGE BODY app AS
 
 
 
+    PROCEDURE set_date (
+        in_date             DATE
+    ) AS
+    BEGIN
+        apex.set_item('G_DATE', TO_CHAR(in_date, sess.format_date));
+    END;
+
+
+
+    PROCEDURE set_date_str (
+        in_date             VARCHAR2
+    ) AS
+    BEGIN
+        apex.set_item('G_DATE', TO_CHAR(TO_DATE(in_date, sess.format_date), sess.format_date));
+    END;
+
+
+
     FUNCTION manipulate_page_label (
         in_page_name        VARCHAR2
     )

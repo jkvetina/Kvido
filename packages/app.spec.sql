@@ -20,6 +20,18 @@ CREATE OR REPLACE PACKAGE app AS
 
 
 
+    PROCEDURE set_date (
+        in_date             DATE
+    );
+
+
+
+    PROCEDURE set_date_str (
+        in_date             VARCHAR2
+    );
+
+
+
     FUNCTION manipulate_page_label (
         in_page_name        VARCHAR2
     )
