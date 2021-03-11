@@ -255,12 +255,32 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         is_active           CHAR(1);
     BEGIN
         sess.init_session(in_user_id);
-        --
+
+        -- prevent sessions for anonymous (unlogged) users
         IF UPPER(in_user_id) = sess.anonymous_user THEN
             RETURN;
         END IF;
 
-        -- check app existance
+        -- prevent multiple calls
+        IF in_app_id        = sess.get_app_id()
+            AND in_user_id  = sess.get_user_id()
+        THEN
+            BEGIN
+                APEX_SESSION.ATTACH (
+                    p_app_id        => sess.get_app_id(),
+                    p_page_id       => in_page_id,
+                    p_session_id    => sess.get_session_id()
+                );
+                --
+                COMMIT;
+                RETURN;
+            EXCEPTION
+            WHEN OTHERS THEN
+                NULL;  -- continue
+            END;
+        END IF;
+
+        -- check app existence
         BEGIN
             SELECT 'Y' INTO is_active
             FROM apps a
@@ -476,14 +496,14 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             DELETE FROM sessions s
             WHERE s.session_id = in_session_id;
             --
-            APEX_SESSION.DELETE_SESSION(in_session_id);
+            -- may throw ORA-20987: APEX - Your session has ended
+            -- not even others handler can capture this
+            --APEX_SESSION.DELETE_SESSION(in_session_id);
         END IF;
         --
         tree.update_timer();
     EXCEPTION
     WHEN OTHERS THEN
-        ROLLBACK;
-        --
         tree.raise_error('DELETE_SESSION_FAILED');
     END;
 
