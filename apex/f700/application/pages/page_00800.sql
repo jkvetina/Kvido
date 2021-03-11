@@ -2669,14 +2669,14 @@ wwv_flow_api.create_ig_report_column(
 wwv_flow_api.create_ig_report_column(
  p_id=>wwv_flow_api.id(25501180302916101)
 ,p_view_id=>wwv_flow_api.id(25498817486916085)
-,p_display_seq=>1
+,p_display_seq=>2
 ,p_column_id=>wwv_flow_api.id(25071798561009660)
 ,p_is_visible=>false
 ,p_is_frozen=>false
 ,p_width=>90
 ,p_sort_order=>1
 ,p_sort_direction=>'ASC'
-,p_sort_nulls=>'LAST'
+,p_sort_nulls=>'FIRST'
 );
 wwv_flow_api.create_ig_report_column(
  p_id=>wwv_flow_api.id(25502902793916108)
