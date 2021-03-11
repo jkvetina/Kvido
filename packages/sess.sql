@@ -445,7 +445,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
     PROCEDURE delete_session (
         in_session_id           sessions.session_id%TYPE,
-        in_created_at           sessions.created_at%TYPE
+        in_today                sessions.today%TYPE
     ) AS
         module_id               logs.log_id%TYPE;
         rows_to_delete          tree.arr_logs_log_id;
@@ -456,7 +456,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         BULK COLLECT INTO rows_to_delete
         FROM logs l
         WHERE l.session_id      = in_session_id
-            AND l.created_at    >= TRUNC(in_created_at);
+            AND l.today         = in_today;
         --
         UPDATE sessions s
         SET s.log_id            = NULL

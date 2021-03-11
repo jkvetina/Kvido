@@ -879,15 +879,12 @@ wwv_flow_api.create_page_process(
 ,p_process_name=>'DELETE_SESSION'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
 'sess.delete_session (',
-'    in_session_id => apex.get_item(''$DELETE''),',
-'    in_created_at => app.get_date() - 1',
+'    in_session_id   => apex.get_item(''$DELETE''),',
+'    in_today        => app.get_date_str()',
 ');',
 '--',
 'apex.set_item(''$DELETE'');',
-'apex.redirect(',
-'    in_names => ''P902_RESET'',  -- keep current filters',
-'    in_values => ''''',
-');',
+'apex.redirect_with_items();',
 ''))
 ,p_process_clob_language=>'PLSQL'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'

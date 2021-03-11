@@ -208,7 +208,7 @@ CREATE OR REPLACE PACKAGE sess AS
     --
     PROCEDURE delete_session (
         in_session_id       sessions.session_id%TYPE,
-        in_created_at       sessions.created_at%TYPE
+        in_today            sessions.today%TYPE
     );
 
 
