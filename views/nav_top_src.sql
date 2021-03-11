@@ -18,6 +18,7 @@ SELECT  -- fake first record to have correct data types
     '-' AS is_hidden,
     0   AS order#
 FROM DUAL
+WHERE 1 = 0
 UNION ALL
 SELECT
     t.page_id,
