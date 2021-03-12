@@ -2022,7 +2022,7 @@ wwv_flow_api.create_page_button(
 ,p_button_template_options=>'#DEFAULT#'
 ,p_button_template_id=>wwv_flow_api.id(63744470351014400)
 ,p_button_is_hot=>'Y'
-,p_button_image_alt=>'Start Now'
+,p_button_image_alt=>'<span class="fa fa-play" title="Start job right now"></span>'
 ,p_button_position=>'RIGHT_OF_TITLE'
 ,p_button_redirect_url=>'f?p=&APP_ID.:940:&SESSION.::&DEBUG.::P940_JOB_NAME,P940_START:&P940_JOB_NAME.,Y'
 ,p_button_condition=>'P940_JOB_NAME'
