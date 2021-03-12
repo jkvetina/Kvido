@@ -178,3 +178,7 @@ BEGIN
 END;
 /
 
+
+SELECT * FROM user_objects;
+
+

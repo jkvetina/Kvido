@@ -87,6 +87,8 @@ BEGIN
     --
     COMMIT;
     --
+    -- @TODO: null parent_id if parent = id
+    --
     nav.add_new_pages();
     --
     UPDATE navigation n
