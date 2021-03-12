@@ -999,7 +999,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
                     WHEN in_type IN ('UPDATE', 'WHERE')
                         THEN RPAD('t.' || LOWER(d.column_name), CEIL((d.name_length + 5) * 4) / 4) || ' = target_table(i).' || LOWER(d.column_name)
                     END AS text_
-            FROM p805_table_columns d
+            FROM p951_table_columns d
             JOIN uploaders u
                 ON u.target_table       = d.table_name
             JOIN uploaders_mapping m

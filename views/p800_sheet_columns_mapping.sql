@@ -30,11 +30,11 @@ WITH p AS (
         AND m.uploader_id   = apex.get_item('$TARGET')
         AND m.source_column = c.column_name
         AND m.is_hidden     IS NULL
-    LEFT JOIN p805_table_columns d
         ON d.table_name     = m.uploader_id
         AND d.column_name   = m.source_column
     WHERE c.file_name       = apex.get_item('$FILE')
         AND c.sheet_id      = apex.get_item('$SHEET')
+    LEFT JOIN p951_table_columns d
 ),
 m AS (
     -- missing columns
@@ -65,7 +65,7 @@ m AS (
         --
         CASE WHEN d.column_id IS NOT NULL THEN 'U' END AS allow_changes  -- U = update
     FROM uploaders_mapping m
-    LEFT JOIN p805_table_columns d
+    LEFT JOIN p951_table_columns d
         ON d.table_name     = m.uploader_id
         AND d.column_name   = m.target_column
     LEFT JOIN uploaded_file_cols c

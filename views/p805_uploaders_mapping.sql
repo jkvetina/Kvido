@@ -11,7 +11,7 @@ SELECT
     m.is_hidden,
     --
     CASE WHEN p.column_name IS NOT NULL THEN 'Y' END AS is_key_def,
-    CASE WHEN d.nullable = 'N'          THEN 'Y' END AS is_nn_def,
+    CASE WHEN d.nn          IS NOT NULL THEN 'Y' END AS is_nn_def,
     --
     CASE WHEN m.target_column IS NULL AND d.column_name IN (
             'UPDATED_BY', 'UPDATED_AT',
@@ -25,7 +25,7 @@ SELECT
     m.source_column,
     m.overwrite_value
 FROM uploaders u
-JOIN p805_table_columns d
+JOIN p951_table_columns d
     ON d.table_name         = u.target_table
 LEFT JOIN user_constraints n
     ON n.table_name         = d.table_name
