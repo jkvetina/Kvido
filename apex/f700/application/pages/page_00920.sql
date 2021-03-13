@@ -98,7 +98,7 @@ wwv_flow_api.create_region_column(
 ,p_enable_sort_group=>true
 ,p_enable_control_break=>true
 ,p_enable_hide=>true
-,p_is_primary_key=>false
+,p_is_primary_key=>true
 ,p_duplicate_value=>true
 ,p_include_in_export=>true
 );
@@ -375,7 +375,7 @@ wwv_flow_api.create_region_column(
 ,p_attribute_01=>'Y'
 ,p_use_as_row_header=>false
 ,p_enable_sort_group=>false
-,p_is_primary_key=>true
+,p_is_primary_key=>false
 ,p_include_in_export=>false
 );
 wwv_flow_api.create_interactive_grid(
