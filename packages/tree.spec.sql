@@ -61,7 +61,7 @@ CREATE OR REPLACE PACKAGE tree AS
     length_contexts         CONSTANT PLS_INTEGER        := 1000;    -- logs.contexts%TYPE
 
     -- append callstack for these flags; % for all
-    track_callstack         CONSTANT VARCHAR2(30)       := flag_error || flag_warning || flag_module || flag_result || flag_session;
+    track_callstack         CONSTANT VARCHAR2(30)       := flag_error || flag_warning || flag_module;
 
     -- arguments separator
     splitter                CONSTANT CHAR               := '|';
