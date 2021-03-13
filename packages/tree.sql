@@ -970,13 +970,8 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             in_action_name  => COALESCE(in_action_name, rec.module_name || tree.splitter || rec.module_line)
         );
 
-        -- override flag for SESS package calls
-        IF rec.module_name LIKE trigger_sess AND rec.flag = tree.flag_module THEN
-            rec.flag := tree.flag_session;
-        END IF;
-
         -- override flags for APEX calls
-        IF rec.flag = tree.flag_session AND rec.module_name IN (
+        IF rec.module_name LIKE trigger_sess AND rec.flag = tree.flag_module AND rec.module_name IN (
             'SESS.CREATE_SESSION',
             'SESS.UPDATE_SESSION'
         ) THEN
@@ -1522,6 +1517,9 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             WHERE t.owner           = tree.dml_tables_owner
                 AND t.table_name    LIKE '%' || dml_tables_postfix
             ORDER BY 1
+            --
+            -- @TODO: JSON
+            --
         ) LOOP
             q_block := 'UNION ALL' || CHR(10);
             q_block := q_block || 'SELECT' || CHR(10);
@@ -1624,6 +1622,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             END IF;
         END LOOP;
         --
+        -- SHRINK TOO ???
         COMMIT;
     END;
 

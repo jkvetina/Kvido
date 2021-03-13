@@ -49,7 +49,6 @@ CREATE OR REPLACE PACKAGE tree AS
     flag_error              CONSTANT logs.flag%TYPE     := 'E';     -- error
     flag_longops            CONSTANT logs.flag%TYPE     := 'L';     -- longops row
     flag_scheduler          CONSTANT logs.flag%TYPE     := 'S';     -- scheduler run planned
-    flag_session            CONSTANT logs.flag%TYPE     := 'X';     -- SESS package calls (so you can ignore them)
     --
     flag_apex_page          CONSTANT logs.flag%TYPE     := 'P';     -- page visited/requested
     flag_apex_form          CONSTANT logs.flag%TYPE     := 'F';     -- form submitted
