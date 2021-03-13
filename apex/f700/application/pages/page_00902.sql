@@ -821,6 +821,7 @@ wwv_flow_api.create_page_button(
 ,p_button_image_alt=>'<span class="fa fa-line-chart" title="Show Chart"></span>'
 ,p_button_position=>'RIGHT_OF_TITLE'
 ,p_button_redirect_url=>'f?p=&APP_ID.:902:&SESSION.::&DEBUG.::P902_SHOW_CHART:Y'
+,p_button_condition_type=>'NEVER'
 );
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(15349525759894527)
@@ -835,6 +836,7 @@ wwv_flow_api.create_page_item(
 ,p_name=>'P902_SHOW_CHART'
 ,p_item_sequence=>60
 ,p_item_plug_id=>wwv_flow_api.id(54195600298789905)
+,p_item_default=>'Y'
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
 );
@@ -920,8 +922,6 @@ wwv_flow_api.create_page_process(
 ''))
 ,p_process_clob_language=>'PLSQL'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
-,p_process_when=>'P902_SHOW_CHART'
-,p_process_when_type=>'ITEM_IS_NOT_NULL'
 );
 wwv_flow_api.component_end;
 end;
