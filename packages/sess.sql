@@ -188,7 +188,8 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
     PROCEDURE create_session (
-        in_user_id          sessions.user_id%TYPE
+        in_user_id          sessions.user_id%TYPE,
+        in_apply_items      BOOLEAN                     := FALSE
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
@@ -208,12 +209,14 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         tree.log_module('START');
 
         -- load APEX items from recent (previous) session
-        BEGIN
-            apex.apply_items(sess.get_recent_items());
-        EXCEPTION
-        WHEN OTHERS THEN
-            NULL;
-        END;
+        IF in_apply_items THEN
+            BEGIN
+                apex.apply_items(sess.get_recent_items());
+            EXCEPTION
+            WHEN OTHERS THEN
+                NULL;
+            END;
+        END IF;
 
         -- create record in calendar
         IF sess.get_app_id() > 0 THEN

@@ -178,7 +178,8 @@ CREATE OR REPLACE PACKAGE sess AS
     -- Set user_id and items from previous session
     --
     PROCEDURE create_session (
-        in_user_id          sessions.user_id%TYPE
+        in_user_id          sessions.user_id%TYPE,
+        in_apply_items      BOOLEAN                     := FALSE
     );
 
 

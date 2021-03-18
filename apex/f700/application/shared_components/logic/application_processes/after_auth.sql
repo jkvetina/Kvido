@@ -19,7 +19,8 @@ wwv_flow_api.create_flow_process(
 ,p_process_name=>'AFTER_AUTH'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
 'sess.create_session (',
-'    in_user_id => :APP_USER',
+'    in_user_id      => :APP_USER,',
+'    in_apply_items  => TRUE',
 ');'))
 ,p_process_clob_language=>'PLSQL'
 );
