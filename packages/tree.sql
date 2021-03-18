@@ -39,11 +39,14 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         -- better version of DBMS_UTILITY.FORMAT_CALL_STACK
         FOR i IN REVERSE 2 .. UTL_CALL_STACK.DYNAMIC_DEPTH LOOP  -- 2 = ignore this function
             out_module := UTL_CALL_STACK.CONCATENATE_SUBPROGRAM(UTL_CALL_STACK.SUBPROGRAM(i));
+            /*
             CONTINUE WHEN
                 UTL_CALL_STACK.OWNER(i) != tree.dml_tables_owner                -- different user (APEX)
                 OR UTL_CALL_STACK.UNIT_LINE(i) IS NULL                          -- skip DML queries
                 OR REGEXP_LIKE(out_module, 'UT(\.|_[A-Z0-9_]*\.)[A-Z0-9_]+')    -- skip unit tests
                 OR (out_module = internal_log_fn AND i <= 2);                   -- skip target function
+            */
+            CONTINUE WHEN UTL_CALL_STACK.OWNER(i) IS NULL;
             --
             out_stack := out_stack || out_module || ' [' || UTL_CALL_STACK.UNIT_LINE(i) || ']' || CHR(10);
         END LOOP;

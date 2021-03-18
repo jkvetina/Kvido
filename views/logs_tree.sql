@@ -10,7 +10,12 @@ SELECT
     LPAD(' ', (LEVEL - 1) * 4) || l.module_name AS module_name,
     l.module_line                               AS line,
     l.arguments,
-    l.message,
+    --
+    REGEXP_REPLACE(REGEXP_SUBSTR(
+        l.message,
+        '(\s'  || USER || '\..*)'),
+        '(\s*' || USER || '.TREE.LOG_[A-Z_]+\s+\[\d+\]){1,2}', '') AS message,
+    --
     l.session_id,
     app.get_duration(l.timer)                   AS timer,
     l.created_at
