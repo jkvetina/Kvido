@@ -213,7 +213,7 @@ CREATE OR REPLACE PACKAGE BODY apex AS
         --
         FOR i IN 1 .. json_keys.COUNT LOOP
             BEGIN
-                APEX_UTIL.SET_SESSION_STATE(json_keys(i), JSON_VALUE(in_items, '$.' || json_keys(i)));
+                apex.set_item(json_keys(i), JSON_VALUE(in_items, '$.' || json_keys(i)));
             EXCEPTION
             WHEN OTHERS THEN
                 NULL;
