@@ -543,15 +543,11 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     RETURN sessions.apex_items%TYPE AS
         out_payload         sessions.apex_items%TYPE;
     BEGIN
-        SELECT s.apex_items INTO out_payload
+        SELECT MIN(s.apex_items) KEEP (DENSE_RANK FIRST ORDER BY s.created_at DESC) INTO out_payload
         FROM sessions s
-        WHERE s.session_id = (
-            SELECT MAX(s.session_id)        -- @TODO: MIN(d.id) KEEP (DENSE_RANK FIRST ORDER BY d.id)
-            FROM sessions s
-            WHERE s.user_id         = COALESCE(in_user_id, sess.get_user_id())
-                AND s.app_id        = COALESCE(in_app_id,  sess.get_app_id(), s.app_id)
-                AND s.session_id    != sess.get_session_id()
-        );
+        WHERE s.user_id         = COALESCE(in_user_id, sess.get_user_id())
+            AND s.app_id        = COALESCE(in_app_id,  sess.get_app_id(), s.app_id)
+            AND s.session_id    != sess.get_session_id();
         --
         RETURN out_payload;
     EXCEPTION
