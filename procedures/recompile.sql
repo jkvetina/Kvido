@@ -14,10 +14,10 @@ CREATE OR REPLACE PROCEDURE recompile (
     invalids            PLS_INTEGER;
 BEGIN
     /**
-     * This procedure is part of the Lumberjack project under MIT licence.
-     * https://github.com/jkvetina/#lumberjack
+     * This procedure is part of the Kvido project under MIT licence.
+     * https://github.com/jkvetina/Kvido
      *
-     * Copyright (c) Jan Kvetina, 2020
+     * Copyright (c) Jan Kvetina, 2021
      *
      *                                                      (R)
      *                      ---                  ---
