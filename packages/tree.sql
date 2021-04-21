@@ -828,7 +828,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                                'WHEN OTHERS THEN' || CHR(10) ||
                                '    tree.raise_error();' || CHR(10) ||
                                'END;',
-            start_date      => SYSDATE,
+            start_date      => NULL,
             enabled         => FALSE,
             auto_drop       => TRUE,
             comments        => in_comments
