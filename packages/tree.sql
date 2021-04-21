@@ -982,11 +982,20 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             --rec.action_name := REGEXP_SUBSTR(rec.arguments, '^\[\"([^\"]+)\"', 1, 1, NULL, 1);
             --rec.arguments   := REGEXP_REPLACE(rec.arguments, '^\[\"([^\"]+)\",?', '[');
             --
-            IF in_arguments LIKE '["ON_LOAD:BEFORE_HEADER%' THEN
-                rec.flag            := tree.flag_apex_page;
+            rec.action_name     := SUBSTR(APEX_APPLICATION.G_REQUEST, 1, tree.length_action);   -- button name
+            rec.flag            := CASE WHEN rec.action_name IS NOT NULL THEN tree.flag_apex_form ELSE tree.flag_apex_page END;
+            --
+            IF rec.action_name = 'APEX_AJAX_DISPATCH' THEN
                 curr_page_log_id    := NULL;
-            ELSIF in_arguments LIKE '["ON_SUBMIT%' THEN
-                rec.flag            := tree.flag_apex_form;
+                RETURN NULL;        -- dont log
+            END IF;
+
+            -- for APEX actions (processes, computations...) split action name into action and module
+            IF INSTR(APEX_APPLICATION.G_REQUEST, '=') > 0 THEN
+                rec.action_name := SUBSTR(REGEXP_SUBSTR(APEX_APPLICATION.G_REQUEST, '(.*)[=]', 1, 1, NULL, 1), 1, tree.length_action);
+                rec.module_name := SUBSTR(REGEXP_SUBSTR(APEX_APPLICATION.G_REQUEST, '[=](.*)', 1, 1, NULL, 1), 1, 64);
+                rec.module_line := 0;
+                rec.flag        := tree.flag_module;
             END IF;
         END IF;
 
@@ -995,7 +1004,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
         -- use first argument as action_name for anonymous calls
         IF rec.flag = tree.flag_module AND rec.module_name = '__anonymous_block' THEN
-            rec.action_name := SUBSTR(COALESCE(REGEXP_SUBSTR(in_arguments, '^\["([^"]+)', 1, 1, NULL, 1), tree.empty_action), 1, tree.length_action);
+            rec.action_name := SUBSTR(REGEXP_SUBSTR(in_arguments, '^\["([^"]+)', 1, 1, NULL, 1), 1, tree.length_action);
         END IF;
 
         -- override flag for triggers
@@ -1031,9 +1040,9 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         -- prepare record
         rec.app_id          := sess.get_app_id();
         rec.page_id         := sess.get_page_id();
-        rec.action_name     := SUBSTR(COALESCE(rec.action_name, in_action_name, tree.empty_action), 1, tree.length_action);
-        rec.arguments       := SUBSTR(COALESCE(rec.arguments, in_arguments), 1, tree.length_arguments);
-        rec.message         := SUBSTR(in_message,   1, tree.length_message);  -- may be overwritten later
+        rec.action_name     := SUBSTR(NVL(rec.action_name, in_action_name), 1, tree.length_action);
+        rec.arguments       := SUBSTR(NVL(rec.arguments,   in_arguments),   1, tree.length_arguments);
+        rec.message         := SUBSTR(in_message,                           1, tree.length_message);
         rec.session_id      := sess.get_session_id();
         rec.created_at      := SYSTIMESTAMP;
         rec.today           := TO_CHAR(SYSDATE, 'YYYY-MM-DD');
@@ -1045,7 +1054,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
         -- add error stack if available
         IF SQLCODE != 0 THEN
-            rec.action_name := COALESCE(NULLIF(rec.action_name, tree.empty_action), 'UNKNOWN_ERROR');
+            rec.action_name := NVL(rec.action_name, 'UNKNOWN_ERROR');
             rec.message     := SUBSTR(rec.message || tree.get_error_stack(), 1, tree.length_message);
         END IF;
 
@@ -1054,6 +1063,9 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             rec.timer := tree.get_timestamp_diff(curr_page_stamp, rec.created_at);
         END IF;
         */
+
+        rec.action_name := NVL(rec.action_name, tree.empty_action);
+        rec.module_name := NVL(rec.module_name, tree.empty_action);
 
         -- finally store record in table
         INSERT INTO logs VALUES rec;
@@ -1626,6 +1638,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         END LOOP;
         --
         -- SHRINK TOO ???
+        --
         COMMIT;
     END;
 
