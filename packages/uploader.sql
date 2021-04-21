@@ -85,6 +85,8 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
                 in_file_name    => multiple_files(i),
                 in_uploader_id  => in_uploader_id
             );
+            --
+            COMMIT;             -- important, otherwise dynamic SQL may not see imported data
         END LOOP;
         --
         tree.update_timer();
@@ -156,7 +158,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
                 )                       AS profile_json
             FROM uploaded_files f
             WHERE f.file_name           = in_file_name
-                AND in_file_name        LIKE '%.csv'
+                AND in_file_name        NOT LIKE '%.xls%'
         ) LOOP
             -- create sheet record
             INSERT INTO uploaded_file_sheets (
@@ -752,7 +754,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
         --
         q_dynamic := q_start || RTRIM(RTRIM(q_dynamic, CHR(10)), ',') || CHR(10) || q_end;
         --
-        tree.attach_clob(q_dynamic, 'DYNAMIC');
+        --tree.attach_clob(q_dynamic, 'DYNAMIC');
         --
         r := uploader.get_cursor_from_query(q_dynamic);
         --
@@ -949,8 +951,8 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             s.result_unmatched  = s.sheet_rows - rows_inserted# - rows_updated# - rows_deleted# - rows_errors#,
             s.result_log_id     = module_id,
             --
-            s.commited_by       = CASE WHEN in_commit = 'Y' THEN sess.get_user_id() END,
-            s.commited_at       = CASE WHEN in_commit = 'Y' THEN SYSDATE END
+            s.commited_by       = CASE WHEN in_commit = 'Y' THEN in_user_id END,
+            s.commited_at       = CASE WHEN in_commit = 'Y' THEN in_sysdate END
         WHERE s.file_name       = in_file_name
             AND s.sheet_id      = in_sheet_id;
         --
@@ -1112,7 +1114,7 @@ CREATE OR REPLACE PACKAGE BODY uploader AS
             END IF;
         END LOOP;
         --
-        tree.attach_clob(out_, 'UPLOADER');
+        --tree.attach_clob(out_, 'UPLOADER');
         --
         BEGIN
             EXECUTE IMMEDIATE out_;
