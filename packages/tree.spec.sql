@@ -55,7 +55,7 @@ CREATE OR REPLACE PACKAGE tree AS
     flag_trigger            CONSTANT logs.flag%TYPE     := 'G';     -- called from trigger
 
     -- specify maximum length for trim
-    length_action           CONSTANT PLS_INTEGER        := 48;      -- logs.action%TYPE
+    length_action           CONSTANT PLS_INTEGER        := 32;      -- logs.action%TYPE
     length_arguments        CONSTANT PLS_INTEGER        := 1000;    -- logs.arguments%TYPE
     length_message          CONSTANT PLS_INTEGER        := 4000;    -- logs.message%TYPE
     length_contexts         CONSTANT PLS_INTEGER        := 1000;    -- logs.contexts%TYPE
