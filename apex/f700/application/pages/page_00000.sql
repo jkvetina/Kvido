@@ -156,6 +156,9 @@ wwv_flow_api.create_page_plug(
 ,p_plug_query_num_rows=>15
 ,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
 ,p_plug_required_role=>wwv_flow_api.id(63770652250014528)
+,p_plug_display_condition_type=>'EXPRESSION'
+,p_plug_display_when_condition=>'apex.is_debug()'
+,p_plug_display_when_cond2=>'PLSQL'
 ,p_plug_footer=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<br />',
 ''))
@@ -198,6 +201,9 @@ wwv_flow_api.create_page_plug(
 ,p_plug_query_num_rows=>15
 ,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
 ,p_plug_required_role=>wwv_flow_api.id(63770652250014528)
+,p_plug_display_condition_type=>'EXPRESSION'
+,p_plug_display_when_condition=>'apex.is_debug()'
+,p_plug_display_when_cond2=>'PLSQL'
 ,p_plug_footer=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<br />',
 ''))
