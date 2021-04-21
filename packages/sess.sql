@@ -480,7 +480,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         COMMIT;
     EXCEPTION
     WHEN tree.app_exception THEN
-        RAISE;
+        tree.raise_error('UPDATE_SESSION_FAILED');
     WHEN APEX_APPLICATION.E_STOP_APEX_ENGINE THEN
         COMMIT;
     WHEN OTHERS THEN
