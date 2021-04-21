@@ -589,22 +589,9 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     RETURN NUMBER
     RESULT_CACHE
     AS
-        out_group_id        NUMBER;
+        PRAGMA UDF;
     BEGIN
-        WITH x AS (
-            SELECT
-                LEVEL AS group_id,
-                CAST(TRUNC(in_date) + NUMTODSINTERVAL((LEVEL - 1) * in_interval, 'MINUTE') AS DATE) AS start_at,
-                CAST(TRUNC(in_date) + NUMTODSINTERVAL( LEVEL      * in_interval, 'MINUTE') AS DATE) AS end_at
-            FROM DUAL
-            CONNECT BY LEVEL <= (1440 / in_interval)
-        )
-        SELECT x.group_id INTO out_group_id
-        FROM x
-        WHERE in_date       >= x.start_at
-            AND in_date     <  x.end_at;
-        --
-        RETURN out_group_id;
+        RETURN FLOOR((in_date - TRUNC(in_date)) * 1440 / in_interval) + 1;
     END;
 
 END;
