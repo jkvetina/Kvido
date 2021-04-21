@@ -2669,7 +2669,7 @@ wwv_flow_api.create_ig_report_column(
 wwv_flow_api.create_ig_report_column(
  p_id=>wwv_flow_api.id(25501180302916101)
 ,p_view_id=>wwv_flow_api.id(25498817486916085)
-,p_display_seq=>2
+,p_display_seq=>1
 ,p_column_id=>wwv_flow_api.id(25071798561009660)
 ,p_is_visible=>false
 ,p_is_frozen=>false
@@ -2681,7 +2681,7 @@ wwv_flow_api.create_ig_report_column(
 wwv_flow_api.create_ig_report_column(
  p_id=>wwv_flow_api.id(25502902793916108)
 ,p_view_id=>wwv_flow_api.id(25498817486916085)
-,p_display_seq=>4
+,p_display_seq=>5
 ,p_column_id=>wwv_flow_api.id(25071981582009662)
 ,p_is_visible=>false
 ,p_is_frozen=>false
@@ -2744,16 +2744,19 @@ wwv_flow_api.create_ig_report_column(
 wwv_flow_api.create_ig_report_column(
  p_id=>wwv_flow_api.id(25656925791325866)
 ,p_view_id=>wwv_flow_api.id(25498817486916085)
-,p_display_seq=>2
+,p_display_seq=>4
 ,p_column_id=>wwv_flow_api.id(25508892311061624)
 ,p_is_visible=>true
 ,p_is_frozen=>false
 ,p_width=>69
+,p_sort_order=>3
+,p_sort_direction=>'ASC'
+,p_sort_nulls=>'LAST'
 );
 wwv_flow_api.create_ig_report_column(
  p_id=>wwv_flow_api.id(25681220724535791)
 ,p_view_id=>wwv_flow_api.id(25498817486916085)
-,p_display_seq=>5
+,p_display_seq=>2
 ,p_column_id=>wwv_flow_api.id(25509395252061629)
 ,p_is_visible=>false
 ,p_is_frozen=>false
@@ -3285,14 +3288,6 @@ wwv_flow_api.create_page_item(
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'N'
 );
-wwv_flow_api.create_page_item(
- p_id=>wwv_flow_api.id(15185595015721647)
-,p_name=>'P800_HEADER_025'
-,p_item_sequence=>250
-,p_item_plug_id=>wwv_flow_api.id(15332199956843924)
-,p_display_as=>'NATIVE_HIDDEN'
-,p_attribute_01=>'N'
-);
 wwv_flow_api.component_end;
 end;
 /
@@ -3304,6 +3299,14 @@ wwv_flow_api.component_begin (
 ,p_default_application_id=>700
 ,p_default_id_offset=>28323188538908472
 ,p_default_owner=>'DEV'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(15185595015721647)
+,p_name=>'P800_HEADER_025'
+,p_item_sequence=>250
+,p_item_plug_id=>wwv_flow_api.id(15332199956843924)
+,p_display_as=>'NATIVE_HIDDEN'
+,p_attribute_01=>'N'
 );
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(15185699998721648)
@@ -3768,16 +3771,12 @@ wwv_flow_api.create_page_process(
 ,p_process_name=>'Sheet Columns'
 ,p_attribute_01=>'PLSQL_CODE'
 ,p_attribute_04=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'tree.log_warning(''P2A'');',
-'',
 'uploader.update_mapping (',
 '    in_uploader_id          => apex.get_item(''$TARGET''),',
 '    in_source_column        => :SOURCE_COLUMN,',
 '    in_target_column        => :TARGET_COLUMN,',
 '    in_overwrite_value      => :OVERWRITE_VALUE',
 ');',
-'',
-'tree.log_warning(''P2B'');',
 ''))
 ,p_attribute_05=>'N'
 ,p_attribute_06=>'N'
@@ -3790,8 +3789,6 @@ wwv_flow_api.create_page_process(
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'UPLOAD_FILES'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'tree.log_warning(''P2A'');',
-'',
 '-- somehow session_id get lost/changed during submit',
 '-- so we pass it via argument',
 'tree.log_module(''UPLOADING_FILES'', apex.get_item(''$SESSION''));',
@@ -3799,9 +3796,6 @@ wwv_flow_api.create_page_process(
 '    in_session_id => apex.get_item(''$SESSION'')',
 ');',
 '--',
-'tree.log_warning(''P1B'');',
-'',
-'',
 'apex.clear_items();',
 'apex.redirect(',
 '    in_names  => ''P800_UPLOADED'',',
