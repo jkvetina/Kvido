@@ -175,6 +175,15 @@ CREATE OR REPLACE PACKAGE sess AS
 
 
     --
+    -- Clear session at the end
+    --
+    PROCEDURE clear_session (
+        in_log_id       logs.log_id%TYPE        := NULL
+    );
+
+
+
+    --
     -- Set user_id and items from previous session
     --
     PROCEDURE create_session (
