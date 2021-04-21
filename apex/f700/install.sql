@@ -12,16 +12,12 @@ prompt --install
 @@application/shared_components/files/app_css.sql
 @@application/shared_components/files/app_js.sql
 @@application/shared_components/files/fonts_css.sql
+@@application/shared_components/files/logo_png.sql
 @@application/plugin_settings.sql
 @@application/shared_components/security/authorizations/nobody_hidden.sql
 @@application/shared_components/security/authorizations/is_developer.sql
 @@application/shared_components/navigation/navigation_bar.sql
-@@application/shared_components/logic/application_processes/after_footer.sql
 @@application/shared_components/logic/application_processes/after_auth.sql
-@@application/shared_components/logic/application_processes/on_load_before_header.sql
-@@application/shared_components/logic/application_processes/on_ajax_callback.sql
-@@application/shared_components/logic/application_processes/on_new_instance.sql
-@@application/shared_components/logic/application_processes/on_submit_before_validation.sql
 @@application/shared_components/logic/application_items/g_date.sql
 @@application/shared_components/logic/application_settings.sql
 @@application/shared_components/navigation/tabs/standard.sql
@@ -112,7 +108,8 @@ prompt --install
 @@application/shared_components/globalization/messages.sql
 @@application/shared_components/globalization/dyntranslations.sql
 @@application/shared_components/user_interface/shortcuts/delete_confirm_msg.sql
-@@application/shared_components/security/authentications/apex.sql
+@@application/shared_components/security/authentications/apex_accounts.sql
+@@application/shared_components/security/authentications/open_door_testing_only.sql
 @@application/user_interfaces.sql
 @@application/user_interfaces/combined_files.sql
 @@application/pages/page_00000.sql

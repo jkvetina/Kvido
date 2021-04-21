@@ -13,7 +13,7 @@ wwv_flow_api.component_begin (
 );
 wwv_flow_api.create_flow_process(
  p_id=>wwv_flow_api.id(51327090551305329)
-,p_process_sequence=>11
+,p_process_sequence=>1
 ,p_process_point=>'AFTER_LOGIN'
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'AFTER_AUTH'

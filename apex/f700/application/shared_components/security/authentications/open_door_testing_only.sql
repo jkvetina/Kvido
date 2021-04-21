@@ -1,7 +1,7 @@
-prompt --application/shared_components/security/authentications/apex
+prompt --application/shared_components/security/authentications/open_door_testing_only
 begin
 --   Manifest
---     AUTHENTICATION: APEX
+--     AUTHENTICATION: OPEN_DOOR (TESTING ONLY)
 --   Manifest End
 wwv_flow_api.component_begin (
  p_version_yyyy_mm_dd=>'2020.10.01'
@@ -12,9 +12,9 @@ wwv_flow_api.component_begin (
 ,p_default_owner=>'DEV'
 );
 wwv_flow_api.create_authentication(
- p_id=>wwv_flow_api.id(65698087598810744)
-,p_name=>'APEX'
-,p_scheme_type=>'NATIVE_APEX_ACCOUNTS'
+ p_id=>wwv_flow_api.id(104393079175937346)
+,p_name=>'OPEN_DOOR (TESTING ONLY)'
+,p_scheme_type=>'NATIVE_OPEN_DOOR'
 ,p_use_secure_cookie_yn=>'N'
 ,p_ras_mode=>0
 );
