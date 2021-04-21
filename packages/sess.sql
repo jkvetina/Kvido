@@ -15,7 +15,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     FUNCTION get_user_id
     RETURN users.user_id%TYPE AS
     BEGIN
-        RETURN sess.get_user_name(COALESCE(APEX_APPLICATION.G_USER, app_user_id, USER));
+        RETURN sess.get_user_name(COALESCE(APEX_APPLICATION.G_USER, app_user_id, SYS_CONTEXT('USERENV', 'SESSION_USER'), USER));
     END;
 
 
@@ -232,7 +232,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         END IF;
 
         -- log request
-        tree.log_module('START');
+        tree.log_module();
 
         -- load APEX items from recent (previous) session
         IF in_apply_items THEN
@@ -465,8 +465,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         IF rec.page_id != 9999 THEN
             rec.log_id := tree.log_module (
                 in_note,
-                APEX_APPLICATION.G_REQUEST,                                 -- button name
-                REGEXP_REPLACE(req, '^/[^/]+/[^/]+/f[?]p=([^:]*:){6}', '')  -- arguments in URL
+                REGEXP_REPLACE(req, '^/[^/]+/[^/]+/f[?]p=([^:]*:){6}', '')   -- arguments in URL
             );
 
             -- store log_id to use it as parent for all further requests
@@ -610,3 +609,4 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 END;
 /
+
