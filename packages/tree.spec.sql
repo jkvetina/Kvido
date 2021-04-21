@@ -53,12 +53,12 @@ CREATE OR REPLACE PACKAGE tree AS
     flag_apex_page          CONSTANT logs.flag%TYPE     := 'P';     -- page visited/requested
     flag_apex_form          CONSTANT logs.flag%TYPE     := 'F';     -- form submitted
     flag_trigger            CONSTANT logs.flag%TYPE     := 'G';     -- called from trigger
+    flag_business           CONSTANT logs.flag%TYPE     := 'B';     -- business event
 
     -- specify maximum length for trim
     length_action           CONSTANT PLS_INTEGER        := 32;      -- logs.action%TYPE
     length_arguments        CONSTANT PLS_INTEGER        := 1000;    -- logs.arguments%TYPE
     length_message          CONSTANT PLS_INTEGER        := 4000;    -- logs.message%TYPE
-    length_contexts         CONSTANT PLS_INTEGER        := 1000;    -- logs.contexts%TYPE
 
     -- append callstack for these flags; % for all
     track_callstack         CONSTANT VARCHAR2(30)       := flag_error || flag_warning || flag_module;
