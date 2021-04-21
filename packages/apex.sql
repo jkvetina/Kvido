@@ -139,7 +139,11 @@ CREATE OR REPLACE PACKAGE BODY apex AS
         item_name := apex.check_item_name(in_name);
         --
         IF item_name IS NOT NULL THEN
-            APEX_UTIL.SET_SESSION_STATE(item_name, in_value);
+            APEX_UTIL.SET_SESSION_STATE (
+                p_name      => item_name,
+                p_value     => in_value,
+                p_commit    => FALSE
+            );
         END IF;
     END;
 
@@ -154,7 +158,11 @@ CREATE OR REPLACE PACKAGE BODY apex AS
         item_name := apex.check_item_name(in_name);
         --
         IF item_name IS NOT NULL THEN
-            APEX_UTIL.SET_SESSION_STATE(item_name, TO_CHAR(in_value, sess.format_date));
+            APEX_UTIL.SET_SESSION_STATE (
+                p_name      => item_name,
+                p_value     => TO_CHAR(in_value, sess.format_date),
+                p_commit    => FALSE
+            );
         END IF;
     END;
 
