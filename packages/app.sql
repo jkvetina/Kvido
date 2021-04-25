@@ -38,6 +38,22 @@ CREATE OR REPLACE PACKAGE BODY app AS
 
 
 
+    FUNCTION get_user_lang
+    RETURN users.lang_id%TYPE AS
+        out_lang        users.lang_id%TYPE;
+    BEGIN
+        SELECT u.lang_id INTO out_lang
+        FROM users u
+        WHERE u.user_id = sess.get_user_id();
+        --
+        RETURN out_lang;
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN NULL;
+    END;
+
+
+
     FUNCTION get_date
     RETURN DATE AS
     BEGIN

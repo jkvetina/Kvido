@@ -24,7 +24,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>'MUST_NOT_BE_PUBLIC_USER'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210308214311'
+,p_last_upd_yyyymmddhh24miss=>'20210425111909'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(51084378175768182)
@@ -33,7 +33,7 @@ wwv_flow_api.create_page_plug(
 ,p_plug_template=>wwv_flow_api.id(64142195941700285)
 ,p_plug_display_sequence=>20
 ,p_include_in_reg_disp_sel_yn=>'Y'
-,p_plug_grid_column_span=>6
+,p_plug_grid_column_span=>4
 ,p_plug_display_point=>'BODY'
 ,p_query_type=>'SQL'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
@@ -280,7 +280,7 @@ wwv_flow_api.create_page_process(
 ') LOOP',
 '    APEX_UTIL.SET_SESSION_STATE(''P199_USER_LOGIN'', c.user_login);',
 '    APEX_UTIL.SET_SESSION_STATE(''P199_USER_NAME'',  c.user_name);',
-'    APEX_UTIL.SET_SESSION_STATE(''P199_LANG'',       c.lang);',
+'    APEX_UTIL.SET_SESSION_STATE(''P199_LANG'',       c.lang_id);',
 'END LOOP;',
 ''))
 ,p_process_clob_language=>'PLSQL'
@@ -293,10 +293,11 @@ wwv_flow_api.create_page_process(
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'SUBMIT'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'-- should be in procedure with error handler',
 'UPDATE users u',
 'SET u.user_login = :P199_USER_LOGIN,',
 '    u.user_name  = :P199_USER_NAME,',
-'    u.lang       = :P199_LANG',
+'    u.lang_id    = :P199_LANG',
 'WHERE u.user_id  = sess.get_user_id();',
 ''))
 ,p_process_clob_language=>'PLSQL'

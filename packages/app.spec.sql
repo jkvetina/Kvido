@@ -10,6 +10,11 @@ CREATE OR REPLACE PACKAGE app AS
 
 
 
+    FUNCTION get_user_lang
+    RETURN users.lang_id%TYPE;
+
+
+
     FUNCTION get_date
     RETURN DATE;
 

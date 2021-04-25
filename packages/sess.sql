@@ -36,22 +36,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
 
-    FUNCTION get_user_lang
-    RETURN users.lang%TYPE AS
-        out_lang users.lang%TYPE;
-    BEGIN
-        SELECT u.lang INTO out_lang
-        FROM users u
-        WHERE u.user_id = sess.get_user_id;
-        --
-        RETURN out_lang;
-    EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        RETURN NULL;
-    END;
-
-
-
     FUNCTION get_page_id
     RETURN sessions.page_id%TYPE AS
     BEGIN

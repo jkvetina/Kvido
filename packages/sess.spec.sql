@@ -84,14 +84,6 @@ CREATE OR REPLACE PACKAGE sess AS
 
 
     --
-    -- Returns user lang
-    --
-    FUNCTION get_user_lang
-    RETURN users.lang%TYPE;
-
-
-
-    --
     -- Returns APEX page id
     --
     FUNCTION get_page_id

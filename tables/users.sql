@@ -16,7 +16,7 @@ CREATE TABLE users (
     user_login          VARCHAR2(128),
     user_name           VARCHAR2(64),
     --
-    lang                VARCHAR2(5),
+    lang_id             VARCHAR2(5),
     --
     is_active           CHAR(1),
     --
@@ -52,4 +52,9 @@ COMMENT ON COLUMN users.is_active           IS 'Flag to disable user without cha
 --
 COMMENT ON COLUMN users.updated_by          IS 'Recent user who updated row';
 COMMENT ON COLUMN users.updated_at          IS 'Timestamp of last update';
+--
+ALTER TABLE users ADD
+    CONSTRAINT fk_users_lang
+        FOREIGN KEY (lang_id)
+        REFERENCES languages (lang_id);
 

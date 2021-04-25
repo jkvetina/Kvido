@@ -39,7 +39,7 @@ SELECT
     u.user_id,
     u.user_login,
     u.user_name,
-    u.lang,
+    u.lang_id       AS lang,
     u.is_active,
     --
     CASE
