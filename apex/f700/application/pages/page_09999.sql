@@ -106,12 +106,8 @@ wwv_flow_api.create_page_item(
 ,p_name=>'P9999_REMEMBER'
 ,p_item_sequence=>30
 ,p_item_plug_id=>wwv_flow_api.id(66687575570800292)
-,p_prompt=>'Remember username'
-,p_display_as=>'NATIVE_TEXT_FIELD'
-,p_field_template=>wwv_flow_api.id(63743081233014392)
-,p_item_template_options=>'#DEFAULT#'
+,p_display_as=>'NATIVE_HIDDEN'
 ,p_is_persistent=>'N'
-,p_lov_display_extra=>'NO'
 ,p_help_text=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<p>',
 'If you select this checkbox, the application will save your username in a persistent browser cookie named "LOGIN_USERNAME_COOKIE".',
@@ -123,9 +119,7 @@ wwv_flow_api.create_page_item(
 'the application will overwrite it with an empty value.',
 'You can also use your browser''s developer tools to completely remove the cookie.',
 '</p>'))
-,p_attribute_01=>'1'
-,p_attribute_04=>'TEXT'
-,p_attribute_05=>'NONE'
+,p_attribute_01=>'Y'
 );
 wwv_flow_api.create_page_process(
  p_id=>wwv_flow_api.id(31241517099694209)
