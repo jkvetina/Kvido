@@ -63,13 +63,14 @@ wwv_flow_api.create_flow(
 ,p_rejoin_existing_sessions=>'N'
 ,p_csv_encoding=>'Y'
 ,p_auto_time_zone=>'Y'
+,p_error_handling_function=>'#OWNER#.tree.log_apex_error'
 ,p_email_from=>'jan.kvetina@gmail.com'
 ,p_substitution_string_01=>'CLEAR_FILTERS'
 ,p_substitution_value_01=>'<span class="fa fa-refresh fa-flip-horizontal" title="Clear filters"></span>'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210213224343'
+,p_last_upd_yyyymmddhh24miss=>'20210425185540'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
-,p_files_version=>298
+,p_files_version=>337
 ,p_ui_type_name => null
 ,p_print_server_type=>'INSTANCE'
 );

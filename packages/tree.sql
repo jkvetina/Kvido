@@ -913,6 +913,73 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
 
 
+    FUNCTION log_apex_error (
+        p_error             APEX_ERROR.T_ERROR
+    )
+    RETURN APEX_ERROR.T_ERROR_RESULT
+    AS
+        out_result          APEX_ERROR.T_ERROR_RESULT;
+        --
+        l_log_name          logs.action_name%TYPE;
+        l_log_id            logs.log_id%TYPE;
+    BEGIN
+        out_result := APEX_ERROR.INIT_ERROR_RESULT(p_error => p_error);
+
+        -- check internal errors first
+        IF p_error.is_internal_error THEN
+            l_log_id := tree.log_error('INTERNAL_ERROR');
+            --
+            IF NOT p_error.is_common_runtime_error THEN
+                out_result.message            := 'UNEXPECTED_ERROR|' || TO_CHAR(l_log_id);
+                out_result.additional_info    := NULL;
+            END IF;
+            --
+            RETURN out_result;
+        END IF;
+
+        -- always show the error as inline error
+        out_result.display_location := CASE
+            WHEN out_result.display_location = apex_error.c_on_error_page
+                THEN apex_error.c_inline_in_notification
+            ELSE out_result.display_location
+            END;
+
+        -- handle constraint violations
+        IF p_error.ora_sqlcode IN (-1, -2091, -2290, -2291, -2292) THEN
+            -- ORA-00001: unique constraint violated
+            -- ORA-02091: transaction rolled back (can hide a deferred constraint)
+            -- ORA-02290: check constraint violated
+            -- ORA-02291: integrity constraint violated - parent key not found
+            -- ORA-02292: integrity constraint violated - child record found
+            out_result.message := APEX_ERROR.EXTRACT_CONSTRAINT_NAME (
+                p_error             => p_error,
+                p_include_schema    => FALSE
+            );
+            l_log_id := tree.log_error('CONSTRAINT_ERROR', out_result.message);
+        ELSE
+            l_log_id := tree.log_error('UNHANDLED_ERROR');
+        END IF;
+
+        -- show the latest error message and not the full error stack
+        IF p_error.ora_sqlcode IS NOT NULL AND out_result.message = p_error.message THEN
+            out_result.message := APEX_ERROR.GET_FIRST_ORA_ERROR_TEXT (
+                p_error => p_error
+            );
+        END IF;
+
+        -- mark associated page item
+        IF out_result.page_item_name IS NULL AND out_result.column_alias IS NULL THEN
+            APEX_ERROR.AUTO_SET_ASSOCIATED_ITEM (
+                p_error         => p_error,
+                p_error_result  => out_result
+            );
+        END IF;
+
+        RETURN out_result;
+    END;
+
+
+
     FUNCTION log__ (
         in_action_name      logs.action_name%TYPE,
         in_flag             logs.flag%TYPE,

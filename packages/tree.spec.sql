@@ -729,6 +729,16 @@ CREATE OR REPLACE PACKAGE tree AS
 
 
     --
+    -- Log APEX errors
+    --
+    FUNCTION log_apex_error (
+        p_error             APEX_ERROR.T_ERROR
+    )
+    RETURN APEX_ERROR.T_ERROR_RESULT;
+
+
+
+    --
     -- Internal function which creates records in logs table; returns assigned `log_id`
     --
     FUNCTION log__ (
