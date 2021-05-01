@@ -251,5 +251,14 @@ CREATE OR REPLACE PACKAGE sess AS
     RETURN NUMBER
     RESULT_CACHE;
 
+
+
+    --
+    -- Prepare rows in Calendar table
+    --
+    PROCEDURE update_calendar (
+        in_app_id           calendar.app_id%TYPE        := NULL
+    );
+
 END;
 /

@@ -247,21 +247,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             END;
         END IF;
 
-        -- create record in calendar
-        IF sess.get_app_id() > 0 THEN
-            BEGIN
-                INSERT INTO calendar (app_id, today, today__)
-                VALUES (
-                    sess.get_app_id(),
-                    TO_CHAR(SYSDATE, 'YYYY-MM-DD'),
-                    TRUNC(SYSDATE)
-                );
-            EXCEPTION
-            WHEN DUP_VAL_ON_INDEX THEN
-                NULL;
-            END;
-        END IF;
-
         -- insert or update sessions table
         sess.update_session();
         --
@@ -596,6 +581,25 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         PRAGMA UDF;
     BEGIN
         RETURN FLOOR((in_date - TRUNC(in_date)) * 1440 / in_interval) + 1;
+    END;
+
+
+
+    PROCEDURE update_calendar (
+        in_app_id           calendar.app_id%TYPE        := NULL
+    ) AS
+    BEGIN
+        tree.log_module(in_app_id);
+        --
+        INSERT INTO calendar (app_id, today, today__)
+        VALUES (
+            COALESCE(in_app_id, sess.get_app_id()),
+            TO_CHAR(SYSDATE + 1, 'YYYY-MM-DD'),
+            TRUNC(SYSDATE) + 1
+        );
+    EXCEPTION
+    WHEN DUP_VAL_ON_INDEX THEN
+        NULL;
     END;
 
 END;
