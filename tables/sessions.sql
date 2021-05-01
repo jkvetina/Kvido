@@ -1,8 +1,8 @@
 --DROP TABLE sessions PURGE;
 CREATE TABLE sessions (
     session_id          NUMBER          CONSTRAINT nn_sessions_session_id   NOT NULL,
-    --
     app_id              NUMBER(4)       CONSTRAINT nn_sessions_app_id       NOT NULL,       -- FK to apps
+    --
     user_id             VARCHAR2(30)    CONSTRAINT nn_sessions_user_id      NOT NULL,
     page_id             NUMBER(6)       CONSTRAINT nn_sessions_page_id      NOT NULL,       -- FK to app_pages
     --
@@ -14,7 +14,7 @@ CREATE TABLE sessions (
     today               VARCHAR2(10)    CONSTRAINT nn_sessions_today        NOT NULL,       -- no FK on purpose
     --
     CONSTRAINT pk_sessions
-        PRIMARY KEY (session_id),
+        PRIMARY KEY (session_id, app_id),
     /**
     SELECT n.table_name, n.constraint_name
     FROM user_constraints n

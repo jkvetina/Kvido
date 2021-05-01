@@ -449,8 +449,8 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             s.apex_items    = COALESCE(rec.apex_items, s.apex_items),
             s.updated_at    = rec.updated_at
         WHERE s.session_id  = rec.session_id
-            AND s.user_id   = rec.user_id
             AND s.app_id    = rec.app_id
+            AND s.user_id   = rec.user_id
         RETURNING s.created_at INTO rec.created_at;
         --
         IF SQL%ROWCOUNT = 0 THEN
@@ -474,7 +474,8 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             -- store log_id to use it as parent for all further requests
             UPDATE sessions s
             SET s.log_id        = rec.log_id
-            WHERE s.session_id  = rec.session_id;
+            WHERE s.session_id  = rec.session_id
+                AND s.app_id    = rec.app_id;
             --
             tree.curr_page_log_id   := rec.log_id;
             tree.curr_page_stamp    := SYSTIMESTAMP;
