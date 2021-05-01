@@ -15,21 +15,37 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     FUNCTION get_user_id
     RETURN users.user_id%TYPE AS
     BEGIN
-        RETURN sess.get_user_name(COALESCE(APEX_APPLICATION.G_USER, app_user_id, SYS_CONTEXT('USERENV', 'SESSION_USER'), USER));
+        RETURN COALESCE (
+            APEX_APPLICATION.G_USER,
+            app_user_id,
+            SYS_CONTEXT('USERENV', 'SESSION_USER'),
+            USER
+        );
+    END;
+
+
+
+    PROCEDURE set_user_id AS
+    BEGIN
+        APEX_CUSTOM_AUTH.SET_USER (
+            p_user => REGEXP_REPLACE(sess.get_user_name(), '@.*', '')
+        );
     END;
 
 
 
     FUNCTION get_user_name (
-        in_username         sessions.user_id%TYPE
+        in_user_id          sessions.user_id%TYPE       := NULL
     )
-    RETURN users.user_id%TYPE AS
+    RETURN users.user_name%TYPE
+    AS
+        out_name            users.user_name%TYPE        := COALESCE(in_user_id, sess.get_user_id());
     BEGIN
         RETURN LTRIM(RTRIM(
             CONVERT(
-                CASE WHEN NVL(INSTR(in_username, '@'), 0) > 0
-                    THEN LOWER(in_username)                     -- emails lowercased
-                    ELSE UPPER(in_username) END,                -- otherwise uppercased
+                CASE WHEN NVL(INSTR(out_name, '@'), 0) > 0
+                    THEN LOWER(out_name)                        -- emails lowercased
+                    ELSE UPPER(out_name) END,                   -- otherwise uppercased
                 'US7ASCII')                                     -- convert special chars
         ));
     END;
@@ -214,6 +230,9 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         IF sess.get_app_id() = 0 THEN
             RETURN;
         END IF;
+
+        -- adjust user_id in APEX
+        sess.set_user_id();
 
         -- log request
         tree.log_module();

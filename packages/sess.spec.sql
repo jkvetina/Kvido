@@ -73,13 +73,21 @@ CREATE OR REPLACE PACKAGE sess AS
     RETURN users.user_id%TYPE;
 
 
+
+    --
+    -- Set (shorten) user_id after authentification
+    --
+    PROCEDURE set_user_id;
+
+
+
     --
     -- Transform user name
     --
     FUNCTION get_user_name (
-        in_username         sessions.user_id%TYPE
+        in_user_id          sessions.user_id%TYPE       := NULL
     )
-    RETURN users.user_id%TYPE;
+    RETURN users.user_name%TYPE;
 
 
 
