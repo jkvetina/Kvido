@@ -18,8 +18,9 @@ wwv_flow_api.create_flow(
 ,p_alias=>nvl(wwv_flow_application_install.get_application_alias,'700')
 ,p_page_view_logging=>'NO'
 ,p_page_protection_enabled_y_n=>'Y'
-,p_checksum_salt=>'0A061D9815F6A4CD19F2D2F31B1403FA5B0C79C09B162D9479F3C5B7BA84EB5E'
-,p_bookmark_checksum_function=>'MD5'
+,p_checksum_salt=>'B65C6E3584626C393F2F79DA39E058D3E47D17550FCB82CDC076FA9DC37483F4'
+,p_checksum_salt_last_reset=>'20210427064246'
+,p_bookmark_checksum_function=>'SH256'
 ,p_accept_old_checksums=>false
 ,p_max_session_length_sec=>86400
 ,p_max_session_idle_sec=>14400
@@ -68,7 +69,7 @@ wwv_flow_api.create_flow(
 ,p_substitution_string_01=>'CLEAR_FILTERS'
 ,p_substitution_value_01=>'<span class="fa fa-refresh fa-flip-horizontal" title="Clear filters"></span>'
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210425185540'
+,p_last_upd_yyyymmddhh24miss=>'20210501183305'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>337
 ,p_ui_type_name => null
