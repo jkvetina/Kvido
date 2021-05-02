@@ -9,6 +9,23 @@ WITH curr AS (
     FROM navigation n
     WHERE n.app_id      = sess.get_app_id()
         AND n.page_id   = COALESCE(nav.get_peeked_page_id(), sess.get_page_id())
+    UNION ALL
+    --
+    SELECT
+        n.app_id,
+        n.page_id,
+        n.parent_id,
+        NULL   AS root_id,
+        NULL      AS page_group
+    FROM navigation n
+    WHERE n.app_id      = sess.get_app_id()
+        AND ROWNUM      = 1
+        AND NOT EXISTS (
+            SELECT 1
+            FROM navigation n
+            WHERE n.app_id      = sess.get_app_id()
+                AND n.page_id   = COALESCE(nav.get_peeked_page_id(), sess.get_page_id())
+        )
 )
 SELECT
     CASE WHEN t.parent_id IS NULL THEN 1 ELSE 2 END AS lvl,
