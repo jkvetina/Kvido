@@ -1,25 +1,26 @@
 CREATE OR REPLACE FORCE VIEW p952_triggers AS
 WITH x AS (
-    SELECT
+    SELECT /* result_cache cardinality(1) */
         c.app_id,
-        c.today
+        c.today,
+        NULLIF(apex.get_item('$TABLE') || '__', '__') AS filter_table
     FROM calendar c
     WHERE c.app_id      = sess.get_app_id()
         AND c.today     = app.get_date_str()
 ),
 r AS (
-    SELECT
+    SELECT /* materialize */
         l.module_name,
         COUNT(l.log_id)                                                                     AS calls_,
         SUM(TO_NUMBER(REGEXP_SUBSTR(l.arguments, '^[[]"INSERTED:(\d+)"', 1, 1, NULL, 1)))   AS inserted_,
         SUM(TO_NUMBER(REGEXP_SUBSTR(l.arguments, '^[[]"UPDATED:(\d+)"',  1, 1, NULL, 1)))   AS updated_,
         SUM(TO_NUMBER(REGEXP_SUBSTR(l.arguments, '^[[]"DELETED:(\d+)"',  1, 1, NULL, 1)))   AS deleted_
-    FROM logs l
-    JOIN x
-        ON x.app_id         = l.app_id
-        AND x.today         = l.today
+    FROM x
+    JOIN logs l
+        ON l.today          = x.today
+        AND l.app_id        = x.app_id
         AND l.flag          = 'G'
-        AND l.module_name   = CASE WHEN apex.get_item('$TABLE') IS NOT NULL THEN apex.get_item('$TABLE') || '__' ELSE l.module_name END
+        AND l.module_name   = NVL(x.filter_table, l.module_name)
         AND l.arguments     IS NOT NULL
     GROUP BY l.module_name
 )

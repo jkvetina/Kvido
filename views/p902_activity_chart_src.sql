@@ -1,15 +1,27 @@
 CREATE OR REPLACE FORCE VIEW p902_activity_chart_src AS
 WITH x AS (
     SELECT
-        c.today,
-        c.today__,
         c.app_id,
         apex.get_item('$USER_ID')                   AS user_id,
         TO_NUMBER(apex.get_item('$SESSION_ID'))     AS session_id,
-        TO_NUMBER(apex.get_item('$PAGE_ID'))        AS page_id
+        TO_NUMBER(apex.get_item('$PAGE_ID'))        AS page_id,
+        c.today,
+        c.today__
     FROM calendar c
     WHERE c.app_id          = sess.get_app_id()
         AND c.today         = app.get_date_str()
+    --
+    -- @TODO: i would love to do this, but it is much slower
+    --
+    --SELECT /* result_cache cardinality(1) */
+    --    sess.get_app_id()                           AS app_id,
+    --    apex.get_item('$USER_ID')                   AS user_id,
+    --    TO_NUMBER(apex.get_item('$SESSION_ID'))     AS session_id,
+    --    TO_NUMBER(apex.get_item('$PAGE_ID'))        AS page_id,
+    --    app.get_date_str()                          AS today,
+    --    app.get_date()                              AS today__
+    --FROM DUAL
+    --
 ),
 z AS (
     SELECT
@@ -27,11 +39,11 @@ l AS (
         l.user_id,
         l.page_id,
         l.session_id
-    FROM logs l
-    JOIN x
-        ON x.today          = l.today
-        AND x.app_id        = l.app_id
-    WHERE (l.user_id        = x.user_id         OR x.user_id        IS NULL)
+    FROM x
+    JOIN logs l
+        ON l.today          = x.today
+        AND l.app_id        = x.app_id
+        AND (l.user_id      = x.user_id         OR x.user_id        IS NULL)
         AND (l.session_id   = x.session_id      OR x.session_id     IS NULL)
         AND (l.page_id      = x.page_id         OR x.page_id        IS NULL)
 )
