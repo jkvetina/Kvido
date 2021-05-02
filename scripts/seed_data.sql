@@ -114,6 +114,6 @@ FROM navigation n
 WHERE n.app_id = sess.get_app_id()
 ORDER BY 1, 2;
 --
-SELECT * FROM nav_top_src;
+SELECT * FROM navigation_mvw;
 SELECT * FROM nav_top;
 

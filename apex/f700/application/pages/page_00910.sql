@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210308215749'
+,p_last_upd_yyyymmddhh24miss=>'20210502151024'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(9544386426654050)
@@ -918,6 +918,11 @@ wwv_flow_api.create_page_plug(
 ,p_plug_display_when_condition=>'P910_TREE_MODE'
 ,p_attribute_01=>'N'
 ,p_attribute_02=>'HTML'
+,p_plug_comment=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'--',
+'-- MOVE THIS TO PAGE WITH [ROLES]',
+'--',
+''))
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(55228282283963584)
@@ -1950,9 +1955,9 @@ wwv_flow_api.create_page_process(
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'PUBLISH_CHANGES'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'tree.log_module(''REBUILD_MVW'', ''NAV_TOP_SRC'');',
+'tree.log_module(''REBUILD_MVW'', ''NAVIGATION_MVW'');',
 '--',
-'DBMS_SNAPSHOT.REFRESH(''NAV_TOP_SRC'');',
+'DBMS_SNAPSHOT.REFRESH(''NAVIGATION_MVW'');',
 '--',
 'tree.update_timer();',
 'apex.redirect();',

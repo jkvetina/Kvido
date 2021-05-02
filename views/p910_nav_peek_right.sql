@@ -8,7 +8,7 @@ SELECT
         THEN '<b>' || nav.get_page_label(n.page_name) || '</b>'
         ELSE nav.get_page_label(n.page_name)
         END AS page_name__
-FROM nav_top_src n
+FROM navigation_mvw n
 JOIN (
     SELECT n.page_id
     FROM navigation n

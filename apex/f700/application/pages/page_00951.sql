@@ -23,7 +23,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_required_role=>wwv_flow_api.id(63770652250014528)
 ,p_last_updated_by=>'DEV'
-,p_last_upd_yyyymmddhh24miss=>'20210306221753'
+,p_last_upd_yyyymmddhh24miss=>'20210502151213'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(11205893952964003)
@@ -42,7 +42,7 @@ wwv_flow_api.create_page_plug(
 '        WHEN r.read_only = ''YES''',
 '            THEN apex.get_icon(''fa-check-square'', '''')',
 '        END AS is_read_only',
-'FROM p951_tables t',
+'FROM p951_tables_mvw t',
 'JOIN user_tables r',
 '    ON r.table_name     = t.table_name',
 'WHERE t.table_name      = NVL(apex.get_item(''$TABLE''), t.table_name);',
@@ -831,7 +831,7 @@ wwv_flow_api.create_page_plug(
 ,p_query_type=>'SQL'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
 'SELECT t.*',
-'FROM p951_table_columns t',
+'FROM p951_table_columns_mvw t',
 'WHERE t.table_name = NVL(apex.get_item(''$TABLE''), t.table_name);',
 ''))
 ,p_plug_source_type=>'NATIVE_IG'
@@ -1198,6 +1198,31 @@ wwv_flow_api.create_region_column(
 ,p_duplicate_value=>true
 ,p_include_in_export=>true
 );
+wwv_flow_api.create_region_column(
+ p_id=>wwv_flow_api.id(89994315000818420)
+,p_name=>'NAME_LENGTH'
+,p_source_type=>'DB_COLUMN'
+,p_source_expression=>'NAME_LENGTH'
+,p_data_type=>'NUMBER'
+,p_is_query_only=>false
+,p_item_type=>'NATIVE_NUMBER_FIELD'
+,p_heading=>'Name Length'
+,p_heading_alignment=>'RIGHT'
+,p_display_sequence=>150
+,p_value_alignment=>'RIGHT'
+,p_attribute_03=>'right'
+,p_is_required=>false
+,p_enable_filter=>true
+,p_filter_is_required=>false
+,p_filter_lov_type=>'NONE'
+,p_use_as_row_header=>false
+,p_enable_sort_group=>true
+,p_enable_control_break=>true
+,p_enable_hide=>true
+,p_is_primary_key=>false
+,p_duplicate_value=>true
+,p_include_in_export=>true
+);
 wwv_flow_api.create_interactive_grid(
  p_id=>wwv_flow_api.id(12778026255713333)
 ,p_internal_uid=>12778026255713333
@@ -1351,6 +1376,14 @@ wwv_flow_api.create_ig_report_column(
 ,p_display_seq=>11
 ,p_column_id=>wwv_flow_api.id(30393083781219406)
 ,p_is_visible=>false
+,p_is_frozen=>false
+);
+wwv_flow_api.create_ig_report_column(
+ p_id=>wwv_flow_api.id(114100058820983629)
+,p_view_id=>wwv_flow_api.id(12976649145783705)
+,p_display_seq=>12
+,p_column_id=>wwv_flow_api.id(89994315000818420)
+,p_is_visible=>true
 ,p_is_frozen=>false
 );
 wwv_flow_api.create_page_plug(
@@ -2168,6 +2201,18 @@ wwv_flow_api.create_page_item(
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_attribute_01=>'Y'
 );
+wwv_flow_api.component_end;
+end;
+/
+begin
+wwv_flow_api.component_begin (
+ p_version_yyyy_mm_dd=>'2020.10.01'
+,p_release=>'20.2.0.00.20'
+,p_default_workspace_id=>9526531750928358
+,p_default_application_id=>700
+,p_default_id_offset=>28323188538908472
+,p_default_owner=>'DEV'
+);
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(42893942374353716)
 ,p_name=>'P951_LOCKED'
@@ -2201,18 +2246,6 @@ wwv_flow_api.create_page_item(
 ,p_display_as=>'NATIVE_HIDDEN'
 ,p_is_persistent=>'N'
 ,p_attribute_01=>'Y'
-);
-wwv_flow_api.component_end;
-end;
-/
-begin
-wwv_flow_api.component_begin (
- p_version_yyyy_mm_dd=>'2020.10.01'
-,p_release=>'20.2.0.00.20'
-,p_default_workspace_id=>9526531750928358
-,p_default_application_id=>700
-,p_default_id_offset=>28323188538908472
-,p_default_owner=>'DEV'
 );
 wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(89992672823818403)
@@ -2276,12 +2309,12 @@ wwv_flow_api.create_page_process(
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'REBUILD_MVW_TAB_COLS'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'tree.log_module(''REBUILD_MVW'', ''P951_TABLES'');',
-'DBMS_SNAPSHOT.REFRESH(''P951_TABLES'');',
+'tree.log_module(''REBUILD_MVW'', ''P951_TABLES_MVW'');',
+'DBMS_SNAPSHOT.REFRESH(''P951_TABLES_MVW'');',
 'tree.update_timer();',
 '--',
-'tree.log_module(''REBUILD_MVW'', ''P951_TABLE_COLUMNS'');',
-'DBMS_SNAPSHOT.REFRESH(''P951_TABLE_COLUMNS'');',
+'tree.log_module(''REBUILD_MVW'', ''P951_TABLE_COLUMNS_MVW'');',
+'DBMS_SNAPSHOT.REFRESH(''P951_TABLE_COLUMNS_MVW'');',
 'tree.update_timer();',
 '--',
 'apex.redirect (',

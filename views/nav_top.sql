@@ -75,7 +75,7 @@ SELECT
     NULL AS attribute08,
     NULL AS attribute09,
     NULL AS attribute10
-FROM nav_top_src t
+FROM navigation_mvw t
 CROSS JOIN curr
 WHERE t.order#              > 0
     AND t.is_hidden         IS NULL

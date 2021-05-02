@@ -25,7 +25,7 @@ SELECT
     m.source_column,
     m.overwrite_value
 FROM uploaders u
-JOIN p951_table_columns d
+JOIN p951_table_columns_mvw d
     ON d.table_name         = u.target_table
 LEFT JOIN user_constraints n
     ON n.table_name         = d.table_name

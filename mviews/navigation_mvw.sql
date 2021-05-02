@@ -1,5 +1,5 @@
---DROP MATERIALIZED VIEW nav_top_src;
-CREATE MATERIALIZED VIEW nav_top_src
+--DROP MATERIALIZED VIEW navigation_mvw;
+CREATE MATERIALIZED VIEW navigation_mvw
 BUILD DEFERRED
 REFRESH COMPLETE ON DEMAND
 AS
@@ -105,10 +105,10 @@ FROM (
 BEGIN
     sess.create_session('DEV', 700, 910);
     --
-    DBMS_SNAPSHOT.REFRESH('NAV_TOP_SRC');   -- 6sec
+    DBMS_SNAPSHOT.REFRESH('NAVIGATION_MVW');   -- 6sec
 END;
 /
 --
-SELECT * FROM nav_top_src;
+SELECT * FROM navigation_mvw;
 */
 

@@ -1,11 +1,11 @@
---DROP MATERIALIZED VIEW p951_tables;
-CREATE MATERIALIZED VIEW p951_tables
+--DROP MATERIALIZED VIEW p951_tables_mvw;
+CREATE MATERIALIZED VIEW p951_tables_mvw
 BUILD DEFERRED
 REFRESH COMPLETE ON DEMAND
 AS
 WITH s AS (
     -- columns count
-    SELECT
+    SELECT /* materialize */
         c.table_name,
         COUNT(*) AS cols_
     FROM user_tab_cols c
@@ -13,7 +13,7 @@ WITH s AS (
 ),
 c AS (
     -- constraints overview
-    SELECT
+    SELECT /* materialize */
         c.table_name,
         NULLIF(SUM(CASE WHEN c.constraint_type = 'P' THEN 1 ELSE 0 END), 0) AS pk_,
         NULLIF(SUM(CASE WHEN c.constraint_type = 'U' THEN 1 ELSE 0 END), 0) AS uq_,
@@ -24,7 +24,7 @@ c AS (
 ),
 i AS (
     -- indexes overview
-    SELECT
+    SELECT /* materialize */
         i.table_name,
         COUNT(i.table_name) AS ix_
     FROM user_indexes i
@@ -33,7 +33,7 @@ i AS (
 ),
 g AS (
     -- triggers overview
-    SELECT
+    SELECT /* materialize */
         g.table_name,
         COUNT(g.table_name) AS trg_
     FROM user_triggers g
@@ -41,7 +41,7 @@ g AS (
 ),
 p AS (
     -- partitions count
-    SELECT
+    SELECT /* materialize */
         p.table_name,
         COUNT(*) AS partitions
     FROM user_tab_partitions p
