@@ -4,7 +4,7 @@ WITH q AS (
     SELECT
         q.page_id,
         q.order#    AS seq#
-    FROM nav_top_src q
+    FROM navigation_mvw q
     --
     -- @TODO: WELL, THIS NEED SOME WORK, NEW/ADDED PAGE IS NOT ON CORRECT PLACE
     --
