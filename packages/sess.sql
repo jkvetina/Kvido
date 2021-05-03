@@ -591,12 +591,33 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     BEGIN
         tree.log_module(in_app_id);
         --
+        IF in_app_id IS NULL THEN
+            sess.create_session (
+                in_user_id          => USER,
+                in_app_id           => 700,         ----------- APP_ID ???
+                in_page_id          => 0
+            );
+        END IF;
+
+        -- create missing days, 7 both ways
         INSERT INTO calendar (app_id, today, today__)
-        VALUES (
-            COALESCE(in_app_id, sess.get_app_id()),
-            TO_CHAR(SYSDATE + 1, 'YYYY-MM-DD'),
-            TRUNC(SYSDATE) + 1
-        );
+        SELECT
+            COALESCE(in_app_id, sess.get_app_id())  AS app_id,
+            TO_CHAR(p.possible_day, 'YYYY-MM-DD')   AS today,
+            p.possible_day                          AS today__
+        FROM (
+            SELECT TRUNC(SYSDATE) + LEVEL           AS possible_day
+            FROM DUAL
+            CONNECT BY LEVEL <= 7
+            UNION ALL
+            SELECT TRUNC(SYSDATE) - LEVEL + 1       AS possible_day
+            FROM DUAL
+            CONNECT BY LEVEL <= 8
+        ) p
+        LEFT JOIN calendar c
+            ON c.today__        = p.possible_day
+            AND c.app_id        = COALESCE(in_app_id, sess.get_app_id())
+        WHERE c.today__         IS NULL;
     EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
         NULL;
