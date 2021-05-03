@@ -62,6 +62,14 @@ CREATE OR REPLACE PACKAGE sess AS
     --
 
     --
+    -- Return APEX log_id created at start of the page
+    --
+    FUNCTION get_apex_log_id
+    RETURN logs.log_id%TYPE;
+
+
+
+    --
     -- Returns APEX application id
     --
     FUNCTION get_app_id

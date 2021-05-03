@@ -1049,8 +1049,10 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             rec.flag            := CASE WHEN rec.action_name IS NOT NULL THEN tree.flag_apex_form ELSE tree.flag_apex_page END;
             --
             IF rec.action_name = 'APEX_AJAX_DISPATCH' THEN
-                curr_page_log_id    := NULL;
-                RETURN NULL;        -- dont log
+                --
+                --sess.set_apex_log_id(NULL);
+                --
+                RETURN NULL;    -- dont log
             END IF;
 
             -- for APEX actions (processes, computations...) split action name into action and module
@@ -1063,7 +1065,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         END IF;
 
         -- fill log_id from recent page visit
-        rec.log_parent := NVL(rec.log_parent, curr_page_log_id);
+        rec.log_parent := NVL(rec.log_parent, sess.get_apex_log_id());
 
         -- use first argument as action_name for anonymous calls
         IF rec.flag = tree.flag_module AND rec.module_name = '__anonymous_block' THEN
@@ -1120,12 +1122,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             rec.action_name := NVL(rec.action_name, 'UNKNOWN_ERROR');
             rec.message     := SUBSTR(rec.message || tree.get_error_stack(), 1, tree.length_message);
         END IF;
-
-        /*
-        IF rec.flag = 'W' THEN
-            rec.timer := tree.get_timestamp_diff(curr_page_stamp, rec.created_at);
-        END IF;
-        */
 
         rec.action_name := NVL(rec.action_name, tree.empty_action);
         rec.module_name := NVL(rec.module_name, tree.empty_action);

@@ -1,5 +1,15 @@
 CREATE OR REPLACE PACKAGE BODY sess AS
 
+    -- log_id when page request started in APEX
+    apex_log_id             logs.log_id%TYPE;
+
+
+
+    FUNCTION get_apex_log_id
+    RETURN logs.log_id%TYPE AS
+    BEGIN
+        RETURN apex_log_id;
+    END;
 
 
 
@@ -498,10 +508,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         FROM logs l
         WHERE l.session_id      = in_session_id
             AND l.today         = in_today;
-        --
-        UPDATE sessions s
-        SET s.log_id            = NULL
-        WHERE s.session_id      = in_session_id;
         --
         IF rows_to_delete.FIRST IS NOT NULL THEN
             FOR i IN rows_to_delete.FIRST .. rows_to_delete.LAST LOOP

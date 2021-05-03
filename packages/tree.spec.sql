@@ -93,10 +93,6 @@ CREATE OR REPLACE PACKAGE tree AS
         TABLE OF logs.log_id%TYPE
         INDEX BY PLS_INTEGER;
 
-    --
-    curr_page_log_id        logs.log_id%TYPE;
-    curr_page_stamp         logs.created_at%TYPE;
-
 
 
 

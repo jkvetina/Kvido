@@ -44,7 +44,6 @@ SELECT
     l.triggers,
     s.created_at,
     s.updated_at,
-    s.log_id,
     --
     app.get_duration(s.updated_at - s.created_at) AS duration,
     --

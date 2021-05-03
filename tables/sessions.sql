@@ -9,7 +9,6 @@ CREATE TABLE sessions (
     apex_items          VARCHAR2(4000),
     created_at          DATE            CONSTRAINT nn_sessions_created_at   NOT NULL,
     updated_at          DATE            CONSTRAINT nn_sessions_updated_at   NOT NULL,
-    log_id              INTEGER,                                                            -- no FK on purpose
     --
     today               VARCHAR2(10)    CONSTRAINT nn_sessions_today        NOT NULL,       -- no FK on purpose
     --
@@ -55,6 +54,5 @@ COMMENT ON COLUMN sessions.page_id          IS 'APEX page ID';
 COMMENT ON COLUMN sessions.apex_items       IS 'APEX global items';
 COMMENT ON COLUMN sessions.created_at       IS 'Time of creation';
 COMMENT ON COLUMN sessions.updated_at       IS 'Time of last update';
-COMMENT ON COLUMN sessions.log_id           IS 'Log ID of page request start';
 COMMENT ON COLUMN sessions.today            IS 'Date of session for best performance';
 
