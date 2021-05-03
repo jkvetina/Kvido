@@ -221,5 +221,73 @@ CREATE OR REPLACE PACKAGE apex AS
     )
     RETURN VARCHAR2;
 
+
+
+    --
+    --
+    --
+    PROCEDURE log_before_header (
+        in_action       logs.action_name%TYPE,
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
+    );
+
+
+
+    --
+    --
+    --
+    PROCEDURE log_after_header (
+        in_action       logs.action_name%TYPE,
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
+    );
+
+
+
+    --
+    --
+    --
+    PROCEDURE log_after_submit (
+        in_action       logs.action_name%TYPE,
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
+    );
+
+
+
+    --
+    --
+    --
+    PROCEDURE log_processing (
+        in_action       logs.action_name%TYPE,
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
+    );
+
 END;
 /

@@ -445,5 +445,101 @@ CREATE OR REPLACE PACKAGE BODY apex AS
         RETURN '<span class="fa ' || in_name || '" title="' || in_title || '"></span>';
     END;
 
+
+
+    PROCEDURE log_before_header (
+        in_action       logs.action_name%TYPE,
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
+    )
+    AS
+        log_id          logs.log_id%TYPE;
+    BEGIN
+        log_id := tree.log__ (
+            in_flag             => tree.flag_apex_process,
+            in_action_name      => 'BEFORE_HEADER',
+            in_module_name      => in_action,
+            in_arguments        => tree.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+        );
+    END;
+
+
+
+    PROCEDURE log_after_header (
+        in_action       logs.action_name%TYPE,
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
+    )
+    AS
+        log_id          logs.log_id%TYPE;
+    BEGIN
+        log_id := tree.log__ (
+            in_flag             => tree.flag_apex_process,
+            in_action_name      => 'AFTER_HEADER',
+            in_module_name      => in_action,
+            in_arguments        => tree.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+        );
+    END;
+
+
+
+    PROCEDURE log_after_submit (
+        in_action       logs.action_name%TYPE,
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
+    )
+    AS
+        log_id          logs.log_id%TYPE;
+    BEGIN
+        log_id := tree.log__ (
+            in_flag             => tree.flag_apex_process,
+            in_action_name      => 'AFTER_SUBMIT',
+            in_module_name      => in_action,
+            in_arguments        => tree.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+        );
+    END;
+
+
+
+    PROCEDURE log_processing (
+        in_action       logs.action_name%TYPE,
+        in_arg1         logs.arguments%TYPE     := NULL,
+        in_arg2         logs.arguments%TYPE     := NULL,
+        in_arg3         logs.arguments%TYPE     := NULL,
+        in_arg4         logs.arguments%TYPE     := NULL,
+        in_arg5         logs.arguments%TYPE     := NULL,
+        in_arg6         logs.arguments%TYPE     := NULL,
+        in_arg7         logs.arguments%TYPE     := NULL,
+        in_arg8         logs.arguments%TYPE     := NULL
+    )
+    AS
+        log_id          logs.log_id%TYPE;
+    BEGIN
+        log_id := tree.log__ (
+            in_flag             => tree.flag_apex_process,
+            in_action_name      => 'PROCESSING',
+            in_module_name      => in_action,
+            in_arguments        => tree.get_arguments(in_arg1, in_arg2, in_arg3, in_arg4, in_arg5, in_arg6, in_arg7, in_arg8)
+        );
+    END;
+
 END;
 /
