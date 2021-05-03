@@ -15,6 +15,7 @@ wwv_flow_api.create_authentication(
  p_id=>wwv_flow_api.id(104393079175937346)
 ,p_name=>'OPEN_DOOR (TESTING ONLY)'
 ,p_scheme_type=>'NATIVE_OPEN_DOOR'
+,p_post_auth_process=>'sess.create_session'
 ,p_use_secure_cookie_yn=>'N'
 ,p_ras_mode=>0
 );

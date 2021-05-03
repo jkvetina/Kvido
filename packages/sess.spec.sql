@@ -40,8 +40,11 @@ CREATE OR REPLACE PACKAGE sess AS
     app_max_page            CONSTANT sessions.page_id%TYPE              := 999;
 
     -- anonymous user used on login pages in APEX
-    anonymous_user          CONSTANT VARCHAR2(30)                       := 'NOBODY';  -- uppercase
+    anonymous_user          CONSTANT VARCHAR2(30)                       := 'NOBODY';  -- ORDS_PUBLIC_USER
 
+    -- login page
+    login_page#             CONSTANT NUMBER(6)                          := 9999;
+    
 
 
 
@@ -184,17 +187,14 @@ CREATE OR REPLACE PACKAGE sess AS
 
 
     --
-    -- Set user_id and items from previous session
+    -- Create session from APEX, set user_id and items from previous session
     --
-    PROCEDURE create_session (
-        in_user_id          sessions.user_id%TYPE,
-        in_apply_items      BOOLEAN                     := FALSE
-    );
+    PROCEDURE create_session;
 
 
 
     --
-    -- Set user_id outside of APEX (from console, trigger, job...)
+    -- Create session outside of APEX (from console, trigger, job...)
     --
     PROCEDURE create_session (
         in_user_id          sessions.user_id%TYPE,
@@ -207,9 +207,7 @@ CREATE OR REPLACE PACKAGE sess AS
     --
     -- Store current APEX items and activity to `sessions`
     --
-    PROCEDURE update_session (
-        in_note             VARCHAR2                    := NULL
-    );
+    PROCEDURE update_session;
 
 
 

@@ -813,9 +813,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             in_parent_id    => tree.recent_log_id
         );
         --
-        sess.create_session (
-            in_user_id => USER
-        );
+        sess.create_session();
         --
         DBMS_SCHEDULER.CREATE_JOB (
             in_job_name,
@@ -1025,9 +1023,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
             -- recover app context values from log and set user
             recent_log_id := rec.log_id;  -- to link SESS calls to proper branch
-            sess.create_session (
-                in_user_id      => rec.user_id
-            );
+            sess.create_session();
         END IF;
 
         -- get user and update session info

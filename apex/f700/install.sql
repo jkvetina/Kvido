@@ -17,7 +17,6 @@ prompt --install
 @@application/shared_components/security/authorizations/nobody_hidden.sql
 @@application/shared_components/security/authorizations/is_developer.sql
 @@application/shared_components/navigation/navigation_bar.sql
-@@application/shared_components/logic/application_processes/after_auth.sql
 @@application/shared_components/logic/application_items/g_date.sql
 @@application/shared_components/logic/application_settings.sql
 @@application/shared_components/navigation/tabs/standard.sql

@@ -1,6 +1,5 @@
 CREATE OR REPLACE PACKAGE BODY sess AS
 
-    app_user_id             sessions.user_id%TYPE;          -- user_id used when called outside of APEX
 
 
 
@@ -17,7 +16,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     BEGIN
         RETURN COALESCE (
             APEX_APPLICATION.G_USER,
-            app_user_id,
             SYS_CONTEXT('USERENV', 'SESSION_USER'),
             USER
         );
@@ -25,10 +23,28 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
 
+    FUNCTION get_user_id (
+        in_user_login       users.user_login%TYPE
+    )
+    RETURN users.user_id%TYPE AS
+    BEGIN
+        -- shorten user_login to user_id
+        RETURN REGEXP_REPLACE(LTRIM(RTRIM(
+            CONVERT(
+                CASE WHEN NVL(INSTR(in_user_login, '@'), 0) > 0
+                    THEN LOWER(in_user_login)                       -- emails lowercased
+                    ELSE UPPER(in_user_login) END,                  -- otherwise uppercased
+                'US7ASCII')                                         -- convert special chars
+        )), '@.*', '');
+    END;
+
+
+
     PROCEDURE set_user_id AS
     BEGIN
+        -- overwrite current user in APEX
         APEX_CUSTOM_AUTH.SET_USER (
-            p_user => REGEXP_REPLACE(sess.get_user_name(), '@.*', '')
+            p_user => sess.get_user_id(sess.get_user_id())
         );
     END;
 
@@ -39,15 +55,16 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     )
     RETURN users.user_name%TYPE
     AS
-        out_name            users.user_name%TYPE        := COALESCE(in_user_id, sess.get_user_id());
+        out_name            users.user_name%TYPE;
     BEGIN
-        RETURN LTRIM(RTRIM(
-            CONVERT(
-                CASE WHEN NVL(INSTR(out_name, '@'), 0) > 0
-                    THEN LOWER(out_name)                        -- emails lowercased
-                    ELSE UPPER(out_name) END,                   -- otherwise uppercased
-                'US7ASCII')                                     -- convert special chars
-        ));
+        SELECT u.user_name INTO out_name
+        FROM users u
+        WHERE u.user_id = in_user_id;
+        --
+        RETURN out_name;
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN NULL;
     END;
 
 
@@ -181,8 +198,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         -- set session things
         DBMS_SESSION.SET_IDENTIFIER(in_user_id);                -- USERENV.CLIENT_IDENTIFIER
         DBMS_APPLICATION_INFO.SET_CLIENT_INFO(in_user_id);      -- CLIENT_INFO, v$
-        --
-        app_user_id := in_user_id;
     END;
 
 
@@ -213,39 +228,58 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
 
-    PROCEDURE create_session (
-        in_user_id          sessions.user_id%TYPE,
-        in_apply_items      BOOLEAN                     := FALSE
-    ) AS
+    PROCEDURE create_session AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
-        rec sessions%ROWTYPE;
+        v_user_id               users.user_id%TYPE;
+        v_is_active             users.is_active%TYPE;
     BEGIN
-        sess.init_session(in_user_id);
-        --
-        IF UPPER(in_user_id) = sess.anonymous_user THEN
-            RETURN;
-        END IF;
-        --
-        IF sess.get_app_id() = 0 THEN
+        -- this procedure is starting point in APEX after successful authentication
+        -- prevent sessions for anonymous (unlogged) users
+        IF UPPER(sess.get_user_id()) = sess.anonymous_user OR sess.get_app_id() = 0 THEN
             RETURN;
         END IF;
 
-        -- adjust user_id in APEX
+        -- make sure user exists
+        BEGIN
+            SELECT u.user_id, u.is_active INTO v_user_id, v_is_active
+            FROM users u
+            WHERE u.user_login = sess.get_user_id();
+            --
+            IF v_is_active IS NULL THEN
+                RAISE_APPLICATION_ERROR(tree.app_exception_code, 'ACCOUNT_DISABLED');
+            END IF;
+        EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            v_user_id := sess.get_user_id();  -- it contains login just after auth
+            --
+            BEGIN
+                -- create user account
+                sess_create_user (
+                    in_user_login       => v_user_id,
+                    in_user_id          => sess.get_user_id(v_user_id),
+                    in_user_name        => v_user_id
+                );
+                --
+                v_user_id := sess.get_user_id(v_user_id);  -- overwrite with real user_id
+            EXCEPTION
+            WHEN OTHERS THEN
+                RAISE_APPLICATION_ERROR(tree.app_exception_code, 'CREATE_USER_FAILED', TRUE);
+            END;
+        END;
+
+        -- adjust user_id in APEX, init session
         sess.set_user_id();
-
-        -- log request
+        sess.init_session(v_user_id);
         tree.log_module();
 
         -- load APEX items from recent (previous) session
-        IF in_apply_items THEN
-            BEGIN
-                apex.apply_items(sess.get_recent_items());
-            EXCEPTION
-            WHEN OTHERS THEN
-                NULL;
-            END;
-        END IF;
+        BEGIN
+            apex.apply_items(sess.get_recent_items());
+        EXCEPTION
+        WHEN OTHERS THEN
+            NULL;
+        END;
 
         -- insert or update sessions table
         sess.update_session();
@@ -271,71 +305,54 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         --
         is_active           CHAR(1);
     BEGIN
-        sess.init_session(in_user_id);
-
-        -- prevent sessions for anonymous (unlogged) users
-        IF UPPER(in_user_id) = sess.anonymous_user THEN
-            RETURN;
-        END IF;
-
-        -- prevent multiple calls
-        IF in_app_id        = sess.get_app_id()
-            AND in_user_id  = sess.get_user_id()
-        THEN
-            BEGIN
-                APEX_SESSION.ATTACH (
-                    p_app_id        => sess.get_app_id(),
-                    p_page_id       => in_page_id,
-                    p_session_id    => sess.get_session_id()
-                );
-                --
-                COMMIT;
-                RETURN;
-            EXCEPTION
-            WHEN OTHERS THEN
-                NULL;  -- continue
-            END;
-        END IF;
-
-        -- check app existence
+        -- create session from SQL Developer (not from APEX)
         BEGIN
-            SELECT 'Y' INTO is_active
-            FROM apps a
-            WHERE a.app_id = in_app_id;
+            IF (in_user_id != sess.get_user_id() OR in_app_id != sess.get_app_id()) THEN
+                RAISE NO_DATA_FOUND;
+            END IF;
+
+            -- use existing session if possible
+            APEX_SESSION.ATTACH (
+                p_app_id        => sess.get_app_id(),
+                p_page_id       => in_page_id,
+                p_session_id    => sess.get_session_id()
+            );
         EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-            RAISE_APPLICATION_ERROR(tree.app_exception_code, 'APPLICATION_MISSING');
+        WHEN OTHERS THEN
+            -- find and setup workspace
+            FOR a IN (
+                SELECT a.workspace
+                FROM apex_applications a
+                WHERE a.application_id  = in_app_id
+                    AND ROWNUM          = 1
+            ) LOOP
+                APEX_UTIL.SET_WORKSPACE (
+                    p_workspace => a.workspace
+                );
+                APEX_UTIL.SET_SECURITY_GROUP_ID (
+                    p_security_group_id => APEX_UTIL.FIND_SECURITY_GROUP_ID(p_workspace => a.workspace)
+                );
+                APEX_UTIL.SET_USERNAME (
+                    p_userid    => APEX_UTIL.GET_USER_ID(in_user_id),
+                    p_username  => in_user_id
+                );
+
+                -- create APEX session
+                BEGIN
+                    APEX_SESSION.CREATE_SESSION (
+                        p_app_id    => in_app_id,
+                        p_page_id   => in_page_id,
+                        p_username  => in_user_id
+                    );
+                EXCEPTION
+                WHEN OTHERS THEN
+                    tree.raise_error('INVALID_APP_OR_PAGE', in_app_id, in_page_id, in_user_id);
+                END;
+            END LOOP;
         END;
 
-        -- find and setup workspace
-        FOR a IN (
-            SELECT a.workspace
-            FROM apex_applications a
-            WHERE a.application_id  = in_app_id
-                AND ROWNUM          = 1
-        ) LOOP
-            APEX_UTIL.SET_WORKSPACE (
-                p_workspace => a.workspace
-            );
-            APEX_UTIL.SET_SECURITY_GROUP_ID (
-                p_security_group_id => APEX_UTIL.FIND_SECURITY_GROUP_ID(p_workspace => a.workspace)
-            );
-            APEX_UTIL.SET_USERNAME (
-                p_userid    => APEX_UTIL.GET_USER_ID(in_user_id),
-                p_username  => in_user_id
-            );
-        END LOOP;
-
-        -- create APEX session
-        APEX_SESSION.CREATE_SESSION (
-            p_app_id    => in_app_id,
-            p_page_id   => in_page_id,
-            p_username  => in_user_id
-        );
-        --
-        sess.create_session (
-            in_user_id => in_user_id
-        );
+        -- go thru standard process as from APEX
+        sess.create_session();
         --
         COMMIT;
     EXCEPTION
@@ -351,59 +368,52 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
 
-    PROCEDURE update_session (
-        in_note             VARCHAR2                := NULL
-    )
+    PROCEDURE update_session
     AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
         in_user_id          CONSTANT users.user_id%TYPE := sess.get_user_id();
         --
-        is_active           CHAR(1);
+        is_active           apps.is_active%TYPE;
         rec                 sessions%ROWTYPE;
         req                 VARCHAR2(4000);
         --
         -- DONT CALL TREE PACKAGE FROM THIS MODULE
         --
     BEGIN
+        -- prevent processing for anonymous users
         IF UPPER(in_user_id) = sess.anonymous_user THEN
             RETURN;
         END IF;
 
         -- check app availability
-        BEGIN
-            SELECT 'Y' INTO is_active
-            FROM apps a
-            WHERE a.app_id          = sess.get_app_id()
-                AND (a.is_active    = 'Y' OR apex.is_developer_y_null() = 'Y');
-        EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-            RAISE_APPLICATION_ERROR(tree.app_exception_code, 'APPLICATION_OFFLINE');
-        END;
-
-        -- make sure user exists (after successful authentication)
-        BEGIN
-            SELECT u.user_id, u.is_active
-            INTO rec.user_id, is_active
-            FROM users u
-            WHERE u.user_id = in_user_id;
-            --
-            IF is_active IS NULL THEN
-                RAISE_APPLICATION_ERROR(tree.app_exception_code, 'ACCOUNT_DISABLED');
-            END IF;
-        EXCEPTION
-        WHEN NO_DATA_FOUND THEN
+        IF NOT apex.is_developer() THEN
             BEGIN
-                sess_create_user(in_user_id);
-                --
-                rec.user_id := in_user_id;
+                SELECT 'Y' INTO is_active
+                FROM apps a
+                WHERE a.app_id          = sess.get_app_id()
+                    AND a.is_active     = 'Y';
             EXCEPTION
-            WHEN OTHERS THEN
-                RAISE_APPLICATION_ERROR(tree.app_exception_code, 'CREATE_USER_FAILED', TRUE);
+            WHEN NO_DATA_FOUND THEN
+                RAISE_APPLICATION_ERROR(tree.app_exception_code, 'APPLICATION_OFFLINE');
             END;
-        END;
+            --
+            BEGIN
+                SELECT 'Y' INTO is_active
+                FROM user_roles r
+                WHERE r.app_id          = sess.get_app_id()
+                    AND r.user_id       = in_user_id
+                    AND r.is_active     = 'Y'
+                GROUP BY r.user_id
+                HAVING COUNT(*) > 0;
+            EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                RAISE_APPLICATION_ERROR(tree.app_exception_code, 'USER_TEMPORARLY_DISABLED');
+            END;
+        END IF;
 
         -- values to store
+        rec.user_id         := in_user_id;
         rec.session_id      := sess.get_session_id();
         rec.app_id          := sess.get_app_id();
         rec.page_id         := sess.get_page_id();
@@ -443,32 +453,26 @@ CREATE OR REPLACE PACKAGE BODY sess AS
                 INSERT INTO sessions VALUES rec;
             EXCEPTION
             WHEN DUP_VAL_ON_INDEX THEN
-                NULL;  -- redirect to logout/login page
+                -- redirect to logout/login page
+                RAISE;
             END;
-        ELSIF TRUNC(rec.created_at) < TRUNC(rec.updated_at) THEN    -- avoid sessions thru multiple days
+        ELSIF TRUNC(rec.created_at) < TRUNC(rec.updated_at) THEN
+            -- avoid sessions thru multiple days
             sess.force_new_session();
         END IF;
 
         -- log request, except for login page
-        IF rec.page_id != 9999 THEN
-            rec.log_id := tree.log_module (
-                in_note,
+        IF rec.page_id != sess.login_page# THEN
+            apex_log_id := tree.log_module (
                 REGEXP_REPLACE(req, '^/[^/]+/[^/]+/f[?]p=([^:]*:){6}', '')   -- arguments in URL
             );
-
-            -- store log_id to use it as parent for all further requests
-            UPDATE sessions s
-            SET s.log_id        = rec.log_id
-            WHERE s.session_id  = rec.session_id
-                AND s.app_id    = rec.app_id;
-            --
-            tree.curr_page_log_id   := rec.log_id;
-            tree.curr_page_stamp    := SYSTIMESTAMP;
         END IF;
         --
         COMMIT;
     EXCEPTION
     WHEN tree.app_exception THEN
+        ROLLBACK;
+        --
         tree.raise_error('UPDATE_SESSION_FAILED');
     WHEN APEX_APPLICATION.E_STOP_APEX_ENGINE THEN
         COMMIT;
