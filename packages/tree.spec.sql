@@ -50,13 +50,15 @@ CREATE OR REPLACE PACKAGE tree AS
     flag_longops            CONSTANT logs.flag%TYPE     := 'L';     -- longops row
     flag_scheduler          CONSTANT logs.flag%TYPE     := 'S';     -- scheduler run planned
     --
+    flag_apex_process       CONSTANT logs.flag%TYPE     := 'X';     -- APEX process
     flag_apex_page          CONSTANT logs.flag%TYPE     := 'P';     -- page visited/requested
     flag_apex_form          CONSTANT logs.flag%TYPE     := 'F';     -- form submitted
     flag_trigger            CONSTANT logs.flag%TYPE     := 'G';     -- called from trigger
     flag_business           CONSTANT logs.flag%TYPE     := 'B';     -- business event
 
     -- specify maximum length for trim
-    length_action           CONSTANT PLS_INTEGER        := 32;      -- logs.action%TYPE
+    length_action           CONSTANT PLS_INTEGER        := 32;      -- logs.action_name%TYPE
+    length_module           CONSTANT PLS_INTEGER        := 30;      -- logs.module_name%TYPE
     length_arguments        CONSTANT PLS_INTEGER        := 1000;    -- logs.arguments%TYPE
     length_message          CONSTANT PLS_INTEGER        := 4000;    -- logs.message%TYPE
 
@@ -738,13 +740,23 @@ CREATE OR REPLACE PACKAGE tree AS
     -- Internal function which creates records in logs table; returns assigned `log_id`
     --
     FUNCTION log__ (
-        in_action_name      logs.action_name%TYPE,
         in_flag             logs.flag%TYPE,
+        in_action_name      logs.action_name%TYPE,
+        in_module_name      logs.action_name%TYPE   := NULL,
         in_arguments        logs.arguments%TYPE     := NULL,
         in_message          logs.message%TYPE       := NULL,
         in_parent_id        logs.log_parent%TYPE    := NULL
     )
-    RETURN logs.log_id%TYPE
+    RETURN logs.log_id%TYPE;
+
+
+
+    --
+    --
+    --
+    PROCEDURE log__ (
+        rec                 IN OUT NOCOPY logs%ROWTYPE
+    )
     ACCESSIBLE BY (
         PACKAGE tree,
         PACKAGE tree_ut

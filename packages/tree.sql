@@ -979,36 +979,42 @@ CREATE OR REPLACE PACKAGE BODY tree AS
 
 
     FUNCTION log__ (
-        in_action_name      logs.action_name%TYPE,
         in_flag             logs.flag%TYPE,
+        in_action_name      logs.action_name%TYPE,
+        in_module_name      logs.action_name%TYPE   := NULL,
         in_arguments        logs.arguments%TYPE     := NULL,
         in_message          logs.message%TYPE       := NULL,
         in_parent_id        logs.log_parent%TYPE    := NULL
     )
     RETURN logs.log_id%TYPE
-    ACCESSIBLE BY (
-        PACKAGE tree,
-        PACKAGE tree_ut
-    ) AS
-        PRAGMA AUTONOMOUS_TRANSACTION;
-        --
+    AS
         rec                 logs%ROWTYPE;
-        map_index           logs.module_name%TYPE;
-        --
-        whitelisted         BOOLEAN := FALSE;   -- TRUE = log
-        blacklisted         BOOLEAN := FALSE;   -- TRUE = dont log; whitelisted > blacklisted
     BEGIN
-        -- get caller info and parent id
-        rec.log_id := log_id.NEXTVAL;
+        -- prepare record
+        rec.log_id          := log_id.NEXTVAL;
+        rec.log_parent      := COALESCE(in_parent_id, sess.get_apex_log_id());
+        rec.flag            := COALESCE(in_flag, '?');
+        rec.action_name     := SUBSTR(in_action_name,   1, tree.length_action);
+        rec.module_name     := SUBSTR(in_module_name,   1, tree.length_module);
+        rec.arguments       := SUBSTR(in_arguments,     1, tree.length_arguments);
+        rec.message         := SUBSTR(in_message,       1, tree.length_message);
+
         --
-        tree.get_caller__ (
-            in_log_id           => rec.log_id,
-            in_parent_id        => in_parent_id,
-            in_flag             => in_flag,
-            out_module_name     => rec.module_name,
-            out_module_line     => rec.module_line,
-            out_parent_id       => rec.log_parent
-        );
+        -- IF flag = APEX then skip ???
+        --
+        -- get caller info and parent id
+        IF rec.flag NOT IN (tree.flag_apex_process, tree.flag_apex_page, tree.flag_apex_form) THEN
+            tree.get_caller__ (
+                in_log_id           => rec.log_id,
+                in_parent_id        => rec.log_parent,
+                in_flag             => rec.flag,
+                out_module_name     => rec.module_name,
+                out_module_line     => rec.module_line,
+                out_parent_id       => rec.log_parent
+            );
+        END IF;
+
+
 
         -- recover contexts for scheduler
         IF in_flag = tree.flag_scheduler AND in_parent_id IS NOT NULL THEN
@@ -1027,9 +1033,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         END IF;
 
         -- get user and update session info
-        rec.user_id         := COALESCE(rec.user_id, sess.get_user_id());
-        rec.flag            := COALESCE(in_flag, '?');
-        rec.module_line     := COALESCE(rec.module_line, 0);
         --
         tree.set_session (
             in_module_name  => rec.module_name,
@@ -1037,7 +1040,7 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         );
 
         -- override flags for APEX calls
-        IF rec.module_name LIKE trigger_sess AND rec.flag = tree.flag_module AND rec.module_name IN (
+        IF rec.flag = tree.flag_module AND rec.module_name IN (
             'SESS.CREATE_SESSION',
             'SESS.UPDATE_SESSION'
         ) THEN
@@ -1047,11 +1050,9 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             --
             rec.action_name     := SUBSTR(APEX_APPLICATION.G_REQUEST, 1, tree.length_action);   -- button name
             rec.flag            := CASE WHEN rec.action_name IS NOT NULL THEN tree.flag_apex_form ELSE tree.flag_apex_page END;
-            --
+
+            -- avoid too much clutter in log
             IF rec.action_name = 'APEX_AJAX_DISPATCH' THEN
-                --
-                --sess.set_apex_log_id(NULL);
-                --
                 RETURN NULL;    -- dont log
             END IF;
 
@@ -1064,9 +1065,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             END IF;
         END IF;
 
-        -- fill log_id from recent page visit
-        rec.log_parent := NVL(rec.log_parent, sess.get_apex_log_id());
-
         -- use first argument as action_name for anonymous calls
         IF rec.flag = tree.flag_module AND rec.module_name = '__anonymous_block' THEN
             rec.action_name := SUBSTR(REGEXP_SUBSTR(in_arguments, '^\["([^"]+)', 1, 1, NULL, 1), 1, tree.length_action);
@@ -1076,41 +1074,6 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         IF rec.flag = tree.flag_module AND rec.module_name LIKE '%\_\_' ESCAPE '\' THEN
             rec.flag := tree.flag_trigger;
         END IF;
-
-        -- force log errors
-        IF SQLCODE != 0 OR rec.flag IN (tree.flag_error, tree.flag_warning) THEN
-            whitelisted := TRUE;
-        END IF;
-
-        -- check whitelist first
-        IF NOT whitelisted THEN
-            whitelisted := tree.is_listed (
-                in_list => rows_whitelist,
-                in_row  => rec
-            );
-        END IF;
-
-        -- check blacklist
-        IF NOT whitelisted THEN
-            blacklisted := tree.is_listed (
-                in_list => rows_blacklist,
-                in_row  => rec
-            );
-            --
-            IF blacklisted THEN
-                RETURN NULL;  -- exit function
-            END IF;
-        END IF;
-
-        -- prepare record
-        rec.app_id          := sess.get_app_id();
-        rec.page_id         := sess.get_page_id();
-        rec.action_name     := SUBSTR(NVL(rec.action_name, in_action_name), 1, tree.length_action);
-        rec.arguments       := SUBSTR(NVL(rec.arguments,   in_arguments),   1, tree.length_arguments);
-        rec.message         := SUBSTR(in_message,                           1, tree.length_message);
-        rec.session_id      := sess.get_session_id();
-        rec.created_at      := SYSTIMESTAMP;
-        rec.today           := TO_CHAR(SYSDATE, 'YYYY-MM-DD');
 
         -- add call stack
         IF SQLCODE != 0 OR INSTR(tree.track_callstack, rec.flag) > 0 OR tree.track_callstack = '%' OR in_parent_id IS NOT NULL THEN
@@ -1123,10 +1086,63 @@ CREATE OR REPLACE PACKAGE BODY tree AS
             rec.message     := SUBSTR(rec.message || tree.get_error_stack(), 1, tree.length_message);
         END IF;
 
-        rec.action_name := NVL(rec.action_name, tree.empty_action);
-        rec.module_name := NVL(rec.module_name, tree.empty_action);
-
         -- finally store record in table
+        tree.log__(rec);
+        --
+        RETURN rec.log_id;
+    EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(tree.app_exception_code, 'LOG_FAILED', TRUE);
+    END;
+
+
+
+    PROCEDURE log__ (
+        rec                 IN OUT NOCOPY logs%ROWTYPE
+    )
+    ACCESSIBLE BY (
+        PACKAGE tree,
+        PACKAGE tree_ut
+    ) AS
+        PRAGMA AUTONOMOUS_TRANSACTION;
+        --
+        v_proceed           BOOLEAN := FALSE;
+    BEGIN
+        -- force log errors
+        IF SQLCODE != 0 OR rec.flag IN (tree.flag_error, tree.flag_warning) THEN
+            v_proceed := TRUE;
+        END IF;
+
+        -- check whitelist first
+        IF NOT v_proceed THEN
+            v_proceed := tree.is_listed (
+                in_list => rows_whitelist,
+                in_row  => rec
+            );
+        END IF;
+
+        -- check blacklist
+        IF NOT v_proceed THEN
+            IF tree.is_listed (
+                in_list => rows_blacklist,
+                in_row  => rec
+            ) THEN
+                RETURN;  -- exit
+            END IF;
+        END IF;
+
+        -- fill in defaults if needed
+        rec.app_id          := sess.get_app_id();
+        rec.user_id         := COALESCE(rec.user_id, sess.get_user_id());
+        rec.page_id         := sess.get_page_id();
+        rec.action_name     := COALESCE(rec.action_name, tree.empty_action);
+        rec.module_name     := COALESCE(rec.module_name, tree.empty_action);
+        rec.module_line     := COALESCE(rec.module_line, 0);
+        rec.session_id      := sess.get_session_id();
+        rec.created_at      := SYSTIMESTAMP;
+        rec.today           := TO_CHAR(SYSDATE, 'YYYY-MM-DD');
+
+        -- create record
         INSERT INTO logs VALUES rec;
         COMMIT;
         --
@@ -1141,11 +1157,9 @@ CREATE OR REPLACE PACKAGE BODY tree AS
                 rec.log_id || ' ^' || COALESCE(rec.log_parent, 0) || ' [' || rec.flag || ']: ' ||
                 --RPAD(' ', (rec.module_depth - 1) * 2, ' ') ||
                 rec.module_name || ' [' || rec.module_line || '] ' || NULLIF(rec.action_name, tree.empty_action) ||
-                RTRIM(': ' || SUBSTR(in_arguments, 1, 40), ': ')
+                RTRIM(': ' || SUBSTR(rec.arguments, 1, 40), ': ')
             );
         END IF;
-        --
-        RETURN rec.log_id;
     EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('-- NOT LOGGED ERROR:');
