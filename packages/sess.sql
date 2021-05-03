@@ -215,21 +215,11 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     PROCEDURE clear_session (
         in_log_id       logs.log_id%TYPE        := NULL
     ) AS
-        curr_log_id     logs.log_id%TYPE;
     BEGIN
-        -- update timer for log_id stored at page start (before header)
-        IF in_log_id IS NOT NULL THEN
-            BEGIN
-                SELECT s.log_id INTO curr_log_id
-                FROM sessions s
-                WHERE s.session_id = sess.get_session_id();
-            EXCEPTION
-            WHEN NO_DATA_FOUND THEN
-                NULL;
-            END;
+        -- update timer stored at page start to track page performance
+        IF COALESCE(in_log_id, apex_log_id) IS NOT NULL THEN
+            tree.update_timer(COALESCE(in_log_id, apex_log_id));
         END IF;
-        --
-        tree.update_timer(NVL(curr_log_id, in_log_id));
         --
         DBMS_SESSION.CLEAR_IDENTIFIER();
         --DBMS_SESSION.CLEAR_ALL_CONTEXT(namespace);
