@@ -37,7 +37,7 @@ CREATE OR REPLACE PACKAGE tree AS
 
     -- view which holds all DML errors
     view_dml_errors         CONSTANT VARCHAR2(30)       := 'LOGS_DML_ERRORS';
-    view_logs_modules       CONSTANT VARCHAR2(30)       := 'LOGS_MODULES';
+    view_logs_modules       CONSTANT VARCHAR2(30)       := 'LOGS_MODULES_MVW';
 
     -- flags
     flag_module             CONSTANT logs.flag%TYPE     := 'M';     -- start of any module (procedure/function)
