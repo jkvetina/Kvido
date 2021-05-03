@@ -61,7 +61,7 @@ CREATE OR REPLACE PACKAGE tree AS
     length_message          CONSTANT PLS_INTEGER        := 4000;    -- logs.message%TYPE
 
     -- append callstack for these flags; % for all
-    track_callstack         CONSTANT VARCHAR2(30)       := flag_error || flag_warning || flag_module;
+    track_callstack         CONSTANT VARCHAR2(30)       := flag_error || flag_warning || flag_module || flag_apex_page || flag_apex_form;
 
     -- arguments separator
     splitter                CONSTANT CHAR               := '|';
