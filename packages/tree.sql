@@ -1272,8 +1272,9 @@ CREATE OR REPLACE PACKAGE BODY tree AS
         in_end          TIMESTAMP       := NULL
     )
     RETURN logs.timer%TYPE AS
+        v_end           CONSTANT logs.created_at%TYPE := SYSTIMESTAMP;  -- to prevent timezone shift, APEX_UTIL.GET_SESSION_TIME_ZONE
     BEGIN
-        RETURN COALESCE(in_end, SYSTIMESTAMP) - in_start;
+        RETURN COALESCE(in_end, v_end) - in_start;
     END;
 
 
