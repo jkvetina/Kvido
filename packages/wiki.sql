@@ -196,7 +196,7 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
         DBMS_OUTPUT.PUT_LINE('');
         FOR c IN (
             SELECT s.text
-            FROM logs_modules m
+            FROM logs_modules_mvw m
             JOIN user_source s
                 ON s.name               = m.package_name
                 AND s.type              = 'PACKAGE'
@@ -222,7 +222,7 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
         DBMS_OUTPUT.PUT_LINE('');
         FOR c IN (
             SELECT s.text
-            FROM logs_modules m
+            FROM logs_modules_mvw m
             JOIN user_source s
                 ON s.name               = m.package_name
                 AND s.type              = 'PACKAGE BODY'
@@ -301,7 +301,7 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
                     SUM(CASE private WHEN 'Y' THEN 1 ELSE 0 END),
                     COUNT(args_out)
                 INTO sum_public, sum_private, count_out
-                FROM logs_modules
+                FROM logs_modules_mvw
                 WHERE package_name  = UPPER(in_package)
                     AND group_line  = c.group_line;
                 --
@@ -322,7 +322,7 @@ CREATE OR REPLACE PACKAGE BODY wiki AS
                         body_lines,
                         comment_,
                         f_id
-                    FROM logs_modules
+                    FROM logs_modules_mvw
                     WHERE package_name  = UPPER(in_package)
                         AND group_line  = c.group_line
                     ORDER BY spec_start
