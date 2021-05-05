@@ -88,7 +88,11 @@ CREATE OR REPLACE PACKAGE sess AS
     --
     -- Set (shorten) user_id after authentification
     --
-    PROCEDURE set_user_id;
+    PROCEDURE set_user_id
+    ACCESSIBLE BY (
+        PACKAGE sess,
+        PACKAGE sess_ut
+    );
 
 
 
@@ -173,15 +177,6 @@ CREATE OR REPLACE PACKAGE sess AS
     -- Initialize session
     --
     PROCEDURE init_session;
-
-
-
-    --
-    -- Initialize session and keep resp. set user_id
-    --
-    PROCEDURE init_session (
-        in_user_id          sessions.user_id%TYPE
-    );
 
 
 

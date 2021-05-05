@@ -50,11 +50,30 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
 
-    PROCEDURE set_user_id AS
+    PROCEDURE set_user_id
+    ACCESSIBLE BY (
+        PACKAGE sess,
+        PACKAGE sess_ut
+    )
+    AS
+        v_user_login        users.user_login%TYPE;
+        v_user_id           users.user_id%TYPE;
     BEGIN
+        v_user_login        := sess.get_user_id();
+        v_user_id           := sess.get_user_id(v_user_login);
+
+        -- store first user_login, never change it
+        IF apex.get_item(sess.login_item_name) IS NULL THEN
+            apex.set_item(sess.login_item_name, v_user_login);
+        END IF;
+
+        -- set session things
+        DBMS_SESSION.SET_IDENTIFIER(v_user_id);                 -- USERENV.CLIENT_IDENTIFIER
+        DBMS_APPLICATION_INFO.SET_CLIENT_INFO(v_user_id);       -- CLIENT_INFO, v$
+
         -- overwrite current user in APEX
         APEX_CUSTOM_AUTH.SET_USER (
-            p_user => sess.get_user_id(sess.get_user_id())
+            p_user => v_user_id
         );
     END;
 
@@ -199,19 +218,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
 
 
-    PROCEDURE init_session (
-        in_user_id          sessions.user_id%TYPE
-    ) AS
-    BEGIN
-        sess.init_session();
-
-        -- set session things
-        DBMS_SESSION.SET_IDENTIFIER(in_user_id);                -- USERENV.CLIENT_IDENTIFIER
-        DBMS_APPLICATION_INFO.SET_CLIENT_INFO(in_user_id);      -- CLIENT_INFO, v$
-    END;
-
-
-
     PROCEDURE clear_session (
         in_log_id       logs.log_id%TYPE        := NULL
     ) AS
@@ -231,12 +237,16 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     PROCEDURE create_session AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
+        v_user_login            users.user_login%TYPE;
         v_user_id               users.user_id%TYPE;
         v_is_active             users.is_active%TYPE;
     BEGIN
+        -- store login used
+        v_user_login := sess.get_user_id();
+
         -- this procedure is starting point in APEX after successful authentication
         -- prevent sessions for anonymous (unlogged) users
-        IF UPPER(sess.get_user_id()) = sess.anonymous_user OR sess.get_app_id() = 0 THEN
+        IF (UPPER(v_user_login) IN (sess.anonymous_user, 'ORDS_PUBLIC_USER') OR sess.get_app_id() = 0) THEN
             RETURN;
         END IF;
 
@@ -244,24 +254,22 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         BEGIN
             SELECT u.user_id, u.is_active INTO v_user_id, v_is_active
             FROM users u
-            WHERE u.user_login = sess.get_user_id();
+            WHERE u.user_login = v_user_login;
             --
             IF v_is_active IS NULL THEN
                 RAISE_APPLICATION_ERROR(tree.app_exception_code, 'ACCOUNT_DISABLED');
             END IF;
         EXCEPTION
         WHEN NO_DATA_FOUND THEN
-            v_user_id := sess.get_user_id();  -- it contains login just after auth
+            v_user_id := sess.get_user_id(v_user_login);
             --
             BEGIN
                 -- create user account
                 sess_create_user (
-                    in_user_login       => v_user_id,
-                    in_user_id          => sess.get_user_id(v_user_id),
-                    in_user_name        => v_user_id
+                    in_user_login       => v_user_login,
+                    in_user_id          => v_user_id,
+                    in_user_name        => v_user_login
                 );
-                --
-                v_user_id := sess.get_user_id(v_user_id);  -- overwrite with real user_id
             EXCEPTION
             WHEN OTHERS THEN
                 RAISE_APPLICATION_ERROR(tree.app_exception_code, 'CREATE_USER_FAILED', TRUE);
@@ -269,8 +277,9 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         END;
 
         -- adjust user_id in APEX, init session
+        sess.init_session();
         sess.set_user_id();
-        sess.init_session(v_user_id);
+        --
         tree.log_module();
 
         -- load APEX items from recent (previous) session
@@ -302,8 +311,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         in_page_id          sessions.page_id%TYPE       := 0
     ) AS
         PRAGMA AUTONOMOUS_TRANSACTION;
-        --
-        is_active           CHAR(1);
     BEGIN
         -- create session from SQL Developer (not from APEX)
         BEGIN
@@ -372,7 +379,9 @@ CREATE OR REPLACE PACKAGE BODY sess AS
     AS
         PRAGMA AUTONOMOUS_TRANSACTION;
         --
-        in_user_id          CONSTANT users.user_id%TYPE := sess.get_user_id();
+        in_user_id          CONSTANT users.user_id%TYPE         := sess.get_user_id();
+        in_session_id       CONSTANT sessions.session_id%TYPE   := sess.get_session_id();
+        in_app_id           CONSTANT sessions.app_id%TYPE       := sess.get_app_id();
         --
         is_active           apps.is_active%TYPE;
         rec                 sessions%ROWTYPE;
@@ -382,7 +391,8 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         --
     BEGIN
         -- prevent processing for anonymous users
-        IF UPPER(in_user_id) = sess.anonymous_user THEN
+        -- also check session_id for 0 because of the file uploads
+        IF (UPPER(in_user_id) IN (sess.anonymous_user, 'ORDS_PUBLIC_USER') OR NULLIF(in_session_id, 0) IS NULL) THEN
             RETURN;
         END IF;
 
@@ -391,7 +401,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             BEGIN
                 SELECT 'Y' INTO is_active
                 FROM apps a
-                WHERE a.app_id          = sess.get_app_id()
+                WHERE a.app_id          = in_app_id
                     AND a.is_active     = 'Y';
             EXCEPTION
             WHEN NO_DATA_FOUND THEN
@@ -401,7 +411,7 @@ CREATE OR REPLACE PACKAGE BODY sess AS
             BEGIN
                 SELECT 'Y' INTO is_active
                 FROM user_roles r
-                WHERE r.app_id          = sess.get_app_id()
+                WHERE r.app_id          = in_app_id
                     AND r.user_id       = in_user_id
                     AND r.is_active     = 'Y'
                 GROUP BY r.user_id
@@ -414,8 +424,8 @@ CREATE OR REPLACE PACKAGE BODY sess AS
 
         -- values to store
         rec.user_id         := in_user_id;
-        rec.session_id      := sess.get_session_id();
-        rec.app_id          := sess.get_app_id();
+        rec.session_id      := in_session_id;
+        rec.app_id          := in_app_id;
         rec.page_id         := sess.get_page_id();
         rec.updated_at      := SYSDATE;
         rec.created_at      := rec.updated_at;
