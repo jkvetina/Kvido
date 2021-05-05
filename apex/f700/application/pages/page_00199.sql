@@ -130,27 +130,6 @@ wwv_flow_api.create_page_item(
 ,p_attribute_05=>'BOTH'
 );
 wwv_flow_api.create_page_item(
- p_id=>wwv_flow_api.id(9539663504654003)
-,p_name=>'P199_LANG'
-,p_source_data_type=>'VARCHAR2'
-,p_item_sequence=>50
-,p_item_plug_id=>wwv_flow_api.id(51084378175768182)
-,p_item_source_plug_id=>wwv_flow_api.id(51084378175768182)
-,p_prompt=>'Lang'
-,p_source=>'LANG'
-,p_source_type=>'REGION_SOURCE_COLUMN'
-,p_display_as=>'NATIVE_TEXT_FIELD'
-,p_cSize=>30
-,p_cMaxlength=>5
-,p_field_template=>wwv_flow_api.id(63743308864014396)
-,p_item_template_options=>'#DEFAULT#'
-,p_is_persistent=>'N'
-,p_attribute_01=>'N'
-,p_attribute_02=>'N'
-,p_attribute_04=>'TEXT'
-,p_attribute_05=>'BOTH'
-);
-wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(9539791311654004)
 ,p_name=>'P199_UPDATED_BY'
 ,p_source_data_type=>'VARCHAR2'
@@ -230,39 +209,26 @@ wwv_flow_api.create_page_item(
 ,p_is_persistent=>'N'
 ,p_attribute_01=>'Y'
 );
-wwv_flow_api.create_page_da_event(
- p_id=>wwv_flow_api.id(51237752877880873)
-,p_name=>'COUNTRY_CHANGED'
-,p_event_sequence=>10
-,p_triggering_element_type=>'ITEM'
-,p_triggering_element=>'P199_COUNTRY_ID'
-,p_condition_element=>'P199_COUNTRY_ID'
-,p_triggering_condition_type=>'IN_LIST'
-,p_triggering_expression=>'IN,UK'
-,p_bind_type=>'bind'
-,p_bind_event_type=>'change'
-);
-wwv_flow_api.create_page_da_action(
- p_id=>wwv_flow_api.id(51237873607880874)
-,p_event_id=>wwv_flow_api.id(51237752877880873)
-,p_event_result=>'TRUE'
-,p_action_sequence=>10
-,p_execute_on_page_init=>'Y'
-,p_action=>'NATIVE_HIDE'
-,p_affected_elements_type=>'ITEM'
-,p_affected_elements=>'P199_LM_ID'
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(89995962431818436)
+,p_name=>'P199_LANG_ID'
+,p_source_data_type=>'VARCHAR2'
+,p_item_sequence=>50
+,p_item_plug_id=>wwv_flow_api.id(51084378175768182)
+,p_item_source_plug_id=>wwv_flow_api.id(51084378175768182)
+,p_prompt=>'Lang Id'
+,p_source=>'LANG_ID'
+,p_source_type=>'REGION_SOURCE_COLUMN'
+,p_display_as=>'NATIVE_TEXT_FIELD'
+,p_cSize=>30
+,p_cMaxlength=>5
+,p_field_template=>wwv_flow_api.id(63743308864014396)
+,p_item_template_options=>'#DEFAULT#'
+,p_is_persistent=>'N'
 ,p_attribute_01=>'N'
-);
-wwv_flow_api.create_page_da_action(
- p_id=>wwv_flow_api.id(51237907159880875)
-,p_event_id=>wwv_flow_api.id(51237752877880873)
-,p_event_result=>'FALSE'
-,p_action_sequence=>10
-,p_execute_on_page_init=>'Y'
-,p_action=>'NATIVE_SHOW'
-,p_affected_elements_type=>'ITEM'
-,p_affected_elements=>'P199_LM_ID'
-,p_attribute_01=>'N'
+,p_attribute_02=>'N'
+,p_attribute_04=>'TEXT'
+,p_attribute_05=>'BOTH'
 );
 wwv_flow_api.create_page_process(
  p_id=>wwv_flow_api.id(51085774627768196)
@@ -271,6 +237,8 @@ wwv_flow_api.create_page_process(
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'PREFILL_FORM'
 ,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'apex.log_after_header(''PREFILL_FORM'');',
+'--',
 'APEX_UTIL.SET_SESSION_STATE(''P199_USER_ID'', sess.get_user_id());',
 '--',
 'FOR c IN (',
@@ -280,7 +248,7 @@ wwv_flow_api.create_page_process(
 ') LOOP',
 '    APEX_UTIL.SET_SESSION_STATE(''P199_USER_LOGIN'', c.user_login);',
 '    APEX_UTIL.SET_SESSION_STATE(''P199_USER_NAME'',  c.user_name);',
-'    APEX_UTIL.SET_SESSION_STATE(''P199_LANG'',       c.lang_id);',
+'    APEX_UTIL.SET_SESSION_STATE(''P199_LANG_ID'',    c.lang_id);',
 'END LOOP;',
 ''))
 ,p_process_clob_language=>'PLSQL'
@@ -297,7 +265,7 @@ wwv_flow_api.create_page_process(
 'UPDATE users u',
 'SET u.user_login = :P199_USER_LOGIN,',
 '    u.user_name  = :P199_USER_NAME,',
-'    u.lang_id    = :P199_LANG',
+'    u.lang_id    = :P199_LANG_ID',
 'WHERE u.user_id  = sess.get_user_id();',
 ''))
 ,p_process_clob_language=>'PLSQL'
