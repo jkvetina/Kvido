@@ -62,11 +62,6 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         v_user_login        := sess.get_user_id();
         v_user_id           := sess.get_user_id(v_user_login);
 
-        -- store first user_login, never change it
-        IF apex.get_item(sess.login_item_name) IS NULL THEN
-            apex.set_item(sess.login_item_name, v_user_login);
-        END IF;
-
         -- set session things
         DBMS_SESSION.SET_IDENTIFIER(v_user_id);                 -- USERENV.CLIENT_IDENTIFIER
         DBMS_APPLICATION_INFO.SET_CLIENT_INFO(v_user_id);       -- CLIENT_INFO, v$
@@ -75,6 +70,9 @@ CREATE OR REPLACE PACKAGE BODY sess AS
         APEX_CUSTOM_AUTH.SET_USER (
             p_user => v_user_id
         );
+    EXCEPTION
+    WHEN OTHERS THEN
+        tree.raise_error();
     END;
 
 

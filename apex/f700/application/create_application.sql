@@ -53,10 +53,10 @@ wwv_flow_api.create_flow(
 ,p_browser_frame=>'D'
 ,p_deep_linking=>'Y'
 ,p_vpd=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'sess.update_session();',
+'#OWNER#.sess.update_session();',
 ''))
 ,p_vpd_teardown_code=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'sess.clear_session();',
+'#OWNER#.sess.clear_session();',
 ''))
 ,p_runtime_api_usage=>'T'
 ,p_security_scheme=>'MUST_NOT_BE_PUBLIC_USER'

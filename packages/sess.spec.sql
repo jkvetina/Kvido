@@ -44,7 +44,7 @@ CREATE OR REPLACE PACKAGE sess AS
 
     -- login page
     login_page#             CONSTANT NUMBER(6)                          := 9999;
-    
+
 
 
 
